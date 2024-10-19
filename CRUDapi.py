@@ -1,0 +1,378 @@
+# app.py
+from flask import Flask, request, jsonify, session, render_template, redirect, url_for
+from functools import wraps
+import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
+from scanStats import get_db_connection, get_last_scanned_block, get_wallet_count, get_rpc_connection, retry_rpc_call
+
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Replace with a secure secret key
+
+APIKEYS_DB = './db/APIkeys.db'
+ADMINS_DB = './db/admins.db'
+
+def get_api_keys_db_connection():
+    conn = sqlite3.connect(APIKEYS_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def get_admins_db_connection():
+    conn = sqlite3.connect(ADMINS_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_dbs():
+    # Initialize APIkeys.db
+    conn = sqlite3.connect(APIKEYS_DB)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS api_keys (
+            user_id TEXT PRIMARY KEY,
+            api_key TEXT,
+            creation_date TEXT,
+            renewal_date TEXT,
+            last_login_at INTEGER,
+            plan_name TEXT,
+            max_daily_requests INTEGER,
+            current_period_ends_at INTEGER,
+            will_renew_at_period_end BOOLEAN,
+            num_requests_today INTEGER,
+            num_requests_yesterday INTEGER
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+    # Initialize admins.db
+    conn = sqlite3.connect(ADMINS_DB)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS admins (
+            admin_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_dbs()
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_logged_in' not in session:
+            return redirect(url_for('login_page'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/')
+def index():
+    if 'admin_logged_in' in session:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login_page'))
+
+@app.route('/login', methods=['GET'])
+def login_page():
+    if 'admin_logged_in' in session:
+        return redirect(url_for('dashboard'))
+    return render_template('login.html')
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/api_keys_page')
+@login_required
+def api_keys_page():
+    return render_template('api_keys.html')
+
+@app.route('/admins_page')
+@login_required
+def admins_page():
+    return render_template('admins.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    conn = get_admins_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM admins WHERE username = ?', (username,))
+    admin = cursor.fetchone()
+    conn.close()
+
+    if admin and check_password_hash(admin['password'], password):
+        session['admin_logged_in'] = True
+        session['admin_username'] = username
+        return jsonify({'message': 'Logged in successfully'}), 200
+    else:
+        return jsonify({'error': 'Invalid credentials'}), 401
+
+@app.route('/logout', methods=['POST'])
+@login_required
+def logout():
+    session.pop('admin_logged_in', None)
+    session.pop('admin_username', None)
+    return jsonify({'message': 'Logged out successfully'}), 200
+
+# CRUD operations for API keys
+@app.route('/api/api_keys', methods=['GET'])
+@login_required
+def get_api_keys():
+    conn = get_api_keys_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM api_keys')
+    rows = cursor.fetchall()
+    conn.close()
+
+    api_keys = [dict(row) for row in rows]
+    return jsonify(api_keys), 200
+
+@app.route('/api/api_keys', methods=['POST'])
+@login_required
+def create_api_key():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    api_key = data.get('api_key')
+    creation_date = data.get('creation_date')
+    renewal_date = data.get('renewal_date')
+    last_login_at = data.get('last_login_at')
+    plan_name = data.get('plan_name')
+    max_daily_requests = data.get('max_daily_requests')
+    current_period_ends_at = data.get('current_period_ends_at')
+    will_renew_at_period_end = data.get('will_renew_at_period_end')
+    num_requests_today = data.get('num_requests_today')
+    num_requests_yesterday = data.get('num_requests_yesterday')
+
+    conn = get_api_keys_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO api_keys (
+                user_id, api_key, creation_date, renewal_date, last_login_at,
+                plan_name, max_daily_requests, current_period_ends_at,
+                will_renew_at_period_end, num_requests_today, num_requests_yesterday
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            user_id,
+            api_key,
+            creation_date,
+            renewal_date,
+            last_login_at,
+            plan_name,
+            max_daily_requests,
+            current_period_ends_at,
+            will_renew_at_period_end,
+            num_requests_today,
+            num_requests_yesterday
+        ))
+        conn.commit()
+    except sqlite3.IntegrityError as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 400
+    conn.close()
+    return jsonify({'message': 'API key created successfully'}), 201
+
+@app.route('/api/api_keys/<user_id>', methods=['GET'])
+@login_required
+def get_api_key(user_id):
+    conn = get_api_keys_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM api_keys WHERE user_id = ?', (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row is None:
+        return jsonify({'error': 'API key not found'}), 404
+    else:
+        return jsonify(dict(row)), 200
+
+@app.route('/api/api_keys/<user_id>', methods=['PUT'])
+@login_required
+def update_api_key(user_id):
+    data = request.get_json()
+    api_key = data.get('api_key')
+    creation_date = data.get('creation_date')
+    renewal_date = data.get('renewal_date')
+    last_login_at = data.get('last_login_at')
+    plan_name = data.get('plan_name')
+    max_daily_requests = data.get('max_daily_requests')
+    current_period_ends_at = data.get('current_period_ends_at')
+    will_renew_at_period_end = data.get('will_renew_at_period_end')
+    num_requests_today = data.get('num_requests_today')
+    num_requests_yesterday = data.get('num_requests_yesterday')
+
+    conn = get_api_keys_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE api_keys SET
+            api_key = ?,
+            creation_date = ?,
+            renewal_date = ?,
+            last_login_at = ?,
+            plan_name = ?,
+            max_daily_requests = ?,
+            current_period_ends_at = ?,
+            will_renew_at_period_end = ?,
+            num_requests_today = ?,
+            num_requests_yesterday = ?
+        WHERE user_id = ?
+    ''', (
+        api_key,
+        creation_date,
+        renewal_date,
+        last_login_at,
+        plan_name,
+        max_daily_requests,
+        current_period_ends_at,
+        will_renew_at_period_end,
+        num_requests_today,
+        num_requests_yesterday,
+        user_id
+    ))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'API key updated successfully'}), 200
+
+@app.route('/api/api_keys/<user_id>', methods=['DELETE'])
+@login_required
+def delete_api_key(user_id):
+    conn = get_api_keys_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM api_keys WHERE user_id = ?', (user_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'API key deleted successfully'}), 200
+
+# CRUD operations for Admins
+@app.route('/api/admins', methods=['GET'])
+@login_required
+def get_admins():
+    conn = get_admins_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT admin_id, username FROM admins')
+    rows = cursor.fetchall()
+    conn.close()
+
+    admins = [dict(row) for row in rows]
+    return jsonify(admins), 200
+
+@app.route('/api/admins', methods=['POST'])
+@login_required
+def create_admin():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    password_hash = generate_password_hash(password)
+
+    conn = get_admins_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('INSERT INTO admins (username, password) VALUES (?, ?)', (username, password_hash))
+        conn.commit()
+    except sqlite3.IntegrityError as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 400
+    conn.close()
+    return jsonify({'message': 'Admin created successfully'}), 201
+
+@app.route('/api/admins/<int:admin_id>', methods=['GET'])
+@login_required
+def get_admin(admin_id):
+    conn = get_admins_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT admin_id, username FROM admins WHERE admin_id = ?', (admin_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row is None:
+        return jsonify({'error': 'Admin not found'}), 404
+    else:
+        return jsonify(dict(row)), 200
+
+@app.route('/api/admins/<int:admin_id>', methods=['PUT'])
+@login_required
+def update_admin(admin_id):
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    conn = get_admins_db_connection()
+    cursor = conn.cursor()
+
+    if password:
+        password_hash = generate_password_hash(password)
+        cursor.execute('''
+            UPDATE admins SET
+                username = ?,
+                password = ?
+            WHERE admin_id = ?
+        ''', (
+            username,
+            password_hash,
+            admin_id
+        ))
+    else:
+        cursor.execute('''
+            UPDATE admins SET
+                username = ?
+            WHERE admin_id = ?
+        ''', (
+            username,
+            admin_id
+        ))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Admin updated successfully'}), 200
+
+@app.route('/api/admins/<int:admin_id>', methods=['DELETE'])
+@login_required
+def delete_admin(admin_id):
+    conn = get_admins_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM admins WHERE admin_id = ?', (admin_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Admin deleted successfully'}), 200
+
+@app.route('/api/scan_progress', methods=['GET'])
+@login_required
+def get_scan_progress():
+    coins = ['DOGE', 'LKY', 'LTC']  # List of coins to check
+    progress_data = []
+
+    for coin in coins:
+        try:
+            conn = get_db_connection(coin)
+            rpc_connection = get_rpc_connection(coin)
+
+            last_scanned_block = get_last_scanned_block(conn, coin)
+            latest_block = retry_rpc_call(rpc_connection.getblockcount)
+            wallet_count = get_wallet_count(conn)
+
+            percent_done = (last_scanned_block / latest_block) * 100 if latest_block > 0 else 0
+            progress_data.append({
+                'coin': coin,
+                'percent_done': f"{percent_done:.2f}%",
+                'last_scanned_block': last_scanned_block,
+                'latest_block': latest_block,
+                'wallet_count': wallet_count
+            })
+
+            conn.close()
+        except Exception as e:
+            # Handle any errors and include them in the response
+            progress_data.append({
+                'coin': coin,
+                'error': str(e)
+            })
+
+    return jsonify(progress_data), 200
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8070, debug=True)
