@@ -862,8 +862,8 @@ X-API-Key: your_api_key_here
     <!-- Endpoint 19: Ord Check -->
     <div class="endpoint" id="ord_check">
         <h3>19. Ord Check</h3>
-        <p><strong>Endpoint:</strong> <code>GET /api/v1/ord_check/&lt;coin&gt;/&lt;txid&gt;</code></p>
-        <p><strong>Description:</strong> Executes the ordCheck function with the specified coin and transaction ID, returning the transaction details.</p>
+        <p><strong>Endpoint:</strong> <code>GET /api/v1/ord_check/&lt;coin&gt;/&lt;txid&gt;/&lt;vout&gt;</code></p>
+        <p><strong>Description:</strong> Executes the ordCheck function with the specified coin, transaction ID, and output index (vout), returning the transaction details.</p>
         <p><strong>HTTP Method:</strong> GET</p>
         <p><strong>Headers:</strong></p>
         <ul>
@@ -873,9 +873,10 @@ X-API-Key: your_api_key_here
         <ul>
             <li><code>coin</code> (string): The coin identifier (e.g., LKY, DOGE, LTC).</li>
             <li><code>txid</code> (string): The transaction ID to check.</li>
+            <li><code>vout</code> (integer): The output index of the transaction.</li>
         </ul>
         <p><strong>Example Request:</strong></p>
-        <pre><code>GET /api/v1/ord_check/LKY/03e059c8ecff996531399c9096635376fefbbe7e14ac835bf904f71364c5b97d</code></pre>
+        <pre><code>GET /api/v1/ord_check/LKY/03e059c8ecff996531399c9096635376fefbbe7e14ac835bf904f71364c5b97d/0</code></pre>
         <p><strong>Example Response:</strong></p>
         <pre><code>{
     "status": "success",

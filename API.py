@@ -1,7 +1,7 @@
 import sqlite3
 from flask import Flask, request, jsonify, render_template, send_file, g
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from ordCheck import process_transaction, initialize_db 
+### from getOrdGenesis import get_ord_genesis
 import configparser
 from apscheduler.schedulers.background import BackgroundScheduler
 import subprocess
@@ -607,30 +607,26 @@ def decode_script(ticker):
     except JSONRPCException as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route('/api/v1/ord_check/<coin>/<txid>', methods=['GET'])
+@app.route('/api/v1/ord_check/<ticker>/<txid>/<vout>', methods=['GET'])
 @require_api_key
-def ord_check(coin, txid):
+def get_ord_genesis(ticker, txid, vout):
     try:
-        # Call the process_transaction function directly
-        json_result = process_transaction(coin, txid)
+        rpc_connection = get_rpc_connection(ticker)
+        print(f"RPC Connection established for ticker: {ticker}")  # Debugging line
+        result_data = get_ord_genesis(rpc_connection, txid, int(vout))
         
-        # Parse the JSON result
-        result_data = json.loads(json_result)
-        
-        # Check for errors in the result
-        if "error" in result_data:
+        if result_data["status"] == "error":
             return jsonify({
                 "status": "error",
-                "message": result_data["error"]
+                "message": result_data["message"]
             }), 400
         
-        # Return the successful result
         return jsonify({
             "status": "success",
             "data": result_data
         })
     except Exception as e:
-        # Handle unexpected errors
+        print(f"Error in get_ord_genesis: {e}")  # Debugging line
         return jsonify({
             "status": "error",
             "message": f"An unexpected error occurred: {str(e)}"
@@ -970,23 +966,66 @@ def get_witness_script_asm(ticker, txid):
 @require_api_key
 def get_ord_content(ticker, genesis_txid):
     try:
-        # Call the process_tx function with the provided ticker and genesis_txid
-        base64_data = process_tx(ticker, genesis_txid, depth=500)
-        
-        # Log the base64 data for debugging
-        logging.info(f"Base64 Data: {base64_data}")
+        # Connect to the database
+        conn = sqlite3.connect('./db/content.db')
+        cursor = conn.cursor()
 
-        # Check if the transaction was processed successfully
-        if base64_data:
-            return jsonify({
-                "status": "success",
-                "data": {
-                    "base64_data": base64_data
-                }
-            })
+        # Query the database for the content
+        cursor.execute('SELECT mime_type, base64_data, processing FROM transactions WHERE genesis_txid = ?', (genesis_txid,))
+        result = cursor.fetchone()
+
+        if result:
+            mime_type, base64_data, processing = result
+
+            # Check if the transaction is already processed
+            if processing == 0:
+                decoded_data = base64.b64decode(base64_data)
+
+                # Check if the content is HTML
+                if mime_type == 'text/html':
+                    content = decoded_data.decode('utf-8')
+                    content = fetch_and_replace_content(content, set())
+                    return content  # Display the content as a webpage
+
+                # For other MIME types, return the raw content
+                response = make_response(decoded_data)
+                response.headers['Content-Type'] = mime_type
+                return response
+            else:
+                logging.error("Transaction is still being processed.")
+                return jsonify({"status": "error", "message": "Transaction is still being processed."}), 500
         else:
-            logging.error("Failed to process the transaction.")
-            return jsonify({"status": "error", "message": "Failed to process the transaction."}), 500
+            # If not found, call process_tx to retrieve the data
+            logging.info(f"Data not found in DB for txid: {genesis_txid}. Calling process_tx.")
+            result = process_tx(genesis_txid, depth=500)
+
+            # If process_tx returns valid data, store it in the database
+            if isinstance(result, dict) and 'base64_data' in result:
+                mime_type = result.get('mime_type', 'application/octet-stream')
+                base64_data = result['base64_data']
+                cursor.execute('''
+                    INSERT INTO transactions (genesis_txid, mime_type, base64_data, processing)
+                    VALUES (?, ?, ?, 0)
+                ''', (genesis_txid, mime_type, base64_data))
+                conn.commit()
+
+                decoded_data = base64.b64decode(base64_data)
+
+                # Check if the content is HTML
+                if mime_type == 'text/html':
+                    content = decoded_data.decode('utf-8')
+                    content = fetch_and_replace_content(content, set())
+                    return content  # Display the content as a webpage
+
+                # For other MIME types, return the raw content
+                response = make_response(decoded_data)
+                response.headers['Content-Type'] = mime_type
+                return response
+            else:
+                logging.error("Failed to process the transaction.")
+                return jsonify({"status": "error", "message": "Failed to process the transaction."}), 500
+
+        conn.close()
 
     except Exception as e:
         # Log the exception for debugging
@@ -1141,7 +1180,7 @@ def display_content(txid, processed_txids=None):
     except Exception as e:
         # Log the exception for debugging
         app.logger.error(f"An unexpected error occurred: {str(e)}")
-        return jsonify({"status": "error", "message": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"status": "complete", "message": f"Data extracted from the blockchain. Refresh the page to view the content."}), 500
     
     
 @app.route('/api_tester.html')

@@ -27,9 +27,11 @@ def get_rpc_connection(ticker):
     ticker = ticker.upper()
     if ticker in rpc_configs:
         cfg = rpc_configs[ticker]
-        return AuthServiceProxy(
-            f"http://{cfg['rpc_user']}:{cfg['rpc_password']}@{cfg['rpc_host']}:{cfg['rpc_port']}"
-        )
+        rpc_url = f"http://{cfg['rpc_user']}:{cfg['rpc_password']}@{cfg['rpc_host']}:{cfg['rpc_port']}"
+        print(f"Connecting to RPC URL: {rpc_url}")  # Debugging line
+        connection = AuthServiceProxy(rpc_url)
+        print(f"Connection type: {type(connection)}")  # Debugging line
+        return connection
     else:
         raise ValueError(f"No RPC configuration found for ticker: {ticker}")
 

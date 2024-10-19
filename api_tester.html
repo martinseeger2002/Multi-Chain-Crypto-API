@@ -384,10 +384,11 @@
             ord_check: {
                 title: 'Ord Check',
                 method: 'GET',
-                path: '/api/v1/ord_check/{coin}/{txid}',
-                instructions: 'Check ordinals related information for a specific transaction.',
+                path: '/api/v1/ord_check/{ticker}/{txid}/{vout}', // Updated path to include {vout}
+                instructions: 'Check ordinals related information for a specific transaction and output index.',
                 parameters: [
-                    // No additional parameters; coin and txid are in the path
+                    { name: 'txid', type: 'text', placeholder: 'Transaction ID', required: true }, // Added txid parameter
+                    { name: 'vout', type: 'number', placeholder: 'Output Index (VOUT)', required: true } // Added vout parameter
                 ]
             },
             import_address: {
