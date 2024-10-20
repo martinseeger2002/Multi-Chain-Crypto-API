@@ -1,7 +1,7 @@
 {
-    "name": "Plugz Wallet",
-    "short_name": "Plugz",
-    "start_url": "https://blockchainplugz.com/wallet", // Use absolute URL
+    "name": "Blockchain Plugz Wallet",
+    "short_name": "BC-Plugz",
+    "start_url": "https://blockchainplugz.com/wallet",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#000000",

@@ -166,11 +166,10 @@
         <label for="modeSwitch">
             <!-- Sun/Moon Icon -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-8.66h-1m-16 0h-1m15.54-5.36l-.71-.71M5.36 18.64l-.71-.71m13.36-.71l-.71.71M5.36 5.36l-.71.71M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path id="iconPath" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-8.66h-1m-16 0h-1m15.54-5.36l-.71-.71M5.36 18.64l-.71-.71m13.36-.71l-.71.71M5.36 5.36l-.71.71M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
         </label>
     </div>
-
     <h1>Blockchainplugz API Beta Documentation</h1>
 
     <p>Welcome to the Blockchainplugz API Beta documentation. This API allows you to interact with various blockchain networks, such as LKY, DOGE, and LTC, to retrieve information about blocks, transactions, addresses, and to broadcast transactions.</p>
@@ -1833,25 +1832,27 @@ X-API-Key: your_api_key_here
     <script>
         const modeSwitch = document.getElementById('modeSwitch');
         const body = document.body;
+        const iconPath = document.getElementById('iconPath');
 
-        // Check for saved preference and apply
-        if (localStorage.getItem('theme') === 'dark') {
+        // Load saved mode from local storage
+        if (localStorage.getItem('dark-mode') === 'true') {
             body.classList.add('dark-mode');
             modeSwitch.checked = true;
+            iconPath.setAttribute('d', 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c4.41 0 8.19-2.84 9.5-6.75C19.5 16.5 16 14 12 14c-4.41 0-8 3.59-8 8 0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2 0-5.52-4.48-10-10-10z'); // Crescent moon path
         }
 
-        // Toggle dark mode
-        modeSwitch.addEventListener('change', function () {
-            if (this.checked) {
+        modeSwitch.addEventListener('change', () => {
+            if (modeSwitch.checked) {
                 body.classList.add('dark-mode');
-                localStorage.setItem('theme', 'dark');
+                localStorage.setItem('dark-mode', 'true');
+                iconPath.setAttribute('d', 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c4.41 0 8.19-2.84 9.5-6.75C19.5 16.5 16 14 12 14c-4.41 0-8 3.59-8 8 0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2 0-5.52-4.48-10-10-10z'); // Crescent moon path
             } else {
                 body.classList.remove('dark-mode');
-                localStorage.setItem('theme', 'light');
+                localStorage.setItem('dark-mode', 'false');
+                iconPath.setAttribute('d', 'M12 3v1m0 16v1m8.66-8.66h-1m-16 0h-1m15.54-5.36l-.71-.71M5.36 18.64l-.71-.71m13.36-.71l-.71.71M5.36 5.36l-.71.71M15 12a3 3 0 11-6 0 3 3 0 016 0z'); // Sun path
             }
         });
     </script>
-
 
     <h2 id="api-tester">API Tester</h2>
    

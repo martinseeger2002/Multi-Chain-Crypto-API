@@ -8,9 +8,19 @@ export function walletUI() {
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
+    // Apply styles to the landing page
+    landingPage.style.padding = '20px';
+    landingPage.style.fontFamily = 'Courier New, monospace'; // Use a monospace font for a techy look
+    landingPage.style.backgroundColor = '#1a1a1a'; // Dark background
+
     const title = document.createElement('h1');
     title.textContent = 'Wallet';
     landingPage.appendChild(title);
+
+    // Style the title
+    title.style.color = '#00bfff'; // Bright blue for a techy feel
+    title.style.textAlign = 'center';
+    title.style.marginBottom = '20px';
 
     const walletDropdown = document.createElement('select');
     const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
@@ -18,13 +28,15 @@ export function walletUI() {
     const defaultOption = document.createElement('option');
     defaultOption.textContent = 'Select a Wallet';
     defaultOption.disabled = true;
-    defaultOption.selected = true;
     walletDropdown.appendChild(defaultOption);
 
-    wallets.forEach(wallet => {
+    wallets.forEach((wallet, index) => {
         const option = document.createElement('option');
         option.value = wallet.label;
         option.textContent = wallet.label;
+        if (index === 0) {
+            option.selected = true; // Select the first wallet by default
+        }
         walletDropdown.appendChild(option);
     });
 
@@ -64,6 +76,11 @@ export function walletUI() {
         }
     });
 
+    // Trigger change event to update UI with the first wallet's details
+    if (wallets.length > 0) {
+        walletDropdown.dispatchEvent(new Event('change'));
+    }
+
     copyButton.addEventListener('click', () => {
         const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
         if (selectedWallet) {
@@ -76,6 +93,42 @@ export function walletUI() {
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
     backButton.addEventListener('click', landingPageUI);
+
+    // Style the balance and address display
+    balanceDisplay.style.marginTop = '10px';
+    balanceDisplay.style.fontSize = '18px';
+    balanceDisplay.style.color = '#00bfff'; // Blue text
+
+    addressDisplay.style.marginTop = '10px';
+    addressDisplay.style.fontSize = '16px';
+    addressDisplay.style.color = '#00bfff'; // Blue text
+
+    // Style the QR code display
+    qrCodeDisplay.style.display = 'block';
+    qrCodeDisplay.style.margin = '20px auto';
+    qrCodeDisplay.style.border = '2px solid #00bfff'; // Blue border
+
+    // Style buttons
+    const buttons = [copyButton, syncButton, viewUtxosButton, sendButton, manageWalletsButton, backButton];
+    buttons.forEach(button => {
+        button.style.width = '100%';
+        button.style.padding = '10px';
+        button.style.marginTop = '10px';
+        button.style.border = 'none';
+        button.style.borderRadius = '5px';
+        button.style.backgroundColor = '#333'; // Dark button background
+        button.style.color = '#00bfff'; // Blue text
+        button.style.cursor = 'pointer';
+        button.style.transition = 'background-color 0.3s';
+        
+        button.addEventListener('mouseover', () => {
+            button.style.backgroundColor = '#444'; // Slightly lighter on hover
+        });
+        
+        button.addEventListener('mouseout', () => {
+            button.style.backgroundColor = '#333';
+        });
+    });
 
     landingPage.appendChild(walletDropdown);
     landingPage.appendChild(balanceDisplay);
@@ -131,8 +184,8 @@ export function walletUI() {
                         txid: tx.txid,
                         value: tx.value,
                         confirmations: tx.confirmations,
-                        vout: tx.output_no,
-                        script_hex: tx.script_hex // Ensure script_hex is mapped
+                        vout: tx.vout,
+                        script_hex: tx.script_hex
                     }));
                     console.log('UTXOs updated:', selectedWallet.utxos); // Log the updated UTXOs
                 } else {

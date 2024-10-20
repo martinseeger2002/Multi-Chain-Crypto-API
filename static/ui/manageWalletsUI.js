@@ -42,9 +42,28 @@ export function manageWalletsUI() {
         viewPrivateKeyButton.style.margin = '5px auto'; // Center the button
         viewPrivateKeyButton.addEventListener('click', () => viewPrivateKey(wallet));
 
+        const tickerDropdown = document.createElement('select');
+        const tickerOptions = ['DOGE', 'LTC', 'LKY']; // Example ticker options
+        tickerOptions.forEach(ticker => {
+            const option = document.createElement('option');
+            option.value = ticker;
+            option.textContent = ticker;
+            if (wallet.ticker === ticker) {
+                option.selected = true; // Set the current ticker as selected
+            }
+            tickerDropdown.appendChild(option);
+        });
+
+        tickerDropdown.addEventListener('change', (event) => {
+            wallet.ticker = event.target.value;
+            localStorage.setItem('wallets', JSON.stringify(wallets));
+            manageWalletsUI(); // Refresh the UI
+        });
+
         walletDiv.appendChild(renameButton);
         walletDiv.appendChild(deleteButton);
         walletDiv.appendChild(viewPrivateKeyButton);
+        walletDiv.appendChild(tickerDropdown);
         landingPage.appendChild(walletDiv);
     });
 

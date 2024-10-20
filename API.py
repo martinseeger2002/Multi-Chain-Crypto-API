@@ -305,7 +305,7 @@ def get_unspent_txs(ticker, address):
                 "txs": [
                     {
                         "txid": utxo['txid'],
-                        "output_no": utxo['vout'],
+                        "vout": utxo['vout'],
                         "script_hex": utxo['scriptPubKey'],
                         "value": utxo['amount'],
                         "confirmations": utxo['confirmations']  # Added confirmations field

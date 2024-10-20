@@ -9,6 +9,8 @@ import { sendTxUI } from './ui/sendTxUI.js';
 import { confirmSendTxUI } from './ui/confirmSendTxUI.js';
 import { mintFileUI } from './ui/mintFileUI.js';
 import { loginUser } from './api/loginUser.js';
+//import { inscribeUI } from './ui/inscribeUI.js'; // Import the inscribeUI function
+
 
 document.addEventListener('DOMContentLoaded', () => {
     mainSplashUI();
