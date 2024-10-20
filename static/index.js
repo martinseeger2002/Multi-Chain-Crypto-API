@@ -10,6 +10,7 @@ import { confirmSendTxUI } from './ui/confirmSendTxUI.js';
 import { mintFileUI } from './ui/mintFileUI.js';
 import { loginUser } from './api/loginUser.js';
 //import { inscribeUI } from './ui/inscribeUI.js'; // Import the inscribeUI function
+import { userUI } from './ui/userUI.js'; // Import the userUI function
 
 
 document.addEventListener('DOMContentLoaded', () => {

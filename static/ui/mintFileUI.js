@@ -1,5 +1,5 @@
 import { mintSelectionUI } from './mintSelectionUI.js'; // Import the mintSelectionUI function
-//import { inscribeUI } from './inscribeUI.js'; // Import the inscribeUI function
+import { inscribeUI } from './inscribeUI.js'; // Import the inscribeUI function
 
 export function mintFileUI() {
     const landingPage = document.getElementById('landing-page');
@@ -87,29 +87,64 @@ export function mintFileUI() {
     addressInput.style.margin = '10px 0';
     landingPage.appendChild(addressInput);
 
+    // File selection container
+    const fileContainer = document.createElement('div');
+    fileContainer.style.display = 'flex';
+    fileContainer.style.flexDirection = 'column';
+    fileContainer.style.alignItems = 'center';
+    fileContainer.style.cursor = 'pointer';
+    fileContainer.style.border = '1px solid #00bfff'; // Add a border
+    fileContainer.style.padding = '10px'; // Add padding for better appearance
+    fileContainer.style.borderRadius = '5px'; // Optional: add rounded corners
+    fileContainer.style.width = '150px'; // Set a fixed width
+    fileContainer.style.height = '100px'; // Set a fixed height
+    fileContainer.style.boxSizing = 'border-box'; // Include padding and border in the element's total width and height
+
     // File selection
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.id = 'file-input';
     fileInput.style.display = 'none'; // Hide the default file input
 
-    const fileLabel = document.createElement('label');
-    fileLabel.htmlFor = 'file-input';
-    fileLabel.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
-            <svg width="24" height="24" fill="#00bfff" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M12 2L12 14M12 14L8 10M12 14L16 10M4 18H20" stroke="#00bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span style="color: #00bfff; margin-top: 8px;">Choose File</span>
-        </div>
+    const fileLabel = document.createElement('div');
+    fileLabel.style.display = 'flex';
+    fileLabel.style.flexDirection = 'column';
+    fileLabel.style.alignItems = 'center';
+    fileLabel.style.justifyContent = 'center'; // Center content vertically
+    fileLabel.style.height = '100%'; // Ensure it fills the container
+    fileLabel.style.cursor = 'pointer';
+
+    const svgIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgIcon.setAttribute('width', '24');
+    svgIcon.setAttribute('height', '24');
+    svgIcon.setAttribute('fill', '#00bfff');
+    svgIcon.setAttribute('viewBox', '0 0 24 24');
+    svgIcon.innerHTML = `
+        <path d="M12 2L12 14M12 14L8 10M12 14L16 10M4 18H20" stroke="#00bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     `;
-    fileLabel.style.backgroundColor = 'transparent'; // Remove background color
-    fileLabel.style.border = 'none'; // Remove border
-    fileLabel.style.padding = '0'; // Remove padding if any
+
+    const fileText = document.createElement('span');
+    fileText.textContent = 'Choose File';
+    fileText.style.color = '#00bfff';
+    fileText.style.marginTop = '8px';
+
+    // Append SVG and text to the label
+    fileLabel.appendChild(svgIcon);
+    fileLabel.appendChild(fileText);
+
+    // Make the entire container clickable
+    fileContainer.addEventListener('click', () => {
+        fileInput.click();
+    });
 
     fileInput.addEventListener('change', handleFileSelect);
-    landingPage.appendChild(fileInput);
-    landingPage.appendChild(fileLabel);
+
+    // Append file input and label to the container
+    fileContainer.appendChild(fileInput);
+    fileContainer.appendChild(fileLabel);
+
+    // Append the container to the landing page
+    landingPage.appendChild(fileContainer);
 
     // Generate Transactions button
     const generateTxButton = document.createElement('button');
@@ -119,17 +154,6 @@ export function mintFileUI() {
     generateTxButton.style.color = '#fff'; // Set text color to white
     generateTxButton.addEventListener('click', generateTransactions);
     landingPage.appendChild(generateTxButton);
-
-    // Back button
-    const backButton = document.createElement('button');
-    backButton.textContent = 'Back';
-    backButton.style.margin = '10px 0';
-    backButton.style.backgroundColor = '#00bfff'; // Set to blue hue
-    backButton.style.color = '#fff'; // Set text color to white
-    backButton.addEventListener('click', () => {
-        mintSelectionUI(); // Navigate back to mint selection UI
-    });
-    landingPage.appendChild(backButton);
 
     // Inscribe button
     const inscribeButton = document.createElement('button');
@@ -141,6 +165,17 @@ export function mintFileUI() {
         inscribeUI(); // Navigate to inscribe UI
     });
     landingPage.appendChild(inscribeButton);
+
+    // Back button
+    const backButton = document.createElement('button');
+    backButton.textContent = 'Back';
+    backButton.style.margin = '10px 0';
+    backButton.style.backgroundColor = '#333'; // Set to dark color
+    backButton.style.color = '#fff'; // Set text color to white
+    backButton.addEventListener('click', () => {
+        mintSelectionUI(); // Navigate back to mint selection UI
+    });
+    landingPage.appendChild(backButton);
 
     // Function to handle file selection
     function handleFileSelect(event) {
@@ -315,12 +350,17 @@ export function mintFileUI() {
         .then(data => {
             console.log('Mint response:', data);
             if (data.status === 'success') {
-                const pendingTXs = data.pendingTransactions.map(tx => tx.hex);
-                console.log('Pending TXs:', pendingTXs); // Log the pending TXs
+                console.log('Pending Transactions:', data.pendingTransactions); // Log pending transactions
 
-                const pendingTxsStorage = JSON.parse(localStorage.getItem('pendingTxs')) || [];
-                pendingTxsStorage.push(...pendingTXs);
-                localStorage.setItem('pendingTxs', JSON.stringify(pendingTxsStorage));
+                // Check if pendingTransactions is defined
+                if (data.pendingTransactions) {
+                    // Store pending transactions in local storage
+                    localStorage.setItem('pendingTransactions', JSON.stringify(data.pendingTransactions));
+                    console.log('Pending transactions saved to local storage.');
+                } else {
+                    console.error('No pending transactions found in response.');
+                }
+
                 localStorage.removeItem('fileToMint'); // Remove file hex from local storage
                 alert('Transaction generated successfully!');
             } else {

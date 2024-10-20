@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, request, jsonify, render_template, send_file, g, session
+from flask import Flask, request, jsonify, render_template, send_file, g, session, redirect, url_for
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 ### from getOrdGenesis import get_ord_genesis
 import configparser
@@ -36,6 +36,7 @@ def get_db_connection():
     conn = sqlite3.connect('./db/minteruser.db')
     conn.row_factory = sqlite3.Row
     return conn
+
 
 # Add CORS support to your Flask app
 CORS(app)
@@ -78,6 +79,15 @@ def fetch_and_replace_content(content, processed_txids):
             content = content.replace(f'/content/{embedded_txid}i0', embedded_content)
 
     return content
+
+# Define the login_required decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_logged_in' not in session:  # Change the session key to 'user_logged_in'
+            return redirect("https://blockchainplugz.com/wallet")  # Ensure this redirects to the appropriate user login page
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/wallet')
 def wallet():
@@ -1308,8 +1318,7 @@ def display_content(txid, processed_txids=None):
         # Log the exception for debugging
         app.logger.error(f"An unexpected error occurred: {str(e)}")
         return jsonify({"status": "complete", "message": f"Data extracted from the blockchain. Refresh the page to view the content."}), 500
-    
-    
+ 
 @app.route('/api_tester.html')
 def api_tester():
     return send_file('api_tester.html')

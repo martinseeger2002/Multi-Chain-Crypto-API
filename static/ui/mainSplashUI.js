@@ -27,7 +27,7 @@ export function mainSplashUI() {
 
     // Welcome message
     const welcomeMessage = document.createElement('h1');
-    welcomeMessage.textContent = 'Welcome to Blockchain Plugz';
+    welcomeMessage.textContent = 'Welcome to Blockchain Plugz Multi-Chain Wallet';
     welcomeMessage.style.fontFamily = '"Courier New", monospace'; // Cypherpunk style font
     welcomeMessage.style.color = '#ffffff'; // White text
     welcomeMessage.style.textShadow = '2px 2px 4px #000000'; // Text shadow for effect

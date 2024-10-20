@@ -4,7 +4,7 @@ import { viewUtxoUI } from './viewUtxoUI.js';
 import { sendTxUI } from './sendTxUI.js';
 
 
-export function walletUI() {
+export function walletUI(selectedWalletLabel = null) {
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
@@ -30,12 +30,12 @@ export function walletUI() {
     defaultOption.disabled = true;
     walletDropdown.appendChild(defaultOption);
 
-    wallets.forEach((wallet, index) => {
+    wallets.forEach((wallet) => {
         const option = document.createElement('option');
         option.value = wallet.label;
         option.textContent = wallet.label;
-        if (index === 0) {
-            option.selected = true; // Select the first wallet by default
+        if (wallet.label === selectedWalletLabel) {
+            option.selected = true; // Select the newly saved wallet
         }
         walletDropdown.appendChild(option);
     });
@@ -76,8 +76,10 @@ export function walletUI() {
         }
     });
 
-    // Trigger change event to update UI with the first wallet's details
-    if (wallets.length > 0) {
+    // Trigger change event to update UI with the selected wallet's details
+    if (selectedWalletLabel) {
+        walletDropdown.dispatchEvent(new Event('change'));
+    } else if (wallets.length > 0) {
         walletDropdown.dispatchEvent(new Event('change'));
     }
 
@@ -111,9 +113,9 @@ export function walletUI() {
     // Style buttons
     const buttons = [copyButton, syncButton, viewUtxosButton, sendButton, manageWalletsButton, backButton];
     buttons.forEach(button => {
-        button.style.width = '100%';
+        button.style.width = '200px'; // Set a fixed width
+        button.style.margin = '10px auto'; // Center the buttons
         button.style.padding = '10px';
-        button.style.marginTop = '10px';
         button.style.border = 'none';
         button.style.borderRadius = '5px';
         button.style.backgroundColor = '#333'; // Dark button background
@@ -129,6 +131,12 @@ export function walletUI() {
             button.style.backgroundColor = '#333';
         });
     });
+
+    // Enhance background and font styles
+    landingPage.style.backgroundImage = 'url("/static/images/MAINBKGD.webp")'; // Use the correct path
+    landingPage.style.backgroundSize = 'cover';
+    landingPage.style.backgroundPosition = 'center';
+    landingPage.style.color = '#fff'; // White text for better contrast
 
     landingPage.appendChild(walletDropdown);
     landingPage.appendChild(balanceDisplay);

@@ -13,6 +13,11 @@
                 <label for="password">Password</label>
                 <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password">
             </div>
+            <!-- Add Keep Me Logged In Checkbox -->
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" id="keepMeLoggedIn">
+                <label class="form-check-label" for="keepMeLoggedIn">Keep me logged in</label>
+            </div>
             <button type="submit" class="btn btn-primary btn-block">Login</button>
             <div id="loginError" class="text-danger mt-2"></div>
         </form>
@@ -25,6 +30,8 @@
 $(document).ready(function() {
     $('#loginForm').submit(function(e) {
         e.preventDefault();
+        const keepMeLoggedIn = document.getElementById('keepMeLoggedIn').checked;
+        // Use keepMeLoggedIn in your login logic
         $.ajax({
             url: '/login',
             type: 'POST',
