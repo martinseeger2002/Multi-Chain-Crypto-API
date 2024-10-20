@@ -1,9 +1,9 @@
 // static/api/loginUser.js
 
-import { mintSelectionUI } from '../ui/mintSelectionUI.js';
+import { landingPageUI } from '../ui/landingPageUI.js';
 
 export function loginUser(username, password) {
-    fetch('/login', {
+    return fetch('/login', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -13,7 +13,7 @@ export function loginUser(username, password) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            mintSelectionUI(); // Navigate to mint selection UI
+            landingPageUI(); // Navigate to mint selection UI
         } else {
             alert(data.message);
         }

@@ -1,5 +1,5 @@
+import { mainSplashUI } from './ui/mainSplashUI.js';
 import { landingPageUI } from './ui/landingPageUI.js';
-import { mintSplashUI } from './ui/mintSplashUI.js';
 import { mintSelectionUI } from './ui/mintSelectionUI.js';
 import { walletUI } from './ui/walletUI.js';
 import { addWalletUI } from './ui/addWalletUI.js';
@@ -11,7 +11,7 @@ import { mintFileUI } from './ui/mintFileUI.js';
 import { loginUser } from './api/loginUser.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    landingPageUI();
+    mainSplashUI();
 });
 
 if ('serviceWorker' in navigator) {

@@ -4,6 +4,7 @@ from functools import wraps
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from scanStats import get_db_connection, get_last_scanned_block, get_wallet_count, get_rpc_connection, retry_rpc_call
+import bcrypt
 
 
 app = Flask(__name__)
@@ -374,5 +375,114 @@ def get_scan_progress():
 
     return jsonify(progress_data), 200
 
+# CRUD operations for Users
+@app.route('/api/users', methods=['GET'])
+@login_required
+def get_users():
+    conn = get_users_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT user, doge, ltc, lky, mint_credits FROM users')
+    rows = cursor.fetchall()
+    conn.close()
+
+    users = [dict(row) for row in rows]
+    return jsonify(users), 200
+
+
+@app.route('/api/users/<user>', methods=['GET'])
+@login_required
+def get_user(user):
+    conn = get_users_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT user, doge, ltc, lky, mint_credits FROM users WHERE user = ?', (user,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row is None:
+        return jsonify({'error': 'User not found'}), 404
+    else:
+        return jsonify(dict(row)), 200
+
+@app.route('/api/users/<user>', methods=['PUT'])
+@login_required
+def update_user(user):
+    data = request.get_json()
+    password = data.get('password')
+    doge = data.get('doge')
+    ltc = data.get('ltc')
+    lky = data.get('lky')
+    mint_credits = data.get('mint_credits')
+
+    conn = get_users_db_connection()
+    cursor = conn.cursor()
+
+    if password:
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        cursor.execute('''
+            UPDATE users SET
+                password = ?,
+                doge = ?,
+                ltc = ?,
+                lky = ?,
+                mint_credits = ?
+            WHERE user = ?
+        ''', (hashed_password, doge, ltc, lky, mint_credits, user))
+    else:
+        cursor.execute('''
+            UPDATE users SET
+                doge = ?,
+                ltc = ?,
+                lky = ?,
+                mint_credits = ?
+            WHERE user = ?
+        ''', (doge, ltc, lky, mint_credits, user))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'User updated successfully'}), 200
+
+
+
+@app.route('/api/users', methods=['POST'])
+@login_required
+def create_user():
+    data = request.get_json()
+    user = data.get('user')
+    password = data.get('password')
+    doge = data.get('doge')
+    ltc = data.get('ltc')
+    lky = data.get('lky')
+    mint_credits = data.get('mint_credits', 0)
+
+    # Ensure password is provided
+    if not password:
+        return jsonify({'error': 'Password is required'}), 400
+
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+    conn = get_users_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO users (user, password, doge, ltc, lky, mint_credits) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (user, hashed_password, doge, ltc, lky, mint_credits))
+        conn.commit()
+    except sqlite3.IntegrityError as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 400
+    conn.close()
+    return jsonify({'message': 'User created successfully'}), 201
+
+@app.route('/users_page')
+@login_required
+def users_page():
+    return render_template('users.html')
+
+def get_users_db_connection():
+    conn = sqlite3.connect('./db/minteruser.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8070, debug=True)
+

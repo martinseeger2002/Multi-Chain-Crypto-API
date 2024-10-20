@@ -139,14 +139,14 @@ export function addWalletUI() {
         })
         .then(response => response.json())
         .then(data => {
-            if (response.ok) {
-                // Assuming the API returns an object with address and privkey
-                const { address, privkey } = data;
-                addressInput.value = address || '';
-                wifPrivkeyInput.value = privkey || '';
+            console.log('Full API Response:', data); // Log the full response
+            if (data && data.data) {
+                console.log('Data Object:', data.data); // Log the data object
+                const { new_address, privkey } = data.data; // Use new_address
+                addressInput.value = new_address || ''; // Set the address input
+                wifPrivkeyInput.value = privkey || ''; // Set the private key input
             } else {
-                console.error('Error:', data.message);
-                alert(data.message);
+                throw new Error('Invalid response format');
             }
         })
         .catch(error => {

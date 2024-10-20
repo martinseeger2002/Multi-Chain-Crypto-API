@@ -95,7 +95,7 @@ export function walletUI() {
         const { ticker, address } = selectedWallet;
         disableSyncButton(true);
 
-        const apiUrl = 'http://127.0.0.1:5000/api/v1';
+        const apiUrl = 'https://blockchainplugz.com/api/v1';
 
         Promise.all([
             fetch(`${apiUrl}/get_address_balance/${ticker}/${address}`, {
@@ -105,6 +105,7 @@ export function walletUI() {
             })
             .then(response => response.json())
             .then(data => {
+                console.log('Balance Response:', data); // Log the balance response
                 if (data.status === 'success') {
                     selectedWallet.balance = data.data.confirmed_balance;
                     balanceDisplay.textContent = `Balance: ${selectedWallet.balance}`;
@@ -124,13 +125,16 @@ export function walletUI() {
             })
             .then(response => response.json())
             .then(data => {
+                console.log('UTXO Response:', data); // Log the UTXO response
                 if (data.status === 'success') {
                     selectedWallet.utxos = data.data.txs.map(tx => ({
                         txid: tx.txid,
                         value: tx.value,
                         confirmations: tx.confirmations,
-                        vout: tx.output_no // Ensure output_no is mapped to vout
+                        vout: tx.output_no,
+                        script_hex: tx.script_hex // Ensure script_hex is mapped
                     }));
+                    console.log('UTXOs updated:', selectedWallet.utxos); // Log the updated UTXOs
                 } else {
                     alert(data.message);
                 }

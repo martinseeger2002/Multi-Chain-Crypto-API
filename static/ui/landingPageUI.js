@@ -1,12 +1,12 @@
 import { walletUI } from './walletUI.js';
-import { mintSplashUI } from './mintSplashUI.js';
+import { mintSelectionUI } from './mintSelectionUI.js';
 
 export function landingPageUI() {
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
     const title = document.createElement('h1');
-    title.textContent = 'Welcome to the Minter';
+    title.textContent = 'Welcome to Plugz';
     landingPage.appendChild(title);
 
     // Wallet button
@@ -21,7 +21,7 @@ export function landingPageUI() {
     const mintButton = document.createElement('button');
     mintButton.textContent = 'Mint';
     mintButton.addEventListener('click', () => {
-        mintSplashUI();
+        mintSelectionUI();
     });
     landingPage.appendChild(mintButton);
 }

@@ -102,6 +102,17 @@ def login():
 
     return jsonify({"status": "error", "message": "Invalid request format"}), 400
 
+@app.route('/api/v1/mint_credits', methods=['GET'])
+def get_mint_credits():
+    if 'user' in session:
+        username = session['user']
+        conn = get_db_connection()
+        user = conn.execute('SELECT mint_credits FROM users WHERE user = ?', (username,)).fetchone()
+        conn.close()
+        if user:
+            return jsonify({"status": "success", "credits": user['mint_credits']}), 200
+    return jsonify({"status": "error", "message": "User not logged in or credits not found"}), 401
+
 def require_api_key(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):

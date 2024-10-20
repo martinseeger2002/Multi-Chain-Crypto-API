@@ -1,4 +1,5 @@
 import { mintFileUI } from './mintFileUI.js';
+import { landingPageUI } from './landingPageUI.js'; // Import the landingPageUI function
 
 
 export function mintSelectionUI() {
@@ -35,6 +36,15 @@ export function mintSelectionUI() {
         mintFileUI(); // Navigate to mint file UI
     });
     landingPage.appendChild(mintFileButton);
+
+    // Back button
+    const backButton = document.createElement('button');
+    backButton.textContent = 'Back';
+    backButton.style.margin = '10px 0';
+    backButton.addEventListener('click', () => {
+        landingPageUI(); // Navigate back to landing page UI
+    });
+    landingPage.appendChild(backButton);
 
     // Add more UI elements for mint selection as needed
 }
