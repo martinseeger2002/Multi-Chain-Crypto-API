@@ -176,6 +176,7 @@
             <option value="get_ord_content">Get Ordinal Content</option>
             <option value="get_new_address_and_privkey">Get New Address and Private Key</option> <!-- New Endpoint Added -->
             <option value="generate_new_address_and_privkey">Generate New Address and Private Key</option> <!-- New Endpoint Added -->
+            <option value="generate_tx_hex">Generate Transaction Hex</option> <!-- New Endpoint Added -->
         </select>
     </div>
 
@@ -476,6 +477,23 @@
                 parameters: [
                     // No additional parameters; ticker is in the path
                 ]
+            },
+            generate_tx_hex: {
+                title: 'Generate Transaction Hex',
+                method: 'POST',
+                path: '/api/v1/generate_tx_hex/{ticker}',
+                instructions: 'Generate a transaction hex string using specified UTXOs, vouts, wallet WIF private key, and multiple receiving addresses and amounts.',
+                parameters: [
+                    { name: 'txId', type: 'text', placeholder: 'Transaction ID', required: true },
+                    { name: 'outputIndex', type: 'number', placeholder: 'Output Index', required: true },
+                    { name: 'address', type: 'text', placeholder: 'Address', required: true },
+                    { name: 'script', type: 'text', placeholder: 'Script', required: true },
+                    { name: 'satoshis', type: 'number', placeholder: 'Satoshis', required: true },
+                    { name: 'privateKeyWIF', type: 'text', placeholder: 'Private Key WIF', required: true },
+                    { name: 'fee', type: 'number', placeholder: 'Fee', required: true },
+                    { name: 'changeAddress', type: 'text', placeholder: 'Change Address', required: true },
+                    { name: 'receivingAddresses', type: 'textarea', placeholder: 'Receiving Addresses (JSON Array)', required: true }
+                ]
             }
         };
 
@@ -512,18 +530,29 @@
 
         // Generate form fields based on selected endpoint parameters
         function generateFormFields(parameters) {
-            endpointInputs.innerHTML = '';
+            const endpointInputs = document.getElementById('endpointInputs');
+            endpointInputs.innerHTML = ''; // Clear existing inputs
             parameters.forEach(param => {
                 const label = document.createElement('label');
                 label.textContent = param.name.replace(/_/g, ' ').charAt(0).toUpperCase() + param.name.replace(/_/g, ' ').slice(1) + (param.required ? ' *' : '');
                 label.setAttribute('for', param.name);
+
                 const input = document.createElement(param.type === 'textarea' ? 'textarea' : 'input');
                 input.id = param.name;
                 input.placeholder = param.placeholder;
                 input.required = param.required;
                 if (param.type !== 'textarea') {
                     input.type = param.type || 'text';
+                } else {
+                    // Set default example for textarea
+                    if (param.name === 'receivingAddresses') {
+                        input.value = JSON.stringify([
+                            { "address": "receiving-address-1", "amount": 10000 },
+                            { "address": "receiving-address-2", "amount": 20000 }
+                        ], null, 4); // Pretty print JSON
+                    }
                 }
+
                 endpointInputs.appendChild(label);
                 endpointInputs.appendChild(input);
             });

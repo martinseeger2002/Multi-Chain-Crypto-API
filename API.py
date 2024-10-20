@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, request, jsonify, render_template, send_file, g
+from flask import Flask, request, jsonify, render_template, send_file, g, session
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 ### from getOrdGenesis import get_ord_genesis
 import configparser
@@ -20,6 +20,7 @@ import sqlite3
 import base64
 from flask import Flask, jsonify, abort, make_response
 from datetime import datetime
+import bcrypt
 
 
 DB_PATH = './db/content.db' 
@@ -27,6 +28,14 @@ DB_PATH = './db/content.db'
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Replace with a secure key
+API_KEY = 'lucky1'  # Ensure this is the correct API key
+
+# Connect to the SQLite database
+def get_db_connection():
+    conn = sqlite3.connect('./db/minteruser.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # Add CORS support to your Flask app
 CORS(app)
@@ -69,6 +78,29 @@ def fetch_and_replace_content(content, processed_txids):
             content = content.replace(f'/content/{embedded_txid}i0', embedded_content)
 
     return content
+
+@app.route('/wallet')
+def wallet():
+    return render_template('minter_index.html', api_key=API_KEY)
+
+@app.route('/login', methods=['POST'])
+def login():
+    if request.is_json:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password').encode('utf-8')
+
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE user = ?', (username,)).fetchone()
+        conn.close()
+
+        if user and bcrypt.checkpw(password, user['password']):
+            session['user'] = username
+            return jsonify({"status": "success", "message": "Logged in successfully"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Invalid username or password"}), 401
+
+    return jsonify({"status": "error", "message": "Invalid request format"}), 400
 
 def require_api_key(f):
     @wraps(f)
@@ -1114,6 +1146,90 @@ def generate_key(ticker):
         return jsonify({
             "status": "error",
             "message": f"Error importing address: {str(e)}"
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Unexpected error: {str(e)}"
+        }), 500
+
+@app.route('/api/v1/generate_tx_hex/<ticker>', methods=['POST'])
+@require_api_key
+def generate_tx_hex(ticker):
+    # Determine the command directory and script based on the ticker
+    if ticker.lower() == 'doge':
+        command_dir = './getOrdTxsDoge'
+        script = 'generateTxHex.js'
+    elif ticker.lower() == 'lky':
+        command_dir = './getOrdTxsLKY'
+        script = 'generateTxHex.js'
+    elif ticker.lower() == 'ltc':
+        command_dir = './getOrdTxsLTC'
+        script = 'generateTxHex.js'
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Unsupported ticker type."
+        }), 400
+
+    # Extract parameters from the request body
+    data = request.json
+    required_params = ['txId', 'outputIndex', 'address', 'script', 'satoshis', 'privateKeyWIF', 'fee', 'changeAddress']
+    
+    # Check for missing required parameters
+    missing_params = [param for param in required_params if param not in data]
+    if missing_params:
+        return jsonify({
+            "status": "error",
+            "message": f"Missing required parameters: {', '.join(missing_params)}"
+        }), 400
+
+    # Ensure at least one receiving address and amount is provided
+    if 'receivingAddresses' not in data or not isinstance(data['receivingAddresses'], list) or len(data['receivingAddresses']) == 0:
+        return jsonify({
+            "status": "error",
+            "message": "At least one receiving address and amount must be provided."
+        }), 400
+
+    # Define the command to run
+    command = [
+        'node', script,
+        data['txId'], str(data['outputIndex']), data['address'], data['script'], str(data['satoshis']),
+        data['privateKeyWIF'], str(data['fee']), data['changeAddress']
+    ]
+
+    # Add receiving addresses and amounts to the command
+    for entry in data['receivingAddresses']:
+        if 'address' in entry and 'amount' in entry:
+            command.extend([entry['address'], str(entry['amount'])])
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "Each receiving address entry must include both 'address' and 'amount'."
+            }), 400
+
+    try:
+        # Run the command and capture the output
+        result = subprocess.run(
+            command,
+            cwd=command_dir,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        output = result.stdout.strip()
+
+        # Return the transaction hex as JSON
+        return jsonify({
+            "status": "success",
+            "data": {
+                "transaction_hex": output
+            }
+        })
+    except subprocess.CalledProcessError as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Command failed with error: {e.stderr}"
         }), 500
     except Exception as e:
         return jsonify({
