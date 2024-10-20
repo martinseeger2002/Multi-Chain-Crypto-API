@@ -56,17 +56,388 @@ button:hover {
 
 .styled-button {
     display: block;
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    background-color: #1f1f1f;
-    color: white;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #00bfff;
+    color: #fff;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    text-align: center;
+    transition: background-color 0.3s;
 }
 
 .styled-button:hover {
+    background-color: #007acc;
+}
+
+.page-title {
+    color: #00bfff;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.login-form {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.styled-input {
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #1f1f1f;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+}
+
+.action-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.keep-logged-in-container {
+    display: flex;
+    align-items: center;
+    color: white;
+    margin-top: 10px;
+}
+
+.styled-button {
+    width: 100%;
+    margin-bottom: 10px;
+    background-color: #1c1c1c;
+    color: #a0b9e6;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.styled-button:hover {
+    background-color: #333333;
+}
+
+.transaction-details {
+    margin: 20px 0;
+}
+
+.wallet-form {
+    max-width: 280px;
+    margin: 0 auto;
+    background-color: #1a1a1a;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 188, 212, 0.5);
+}
+
+.styled-select, .styled-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
     background-color: #333;
+    color: #00bcd4; /* Blue hue */
+    border: none;
+    border-radius: 4px;
+}
+
+.info-text {
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.red-text {
+    color: #ff5252; /* Red hue */
+}
+
+.green-text {
+    color: #4caf50; /* Green hue */
+}
+
+.landing-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #121212;
+    color: #a0b9e6;
+    margin: 0;
+    text-align: center;
+}
+
+.styled-button {
+    background-color: #1c1c1c;
+    color: #a0b9e6;
+    border: none;
+    padding: 15px 30px;
+    margin: 10px 0;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 5px;
+    width: 150px;
+    transition: background-color 0.3s;
+}
+
+.styled-button:hover {
+    background-color: #333333;
+}
+
+.splash-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.splash-landing-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: transparent;
+    width: 100%;
+    background-image: url("/static/images/MAINBKGD.webp");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.splash-welcome-message {
+    font-family: "Courier New", monospace;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px #000000;
+    text-align: center;
+    animation: pulse 3s infinite;
+}
+
+.splash-cool-description {
+    font-family: "Courier New", monospace;
+    color: #ffffff;
+    text-align: center;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.splash-enter-button {
+    margin: 20px 0;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    background-color: #444444;
+    color: #ffffff;
+    cursor: pointer;
+    font-family: "Courier New", monospace;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+@keyframes pulse {
+    0% { color: #ffffff; }
+    50% { color: #00ffff; }
+    100% { color: #ffffff; }
+}
+
+.styled-select {
+    display: block;
+    margin: 10px auto;
+    width: 100%;
+    padding: 10px;
+    background-color: #1f1f1f;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+}
+
+.wallet-options {
+    text-align: center;
+}
+
+.wallet-label {
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.styled-button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #00bfff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.styled-button:hover {
+    background-color: #007acc;
+}
+
+.delete-button {
+    background-color: red;
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: darkred;
+}
+
+.credits-display {
+    margin: 10px 0;
+    color: #00bfff;
+    text-align: center;
+}
+
+.back-button {
+    background-color: #333;
+}
+
+.back-button:hover {
+    background-color: #555;
+}
+
+.page-title {
+    color: #00bfff;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.transaction-form {
+    max-width: 300px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.recipients-container {
+    width: 100%;
+}
+
+.fee-slider {
+    width: 100%;
+}
+
+.fee-display {
+    margin: 10px 0;
+    text-align: center;
+}
+
+.styled-input {
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #1f1f1f;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+}
+
+.styled-button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #00bfff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.styled-button:hover {
+    background-color: #007acc;
+}
+
+.back-button {
+    background-color: #333;
+}
+
+.back-button:hover {
+    background-color: #555;
+}
+
+.recipient-div {
+    width: 100%;
+    margin: 10px 0;
+}
+
+.user-landing-page {
+    padding: 20px;
+    font-family: 'Courier New', monospace;
+    background-color: #1a1a1a;
+}
+
+.page-title {
+    color: #00bfff;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.input-container {
+    margin-top: 10px;
+}
+
+.input-label {
+    color: #00bfff;
+    display: block;
+    margin-top: 10px;
+}
+
+.styled-input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    background-color: #1a1a1a;
+    color: #00bfff;
+}
+
+.styled-button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #333;
+    color: #00bfff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.styled-button:hover {
+    background-color: #444;
+}
+
+.back-button {
+    background-color: #333;
+}
+
+.back-button:hover {
+    background-color: #555;
+}
+
+.utxo-item {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #1f1f1f;
+    color: #ffffff;
+    border-radius: 5px;
+    border: 1px solid #333;
+}
+
+.no-utxos-message {
+    margin: 20px 0;
+    text-align: center;
+    color: #ff0000;
 }

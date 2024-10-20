@@ -4,10 +4,11 @@ export function confirmSendTxUI(transactionData) {
 
     const title = document.createElement('h1');
     title.textContent = 'Confirm Transaction';
+    title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
     const detailsDiv = document.createElement('div');
-    detailsDiv.style.margin = '20px 0';
+    detailsDiv.className = 'transaction-details'; // Use a class for styling
 
     const recipientsList = document.createElement('ul');
     transactionData.recipients.forEach(recipient => {
@@ -29,7 +30,7 @@ export function confirmSendTxUI(transactionData) {
 
     const sendButton = document.createElement('button');
     sendButton.textContent = 'Send';
-    sendButton.style.margin = '10px';
+    sendButton.className = 'styled-button'; // Use a class for styling
     sendButton.addEventListener('click', () => {
         // Implement the send transaction logic here
         alert('Transaction sent!');
@@ -37,7 +38,7 @@ export function confirmSendTxUI(transactionData) {
 
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
-    backButton.style.margin = '10px';
+    backButton.className = 'styled-button'; // Use a class for styling
     backButton.addEventListener('click', () => sendTxUI(transactionData.selectedLabel));
 
     landingPage.appendChild(sendButton);

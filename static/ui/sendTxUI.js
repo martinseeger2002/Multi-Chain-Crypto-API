@@ -4,6 +4,7 @@ export function sendTxUI(selectedLabel) {
 
     const title = document.createElement('h1');
     title.textContent = 'Send Transaction';
+    title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
     const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
@@ -15,28 +16,24 @@ export function sendTxUI(selectedLabel) {
     }
 
     const form = document.createElement('form');
-    form.style.maxWidth = '300px';
-    form.style.margin = '0 auto';
-    form.style.display = 'flex';
-    form.style.flexDirection = 'column';
-    form.style.alignItems = 'center';
+    form.className = 'transaction-form'; // Use a class for styling
 
     const recipientsContainer = document.createElement('div');
-    recipientsContainer.style.width = '100%';
+    recipientsContainer.className = 'recipients-container'; // Use a class for styling
     addRecipientInput(recipientsContainer);
 
     const addRecipientButton = document.createElement('button');
     addRecipientButton.type = 'button';
     addRecipientButton.textContent = 'Add Recipient';
-    addRecipientButton.style.margin = '10px 0';
+    addRecipientButton.className = 'styled-button'; // Use a class for styling
     addRecipientButton.addEventListener('click', () => addRecipientInput(recipientsContainer));
 
     const feeSlider = document.createElement('input');
     feeSlider.type = 'range';
-    feeSlider.style.width = '100%';
+    feeSlider.className = 'fee-slider'; // Use a class for styling
 
     const feeDisplay = document.createElement('div');
-    feeDisplay.style.margin = '10px 0';
+    feeDisplay.className = 'fee-display'; // Use a class for styling
 
     // Set fee range based on ticker
     if (selectedWallet.ticker === 'LTC') {
@@ -60,18 +57,17 @@ export function sendTxUI(selectedLabel) {
     changeAddressInput.placeholder = 'Change Address';
     changeAddressInput.value = selectedWallet.address; // Set to sending wallet's address
     changeAddressInput.readOnly = true; // Make it read-only to prevent changes
-    changeAddressInput.style.width = '100%';
-    changeAddressInput.style.margin = '10px 0';
+    changeAddressInput.className = 'styled-input'; // Use a class for styling
 
     const sendButton = document.createElement('button');
     sendButton.type = 'button';
     sendButton.textContent = 'Send';
-    sendButton.style.margin = '10px 0';
+    sendButton.className = 'styled-button'; // Use a class for styling
     sendButton.addEventListener('click', generateTransactionHex);
 
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
-    backButton.style.margin = '10px 0';
+    backButton.className = 'styled-button back-button'; // Use a class for styling
     backButton.addEventListener('click', walletUI);
 
     form.appendChild(recipientsContainer);
@@ -86,22 +82,19 @@ export function sendTxUI(selectedLabel) {
 
     function addRecipientInput(container) {
         const recipientDiv = document.createElement('div');
-        recipientDiv.style.width = '100%';
-        recipientDiv.style.margin = '10px 0';
+        recipientDiv.className = 'recipient-div'; // Use a class for styling
 
         const receivingAddressInput = document.createElement('input');
         receivingAddressInput.type = 'text';
         receivingAddressInput.placeholder = 'Receiving Address';
         receivingAddressInput.required = true;
-        receivingAddressInput.style.width = '100%';
-        receivingAddressInput.style.margin = '5px 0';
+        receivingAddressInput.className = 'styled-input'; // Use a class for styling
 
         const amountInput = document.createElement('input');
         amountInput.type = 'number';
         amountInput.placeholder = 'Amount';
         amountInput.required = true;
-        amountInput.style.width = '100%';
-        amountInput.style.margin = '5px 0';
+        amountInput.className = 'styled-input'; // Use a class for styling
 
         recipientDiv.appendChild(receivingAddressInput);
         recipientDiv.appendChild(amountInput);

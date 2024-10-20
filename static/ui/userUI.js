@@ -5,18 +5,12 @@ export function userUI() {
     landingPage.innerHTML = ''; // Clear existing content
 
     // Apply styles to the landing page
-    landingPage.style.padding = '20px';
-    landingPage.style.fontFamily = 'Courier New, monospace'; // Use a monospace font for a techy look
-    landingPage.style.backgroundColor = '#1a1a1a'; // Dark background
+    landingPage.className = 'user-landing-page'; // Use a class for styling
 
     const title = document.createElement('h1');
     title.textContent = 'User Interface';
+    title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
-
-    // Style the title
-    title.style.color = '#00bfff'; // Bright blue for a techy feel
-    title.style.textAlign = 'center';
-    title.style.marginBottom = '20px';
 
     // Create form elements
     const form = document.createElement('form');
@@ -27,9 +21,7 @@ export function userUI() {
     const submitButton = document.createElement('button');
     submitButton.textContent = 'Update Credentials';
     submitButton.type = 'submit';
-
-    // Style the submit button
-    styleButton(submitButton);
+    submitButton.className = 'styled-button'; // Use a class for styling
 
     form.appendChild(passwordInput);
     form.appendChild(dogeInput);
@@ -46,10 +38,8 @@ export function userUI() {
 
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
+    backButton.className = 'styled-button back-button'; // Use a class for styling
     backButton.addEventListener('click', landingPageUI);
-
-    // Style the back button
-    styleButton(backButton);
 
     landingPage.appendChild(backButton);
 
@@ -58,46 +48,19 @@ export function userUI() {
 
     function createInputField(labelText, name) {
         const container = document.createElement('div');
+        container.className = 'input-container'; // Use a class for styling
+
         const label = document.createElement('label');
-        const input = document.createElement('input');
-
         label.textContent = labelText;
-        label.style.color = '#00bfff'; // Blue text
-        label.style.display = 'block';
-        label.style.marginTop = '10px';
+        label.className = 'input-label'; // Use a class for styling
 
+        const input = document.createElement('input');
         input.name = name;
-        input.style.width = '100%';
-        input.style.padding = '10px';
-        input.style.marginTop = '5px';
-        input.style.border = '1px solid #333';
-        input.style.borderRadius = '5px';
-        input.style.backgroundColor = '#1a1a1a';
-        input.style.color = '#00bfff';
+        input.className = 'styled-input'; // Use a class for styling
 
         container.appendChild(label);
         container.appendChild(input);
         return container;
-    }
-
-    function styleButton(button) {
-        button.style.width = '100%';
-        button.style.padding = '10px';
-        button.style.marginTop = '10px';
-        button.style.border = 'none';
-        button.style.borderRadius = '5px';
-        button.style.backgroundColor = '#333'; // Dark button background
-        button.style.color = '#00bfff'; // Blue text
-        button.style.cursor = 'pointer';
-        button.style.transition = 'background-color 0.3s';
-
-        button.addEventListener('mouseover', () => {
-            button.style.backgroundColor = '#444'; // Slightly lighter on hover
-        });
-
-        button.addEventListener('mouseout', () => {
-            button.style.backgroundColor = '#333';
-        });
     }
 
     function fetchUserData() {

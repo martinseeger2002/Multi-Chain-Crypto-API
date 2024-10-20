@@ -3,26 +3,20 @@ import { landingPageUI } from './landingPageUI.js';
 import { viewUtxoUI } from './viewUtxoUI.js';
 import { sendTxUI } from './sendTxUI.js';
 
-
 export function walletUI(selectedWalletLabel = null) {
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
     // Apply styles to the landing page
-    landingPage.style.padding = '20px';
-    landingPage.style.fontFamily = 'Courier New, monospace'; // Use a monospace font for a techy look
-    landingPage.style.backgroundColor = '#1a1a1a'; // Dark background
+    landingPage.className = 'wallet-landing-page'; // Use a class for styling
 
     const title = document.createElement('h1');
     title.textContent = 'Wallet';
+    title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
-    // Style the title
-    title.style.color = '#00bfff'; // Bright blue for a techy feel
-    title.style.textAlign = 'center';
-    title.style.marginBottom = '20px';
-
     const walletDropdown = document.createElement('select');
+    walletDropdown.className = 'styled-select'; // Use a class for styling
     const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
 
     const defaultOption = document.createElement('option');
@@ -41,27 +35,34 @@ export function walletUI(selectedWalletLabel = null) {
     });
 
     const balanceDisplay = document.createElement('div');
+    balanceDisplay.className = 'balance-display'; // Use a class for styling
     const addressDisplay = document.createElement('div');
-    addressDisplay.style.textAlign = 'center'; // Center the address text
+    addressDisplay.className = 'address-display'; // Use a class for styling
     const qrCodeDisplay = document.createElement('img');
+    qrCodeDisplay.className = 'qr-code-display'; // Use a class for styling
     const copyButton = document.createElement('button');
     copyButton.textContent = 'Copy Address';
+    copyButton.className = 'styled-button'; // Use a class for styling
 
     const syncButton = document.createElement('button');
     syncButton.textContent = 'Sync Wallet';
+    syncButton.className = 'styled-button'; // Use a class for styling
     syncButton.addEventListener('click', syncWallet);
 
     const viewUtxosButton = document.createElement('button');
     viewUtxosButton.textContent = 'View UTXOs';
+    viewUtxosButton.className = 'styled-button'; // Use a class for styling
     viewUtxosButton.addEventListener('click', () => viewUtxoUI(walletDropdown.value));
 
     const sendButton = document.createElement('button');
     sendButton.textContent = 'Send';
+    sendButton.className = 'styled-button'; // Use a class for styling
     sendButton.disabled = true; // Disable by default
     sendButton.addEventListener('click', () => sendTxUI(walletDropdown.value));
 
     const manageWalletsButton = document.createElement('button');
     manageWalletsButton.textContent = 'Manage Wallets';
+    manageWalletsButton.className = 'styled-button'; // Use a class for styling
     manageWalletsButton.addEventListener('click', manageWalletsUI);
 
     walletDropdown.addEventListener('change', () => {
@@ -94,49 +95,8 @@ export function walletUI(selectedWalletLabel = null) {
 
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
+    backButton.className = 'styled-button back-button'; // Use a class for styling
     backButton.addEventListener('click', landingPageUI);
-
-    // Style the balance and address display
-    balanceDisplay.style.marginTop = '10px';
-    balanceDisplay.style.fontSize = '18px';
-    balanceDisplay.style.color = '#00bfff'; // Blue text
-
-    addressDisplay.style.marginTop = '10px';
-    addressDisplay.style.fontSize = '16px';
-    addressDisplay.style.color = '#00bfff'; // Blue text
-
-    // Style the QR code display
-    qrCodeDisplay.style.display = 'block';
-    qrCodeDisplay.style.margin = '20px auto';
-    qrCodeDisplay.style.border = '2px solid #00bfff'; // Blue border
-
-    // Style buttons
-    const buttons = [copyButton, syncButton, viewUtxosButton, sendButton, manageWalletsButton, backButton];
-    buttons.forEach(button => {
-        button.style.width = '200px'; // Set a fixed width
-        button.style.margin = '10px auto'; // Center the buttons
-        button.style.padding = '10px';
-        button.style.border = 'none';
-        button.style.borderRadius = '5px';
-        button.style.backgroundColor = '#333'; // Dark button background
-        button.style.color = '#00bfff'; // Blue text
-        button.style.cursor = 'pointer';
-        button.style.transition = 'background-color 0.3s';
-        
-        button.addEventListener('mouseover', () => {
-            button.style.backgroundColor = '#444'; // Slightly lighter on hover
-        });
-        
-        button.addEventListener('mouseout', () => {
-            button.style.backgroundColor = '#333';
-        });
-    });
-
-    // Enhance background and font styles
-    landingPage.style.backgroundImage = 'url("/static/images/MAINBKGD.webp")'; // Use the correct path
-    landingPage.style.backgroundSize = 'cover';
-    landingPage.style.backgroundPosition = 'center';
-    landingPage.style.color = '#fff'; // White text for better contrast
 
     landingPage.appendChild(walletDropdown);
     landingPage.appendChild(balanceDisplay);

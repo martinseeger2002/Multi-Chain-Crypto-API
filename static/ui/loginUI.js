@@ -12,40 +12,33 @@ export function loginUI() {
 
     const title = document.createElement('h1');
     title.textContent = 'Login';
-    title.style.color = 'white'; // Ensure title is visible
+    title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
     // Create login form
     const form = document.createElement('form');
-    form.style.maxWidth = '300px';
-    form.style.margin = '0 auto';
+    form.className = 'login-form'; // Use a class for styling
 
     const usernameInput = document.createElement('input');
     usernameInput.type = 'text';
     usernameInput.placeholder = 'Username';
     usernameInput.required = true;
-    usernameInput.style.width = '100%';
-    usernameInput.style.margin = '10px 0';
+    usernameInput.className = 'styled-input'; // Use a class for styling
 
     const passwordInput = document.createElement('input');
     passwordInput.type = 'password';
     passwordInput.placeholder = 'Password';
     passwordInput.required = true;
-    passwordInput.style.width = '100%';
-    passwordInput.style.margin = '10px 0';
+    passwordInput.className = 'styled-input'; // Use a class for styling
 
     // Create container for login button and checkbox
     const actionContainer = document.createElement('div');
-    actionContainer.style.display = 'flex';
-    actionContainer.style.flexDirection = 'column';
-    actionContainer.style.alignItems = 'center';
-    actionContainer.style.margin = '10px 0';
+    actionContainer.className = 'action-container'; // Use a class for styling
 
     const loginButton = document.createElement('button');
     loginButton.type = 'button';
     loginButton.textContent = 'Log In';
-    loginButton.style.width = '100%';
-    loginButton.style.marginBottom = '10px';
+    loginButton.className = 'styled-button'; // Use a class for styling
     loginButton.addEventListener('click', () => {
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
@@ -67,15 +60,11 @@ export function loginUI() {
 
     // Add a toggle button for "Keep me logged in"
     const keepMeLoggedInContainer = document.createElement('div');
-    keepMeLoggedInContainer.style.display = 'flex';
-    keepMeLoggedInContainer.style.alignItems = 'center';
-    keepMeLoggedInContainer.style.color = 'white';
-    keepMeLoggedInContainer.style.marginTop = '10px'; // Add margin for visibility
+    keepMeLoggedInContainer.className = 'keep-logged-in-container'; // Use a class for styling
 
     const keepMeLoggedInCheckbox = document.createElement('input');
     keepMeLoggedInCheckbox.type = 'checkbox';
     keepMeLoggedInCheckbox.id = 'keepMeLoggedIn';
-    keepMeLoggedInCheckbox.style.marginRight = '5px';
 
     const keepMeLoggedInLabel = document.createElement('label');
     keepMeLoggedInLabel.htmlFor = 'keepMeLoggedIn';

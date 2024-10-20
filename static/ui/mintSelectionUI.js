@@ -8,11 +8,12 @@ export function mintSelectionUI() {
 
     const title = document.createElement('h1');
     title.textContent = 'Mint Selection';
+    title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
     // Display mint credits
     const creditsDisplay = document.createElement('div');
-    creditsDisplay.style.margin = '10px 0';
+    creditsDisplay.className = 'credits-display'; // Use a class for styling
     landingPage.appendChild(creditsDisplay);
 
     fetch('/api/v1/mint_credits')
@@ -32,6 +33,7 @@ export function mintSelectionUI() {
     // Mint File button
     const mintFileButton = document.createElement('button');
     mintFileButton.textContent = 'Mint File';
+    mintFileButton.className = 'styled-button'; // Use a class for styling
     mintFileButton.addEventListener('click', () => {
         mintFileUI(); // Navigate to mint file UI
     });
@@ -40,7 +42,7 @@ export function mintSelectionUI() {
     // Back button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
-    backButton.style.margin = '10px 0';
+    backButton.className = 'styled-button back-button'; // Use a class for styling
     backButton.addEventListener('click', () => {
         landingPageUI(); // Navigate back to landing page UI
     });

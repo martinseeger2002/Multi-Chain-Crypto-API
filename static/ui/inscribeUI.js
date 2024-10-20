@@ -7,7 +7,7 @@ export function inscribeUI() {
     // Title
     const title = document.createElement('h1');
     title.textContent = 'Inscribe Transactions';
-    title.style.color = '#00bfff'; // Set to blue hue
+    title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
     // Retrieve and display pending transactions
@@ -23,17 +23,13 @@ export function inscribeUI() {
     // Inscribe button
     const inscribeButton = document.createElement('button');
     inscribeButton.textContent = 'Inscribe';
-    inscribeButton.style.margin = '10px 0';
-    inscribeButton.style.backgroundColor = '#00bfff'; // Set to blue hue
-    inscribeButton.style.color = '#fff'; // Set text color to white
+    inscribeButton.className = 'styled-button'; // Use a class for styling
     landingPage.appendChild(inscribeButton);
 
     // Back button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
-    backButton.style.margin = '10px 0';
-    backButton.style.backgroundColor = '#00bfff'; // Set to blue hue
-    backButton.style.color = '#fff'; // Set text color to white
+    backButton.className = 'styled-button'; // Use a class for styling
     backButton.addEventListener('click', () => {
         mintFileUI(); // Navigate back to mint file UI
     });

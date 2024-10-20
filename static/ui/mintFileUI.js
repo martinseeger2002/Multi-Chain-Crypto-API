@@ -7,13 +7,12 @@ export function mintFileUI() {
 
     const title = document.createElement('h1');
     title.textContent = 'Mint File';
-    title.style.color = '#00bfff'; // Set to blue hue
+    title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
     // Display mint credits
     const creditsDisplay = document.createElement('div');
-    creditsDisplay.style.margin = '10px 0';
-    creditsDisplay.style.color = '#00bfff'; // Set to blue hue
+    creditsDisplay.className = 'credits-display'; // Use a class for styling
     landingPage.appendChild(creditsDisplay);
 
     fetch('/api/v1/mint_credits')
@@ -32,6 +31,7 @@ export function mintFileUI() {
 
     // Wallet dropdown
     const walletDropdown = document.createElement('select');
+    walletDropdown.className = 'styled-select'; // Use a class for styling
     const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
     wallets.forEach(wallet => {
         const option = document.createElement('option');
@@ -44,16 +44,13 @@ export function mintFileUI() {
     // Sync Wallet button
     const syncButton = document.createElement('button');
     syncButton.textContent = 'Sync Wallet';
-    syncButton.style.margin = '10px 0';
-    syncButton.style.backgroundColor = '#00bfff'; // Set to blue hue
-    syncButton.style.color = '#fff'; // Set text color to white
-    syncButton.style.width = '100px'; // Adjust width as needed
-    syncButton.style.alignSelf = 'center'; // Center the button
+    syncButton.className = 'styled-button'; // Use a class for styling
     syncButton.addEventListener('click', syncWallet);
     landingPage.appendChild(syncButton);
 
     // UTXO dropdown
     const utxoDropdown = document.createElement('select');
+    utxoDropdown.className = 'styled-select'; // Use a class for styling
     landingPage.appendChild(utxoDropdown);
 
     walletDropdown.addEventListener('change', () => {
@@ -84,21 +81,12 @@ export function mintFileUI() {
     const addressInput = document.createElement('input');
     addressInput.type = 'text';
     addressInput.placeholder = 'Enter receiving address';
-    addressInput.style.margin = '10px 0';
+    addressInput.className = 'styled-input'; // Use a class for styling
     landingPage.appendChild(addressInput);
 
     // File selection container
     const fileContainer = document.createElement('div');
-    fileContainer.style.display = 'flex';
-    fileContainer.style.flexDirection = 'column';
-    fileContainer.style.alignItems = 'center';
-    fileContainer.style.cursor = 'pointer';
-    fileContainer.style.border = '1px solid #00bfff'; // Add a border
-    fileContainer.style.padding = '10px'; // Add padding for better appearance
-    fileContainer.style.borderRadius = '5px'; // Optional: add rounded corners
-    fileContainer.style.width = '150px'; // Set a fixed width
-    fileContainer.style.height = '100px'; // Set a fixed height
-    fileContainer.style.boxSizing = 'border-box'; // Include padding and border in the element's total width and height
+    fileContainer.className = 'file-container'; // Use a class for styling
 
     // File selection
     const fileInput = document.createElement('input');
@@ -107,12 +95,7 @@ export function mintFileUI() {
     fileInput.style.display = 'none'; // Hide the default file input
 
     const fileLabel = document.createElement('div');
-    fileLabel.style.display = 'flex';
-    fileLabel.style.flexDirection = 'column';
-    fileLabel.style.alignItems = 'center';
-    fileLabel.style.justifyContent = 'center'; // Center content vertically
-    fileLabel.style.height = '100%'; // Ensure it fills the container
-    fileLabel.style.cursor = 'pointer';
+    fileLabel.className = 'file-label'; // Use a class for styling
 
     const svgIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svgIcon.setAttribute('width', '24');
@@ -125,8 +108,7 @@ export function mintFileUI() {
 
     const fileText = document.createElement('span');
     fileText.textContent = 'Choose File';
-    fileText.style.color = '#00bfff';
-    fileText.style.marginTop = '8px';
+    fileText.className = 'file-text'; // Use a class for styling
 
     // Append SVG and text to the label
     fileLabel.appendChild(svgIcon);
@@ -149,18 +131,14 @@ export function mintFileUI() {
     // Generate Transactions button
     const generateTxButton = document.createElement('button');
     generateTxButton.textContent = 'Generate Transactions';
-    generateTxButton.style.margin = '10px 0';
-    generateTxButton.style.backgroundColor = '#00bfff'; // Set to blue hue
-    generateTxButton.style.color = '#fff'; // Set text color to white
+    generateTxButton.className = 'styled-button'; // Use a class for styling
     generateTxButton.addEventListener('click', generateTransactions);
     landingPage.appendChild(generateTxButton);
 
     // Inscribe button
     const inscribeButton = document.createElement('button');
     inscribeButton.textContent = 'Inscribe';
-    inscribeButton.style.margin = '10px 0';
-    inscribeButton.style.backgroundColor = '#00bfff'; // Set to blue hue
-    inscribeButton.style.color = '#fff'; // Set text color to white
+    inscribeButton.className = 'styled-button'; // Use a class for styling
     inscribeButton.addEventListener('click', () => {
         inscribeUI(); // Navigate to inscribe UI
     });
@@ -169,9 +147,7 @@ export function mintFileUI() {
     // Back button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
-    backButton.style.margin = '10px 0';
-    backButton.style.backgroundColor = '#333'; // Set to dark color
-    backButton.style.color = '#fff'; // Set text color to white
+    backButton.className = 'styled-button back-button'; // Use a class for styling
     backButton.addEventListener('click', () => {
         mintSelectionUI(); // Navigate back to mint selection UI
     });

@@ -8,13 +8,13 @@ export function manageWalletsUI() {
 
     const title = document.createElement('h1');
     title.textContent = 'Manage Wallets';
+    title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
     const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
 
     const walletDropdown = document.createElement('select');
-    walletDropdown.style.display = 'block';
-    walletDropdown.style.margin = '10px auto';
+    walletDropdown.className = 'styled-select'; // Use a class for styling
 
     wallets.forEach((wallet, index) => {
         const option = document.createElement('option');
@@ -26,7 +26,7 @@ export function manageWalletsUI() {
     landingPage.appendChild(walletDropdown);
 
     const walletOptionsDiv = document.createElement('div');
-    walletOptionsDiv.style.textAlign = 'center';
+    walletOptionsDiv.className = 'wallet-options'; // Use a class for styling
     landingPage.appendChild(walletOptionsDiv);
 
     walletDropdown.addEventListener('change', (event) => {
@@ -40,15 +40,13 @@ export function manageWalletsUI() {
 
     const addWalletButton = document.createElement('button');
     addWalletButton.textContent = 'Add Wallet';
-    addWalletButton.style.display = 'block';
-    addWalletButton.style.margin = '10px auto';
+    addWalletButton.className = 'styled-button'; // Use a class for styling
     addWalletButton.addEventListener('click', addWalletUI);
     landingPage.appendChild(addWalletButton);
 
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
-    backButton.style.display = 'block';
-    backButton.style.margin = '10px auto';
+    backButton.className = 'styled-button'; // Use a class for styling
     backButton.addEventListener('click', walletUI);
     landingPage.appendChild(backButton);
 }
@@ -58,30 +56,26 @@ function displayWalletOptions(wallet, container, wallets) {
 
     const walletLabel = document.createElement('div');
     walletLabel.textContent = wallet.label;
-    walletLabel.style.fontWeight = 'bold';
+    walletLabel.className = 'wallet-label'; // Use a class for styling
     container.appendChild(walletLabel);
 
     const renameButton = document.createElement('button');
     renameButton.textContent = 'Rename';
-    renameButton.style.display = 'block';
-    renameButton.style.margin = '5px auto';
+    renameButton.className = 'styled-button'; // Use a class for styling
     renameButton.addEventListener('click', () => renameWallet(wallet, wallets));
 
     const deleteButton = document.createElement('button');
     deleteButton.textContent = 'Delete';
-    deleteButton.style.display = 'block';
-    deleteButton.style.margin = '5px auto';
-    deleteButton.style.backgroundColor = 'red';
-    deleteButton.style.color = 'white';
+    deleteButton.className = 'styled-button delete-button'; // Use a class for styling
     deleteButton.addEventListener('click', () => deleteWallet(wallet, wallets));
 
     const viewPrivateKeyButton = document.createElement('button');
     viewPrivateKeyButton.textContent = 'View Private Key';
-    viewPrivateKeyButton.style.display = 'block';
-    viewPrivateKeyButton.style.margin = '5px auto';
+    viewPrivateKeyButton.className = 'styled-button'; // Use a class for styling
     viewPrivateKeyButton.addEventListener('click', () => viewPrivateKey(wallet));
 
     const tickerDropdown = document.createElement('select');
+    tickerDropdown.className = 'styled-select'; // Use a class for styling
     const tickerOptions = ['DOGE', 'LTC', 'LKY'];
     tickerOptions.forEach(ticker => {
         const option = document.createElement('option');
