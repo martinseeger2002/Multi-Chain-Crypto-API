@@ -1,10 +1,16 @@
+// mintFileUI.js
+
 import { mintSelectionUI } from './mintSelectionUI.js'; // Import the mintSelectionUI function
 import { inscribeUI } from './inscribeUI.js'; // Import the inscribeUI function
 
+/**
+ * Function to initialize and render the Mint File UI.
+ */
 export function mintFileUI() {
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
+    // Create and append the page title
     const title = document.createElement('h1');
     title.textContent = 'Mint File';
     title.className = 'page-title'; // Use a class for styling
@@ -15,6 +21,7 @@ export function mintFileUI() {
     creditsDisplay.className = 'credits-display'; // Use a class for styling
     landingPage.appendChild(creditsDisplay);
 
+    // Fetch and display mint credits
     fetch('/api/v1/mint_credits')
         .then(response => response.json())
         .then(data => {
@@ -33,6 +40,13 @@ export function mintFileUI() {
     const walletDropdown = document.createElement('select');
     walletDropdown.className = 'styled-select'; // Use a class for styling
     const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+
+    const defaultOption = document.createElement('option');
+    defaultOption.textContent = 'Select a Wallet';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    walletDropdown.appendChild(defaultOption);
+
     wallets.forEach(wallet => {
         const option = document.createElement('option');
         option.value = wallet.label;
@@ -53,9 +67,10 @@ export function mintFileUI() {
     utxoDropdown.className = 'styled-select'; // Use a class for styling
     landingPage.appendChild(utxoDropdown);
 
+    // Update UTXO dropdown based on selected wallet
     walletDropdown.addEventListener('change', () => {
         const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
-        if (selectedWallet && selectedWallet.utxos) {
+        if (selectedWallet && selectedWallet.utxos && selectedWallet.utxos.length > 0) {
             utxoDropdown.innerHTML = ''; // Clear existing options
             selectedWallet.utxos.forEach(utxo => {
                 const option = document.createElement('option');
@@ -68,12 +83,15 @@ export function mintFileUI() {
         }
     });
 
+    // Log selected UTXO information
     utxoDropdown.addEventListener('change', () => {
-        const [txid, vout] = utxoDropdown.value.split(':');
-        const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
-        const selectedUtxo = selectedWallet.utxos.find(utxo => utxo.txid === txid && utxo.vout == vout);
-        if (selectedUtxo) {
-            console.log('Selected UTXO:', selectedUtxo); // Log the selected UTXO information
+        if (utxoDropdown.value) {
+            const [txid, vout] = utxoDropdown.value.split(':');
+            const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
+            const selectedUtxo = selectedWallet.utxos.find(utxo => utxo.txid === txid && utxo.vout == vout);
+            if (selectedUtxo) {
+                console.log('Selected UTXO:', selectedUtxo); // Log the selected UTXO information
+            }
         }
     });
 
@@ -88,15 +106,17 @@ export function mintFileUI() {
     const fileContainer = document.createElement('div');
     fileContainer.className = 'file-container'; // Use a class for styling
 
-    // File selection
+    // File selection input
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.id = 'file-input';
     fileInput.style.display = 'none'; // Hide the default file input
 
+    // File selection label
     const fileLabel = document.createElement('div');
     fileLabel.className = 'file-label'; // Use a class for styling
 
+    // SVG Icon for the file label
     const svgIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svgIcon.setAttribute('width', '24');
     svgIcon.setAttribute('height', '24');
@@ -106,19 +126,21 @@ export function mintFileUI() {
         <path d="M12 2L12 14M12 14L8 10M12 14L16 10M4 18H20" stroke="#00bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     `;
 
+    // File label text
     const fileText = document.createElement('span');
     fileText.textContent = 'Choose File';
     fileText.className = 'file-text'; // Use a class for styling
 
-    // Append SVG and text to the label
+    // Append SVG and text to the file label
     fileLabel.appendChild(svgIcon);
     fileLabel.appendChild(fileText);
 
-    // Make the entire container clickable
+    // Make the entire container clickable to trigger file input
     fileContainer.addEventListener('click', () => {
         fileInput.click();
     });
 
+    // Handle file selection
     fileInput.addEventListener('change', handleFileSelect);
 
     // Append file input and label to the container
@@ -153,16 +175,24 @@ export function mintFileUI() {
     });
     landingPage.appendChild(backButton);
 
-    // Function to handle file selection
+    /**
+     * Function to handle file selection
+     * @param {Event} event - The file selection event
+     */
     function handleFileSelect(event) {
         const file = event.target.files[0];
-        if (file && file.size <= 100 * 1024) { // 100 KB
+        if (file && file.size <= 100 * 1024) { // 100 KB limit
             const reader = new FileReader();
             reader.onload = function(e) {
                 const base64 = e.target.result.split(',')[1];
                 const hex = base64ToHex(base64);
                 const mimeType = file.type;
-                const receivingAddress = addressInput.value; // Get the receiving address
+                const receivingAddress = addressInput.value.trim(); // Get and trim the receiving address
+                if (!receivingAddress) {
+                    alert('Please enter a receiving address.');
+                    return;
+                }
+                // **IMPORTANT:** Storing sensitive data like addresses should be done securely
                 localStorage.setItem('fileToMint', JSON.stringify({ mimeType, hex, receivingAddress }));
                 console.log('File and address saved to local storage:', { mimeType, hex, receivingAddress });
             };
@@ -172,7 +202,11 @@ export function mintFileUI() {
         }
     }
 
-    // Utility function to convert base64 to hex
+    /**
+     * Utility function to convert base64 to hex
+     * @param {string} base64 - The base64 encoded string
+     * @returns {string} - The hex representation of the base64 string
+     */
     function base64ToHex(base64) {
         const raw = atob(base64);
         let result = '';
@@ -183,10 +217,15 @@ export function mintFileUI() {
         return result.toUpperCase();
     }
 
-    // Function to sync the wallet and fetch UTXOs with script_hex
+    /**
+     * Function to sync the wallet and fetch UTXOs with script_hex
+     */
     async function syncWallet() {
         const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
-        if (!selectedWallet) return;
+        if (!selectedWallet) {
+            alert('Please select a wallet.');
+            return;
+        }
 
         const { ticker, address } = selectedWallet;
         disableSyncButton(true);
@@ -197,21 +236,23 @@ export function mintFileUI() {
             // Fetch balance
             const balanceResponse = await fetch(`${apiUrl}/get_address_balance/${ticker}/${address}`, {
                 headers: {
-                    'X-API-Key': apiKey
+                    'X-API-Key': apiKey // Assume apiKey is globally accessible
                 }
             });
             const balanceData = await balanceResponse.json();
             if (balanceData.status === 'success') {
                 selectedWallet.balance = balanceData.data.confirmed_balance;
                 console.log(`Balance updated: ${selectedWallet.balance}`);
+                // Update the balance display if the wallet is currently selected
+                balanceDisplay.textContent = `Balance: ${selectedWallet.balance}`;
             } else {
-                alert(balanceData.message);
+                alert(balanceData.message || 'Error fetching balance.');
             }
 
             // Fetch UTXOs
             const utxoResponse = await fetch(`${apiUrl}/get_tx_unspent/${ticker}/${address}`, {
                 headers: {
-                    'X-API-Key': apiKey
+                    'X-API-Key': apiKey // Assume apiKey is globally accessible
                 }
             });
             const utxoData = await utxoResponse.json();
@@ -226,10 +267,10 @@ export function mintFileUI() {
 
                 selectedWallet.utxos = utxos;
                 console.log('UTXOs updated with script_hex:', selectedWallet.utxos);
-                // Update the dropdown
+                // Update the UTXO dropdown
                 walletDropdown.dispatchEvent(new Event('change'));
             } else {
-                alert(utxoData.message);
+                alert(utxoData.message || 'Error fetching UTXOs.');
             }
         } catch (error) {
             console.error('Error syncing wallet:', error);
@@ -241,39 +282,28 @@ export function mintFileUI() {
         }
     }
 
-    // Function to fetch transaction details for a given txid
-    async function fetchTransactionDetails(txid) {
-        try {
-            const response = await fetch(`https://blockchainplugz.com/api/v1/get_transaction/${txid}`, {
-                headers: {
-                    'X-API-Key': apiKey
-                }
-            });
-            const data = await response.json();
-            if (data.status === 'success') {
-                return data.data; // Adjust based on actual response structure
-            } else {
-                console.error(`Error fetching transaction ${txid}:`, data.message);
-                return null;
-            }
-        } catch (error) {
-            console.error(`Error fetching transaction ${txid}:`, error);
-            return null;
-        }
-    }
-
-    // Function to disable/enable the Sync button
+    /**
+     * Function to disable or enable the Sync button
+     * @param {boolean} disable - Whether to disable the button
+     */
     function disableSyncButton(disable) {
         syncButton.disabled = disable;
         syncButton.textContent = disable ? 'Syncing...' : 'Sync Wallet';
         syncButton.style.backgroundColor = disable ? '#555' : '#1f1f1f';
     }
 
-    // Function to generate transactions
+    /**
+     * Function to generate transactions
+     */
     function generateTransactions() {
         const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
         if (!selectedWallet) {
             alert('Please select a wallet.');
+            return;
+        }
+
+        if (!utxoDropdown.value) {
+            alert('Please select a UTXO.');
             return;
         }
 
@@ -300,10 +330,10 @@ export function mintFileUI() {
             meme_type: fileData.mimeType,
             hex_data: fileData.hex,
             sending_address: selectedWallet.address,
-            privkey: selectedWallet.privkey, // Ensure this is securely handled
+            privkey: selectedWallet.privkey, // **WARNING:** Ensure this is securely handled
             utxo: selectedUtxo.txid,
             vout: selectedUtxo.vout,
-            script_hex: selectedUtxo.script_hex, // Now should be correctly set
+            script_hex: selectedUtxo.script_hex, // Now correctly set
             utxo_amount: selectedUtxo.value
         };
 
@@ -313,38 +343,59 @@ export function mintFileUI() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-API-Key': apiKey
+                'X-API-Key': apiKey // Assume apiKey is globally accessible
             },
             body: JSON.stringify(requestBody)
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            console.log('Full Response:', response); // Log the full response object
             return response.json();
         })
         .then(data => {
-            console.log('Mint response:', data);
-            if (data.status === 'success') {
+            console.log('Response Data:', JSON.stringify(data, null, 2)); // Log the response data in a readable format
+
+            // **Adjusting the Success Condition**
+            if (data.pendingTransactions && Array.isArray(data.pendingTransactions) && data.pendingTransactions.length > 0) {
                 console.log('Pending Transactions:', data.pendingTransactions); // Log pending transactions
 
-                // Check if pendingTransactions is defined
-                if (data.pendingTransactions) {
-                    // Store pending transactions in local storage
-                    localStorage.setItem('pendingTransactions', JSON.stringify(data.pendingTransactions));
-                    console.log('Pending transactions saved to local storage.');
-                } else {
-                    console.error('No pending transactions found in response.');
+                // **Save Transaction Hexes to a List**
+                try {
+                    // Retrieve existing hexes from local storage, or initialize an empty array
+                    let existingHexes = JSON.parse(localStorage.getItem('transactionHexes')) || [];
+
+                    // Extract hex data from pendingTransactions
+                    const newHexes = data.pendingTransactions.map(tx => tx.hex);
+
+                    // Append new hexes to the existing list
+                    existingHexes.push(...newHexes);
+
+                    // Save the updated list back to local storage
+                    localStorage.setItem('transactionHexes', JSON.stringify(existingHexes));
+                    console.log('Transaction hexes saved successfully:', newHexes);
+                } catch (error) {
+                    console.error('Error saving transaction hexes to local storage:', error);
+                    alert('An error occurred while saving the transaction hexes.');
+                }
+
+                // **Optional:** Save the entire response to local storage
+                try {
+                    localStorage.setItem('mintResponse', JSON.stringify(data));
+                    console.log('Mint response saved successfully.');
+                } catch (error) {
+                    console.error('Error saving mintResponse to local storage:', error);
+                    alert('An error occurred while saving the mint response.');
                 }
 
                 localStorage.removeItem('fileToMint'); // Remove file hex from local storage
                 alert('Transaction generated successfully!');
             } else {
-                alert(data.message);
+                // Handle cases where pendingTransactions is missing or empty
+                console.error('Mint API did not return pendingTransactions or it is empty:', data);
+                alert(data.message || 'An error occurred.');
             }
         })
         .catch(error => {
-            console.error('Error generating transaction:', error);
+            console.error('Error generating transaction:', error); // Log the full error
             alert('An error occurred while generating the transaction.');
         });
     }

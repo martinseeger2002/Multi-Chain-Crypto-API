@@ -346,3 +346,11 @@ body, .landing-page, .transaction-form, .user-landing-page {
 body, .wallet-form, .login-form {
     background-color: #000000;
 }
+
+select {
+    width: 175px; /* Set a fixed width */
+    max-width: 175px; /* Ensure it doesn't exceed this width */
+    overflow: hidden; /* Hide overflow content */
+    text-overflow: ellipsis; /* Add ellipsis for overflow text */
+    white-space: nowrap; /* Prevent text from wrapping */
+}

@@ -11,7 +11,8 @@ export function inscribeUI() {
     landingPage.appendChild(title);
 
     // Retrieve and display pending transactions
-    const pendingTransactions = JSON.parse(localStorage.getItem('pendingTransactions')) || [];
+    const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
+    const pendingTransactions = mintResponse.pendingTransactions || [];
     const txList = document.createElement('ul');
     pendingTransactions.forEach(tx => {
         const listItem = document.createElement('li');
