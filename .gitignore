@@ -1,4 +1,12 @@
-/db/
+/db/_pycache_/
+/db/minteruser.db
+/db/APIkeys.db 
+/db/content.db
+/db/LKYwallets.db
+/db/LTCwallets.db
+/db/DOGEwallets.db
+/db/BELwallets.db
+/db/admins.db
 /backup/
 /getOrdTxsDoge/node_modules/
 /getOrdTxsLKY/node_modules/
