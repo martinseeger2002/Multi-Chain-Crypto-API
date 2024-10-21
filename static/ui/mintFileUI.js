@@ -166,6 +166,16 @@ export function mintFileUI() {
     });
     landingPage.appendChild(inscribeButton);
 
+    // **New Code: Clear Pending Transactions Button**
+    const clearPendingButton = document.createElement('button');
+    clearPendingButton.textContent = 'Clear Pending';
+    clearPendingButton.className = 'styled-button'; // Use a class for styling
+    clearPendingButton.addEventListener('click', () => {
+        localStorage.removeItem('mintResponse'); // Clear pending transactions from local storage
+        alert('Pending transactions cleared.');
+    });
+    landingPage.appendChild(clearPendingButton);
+
     // Back button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
@@ -379,7 +389,12 @@ export function mintFileUI() {
 
                 // **Optional:** Save the entire response to local storage
                 try {
-                    localStorage.setItem('mintResponse', JSON.stringify(data));
+                    const pendingTransactions = data.pendingTransactions.map(tx => ({
+                        ...tx,
+                        ticker: selectedWallet.ticker // Add the ticker to each transaction
+                    }));
+
+                    localStorage.setItem('mintResponse', JSON.stringify({ pendingTransactions }));
                     console.log('Mint response saved successfully.');
                 } catch (error) {
                     console.error('Error saving mintResponse to local storage:', error);
