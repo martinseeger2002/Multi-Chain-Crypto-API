@@ -37,29 +37,84 @@ export function inscribeUI() {
     inscriptionNameInput.className = 'inscription-name-input'; // Use a class for styling
     landingPage.appendChild(inscriptionNameInput);
 
+    // Button container
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'button-container';
+    landingPage.appendChild(buttonContainer);
+
     // Inscribe button
     const inscribeButton = document.createElement('button');
     inscribeButton.textContent = 'Inscribe';
     inscribeButton.className = 'styled-button'; // Use a class for styling
-    inscribeButton.addEventListener('click', () => {
+    inscribeButton.addEventListener('click', () => inscribeTransaction());
+    buttonContainer.appendChild(inscribeButton);
+
+    // Inscribe All button
+    const inscribeAllButton = document.createElement('button');
+    inscribeAllButton.textContent = 'Inscribe All';
+    inscribeAllButton.className = 'styled-button'; // Use a class for styling
+    inscribeAllButton.addEventListener('click', () => inscribeAllTransactions());
+    buttonContainer.appendChild(inscribeAllButton);
+
+    // Back button
+    const backButton = document.createElement('button');
+    backButton.textContent = 'Back';
+    backButton.className = 'styled-button'; // Use a class for styling
+    backButton.addEventListener('click', () => {
+        mintFileUI(); // Navigate back to mint file UI
+    });
+    buttonContainer.appendChild(backButton);
+
+    // Container for the transaction list
+    const txListContainer = document.createElement('div');
+    txListContainer.className = 'tx-list-container';
+    landingPage.appendChild(txListContainer);
+
+    // Retrieve and display pending transactions
+    const txList = document.createElement('ul');
+    txList.className = 'transaction-list'; // Add a class for styling
+    const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
+    const pendingTransactions = mintResponse.pendingTransactions || [];
+    updateTransactionList(pendingTransactions);
+    txListContainer.appendChild(txList);
+
+    // Function to update the transaction list
+    function updateTransactionList(transactions) {
+        txList.innerHTML = ''; // Clear existing list
+        transactions.forEach(tx => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `Transaction Number: ${tx.transactionNumber}, TXID: ${tx.txid}`;
+            txList.appendChild(listItem);
+        });
+    }
+
+    // Function to inscribe a single transaction
+    function inscribeTransaction(showAlert = true) {
         const mintCredits = parseInt(creditsDisplay.textContent.split(': ')[1], 10);
         if (mintCredits <= 0) {
             alert('Insufficient mint credits.');
-            return;
+            return Promise.reject('Insufficient mint credits.');
         }
 
         const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
         const pendingTransactions = mintResponse.pendingTransactions || [];
         if (pendingTransactions.length === 0) {
             alert('No pending transactions available.');
-            return;
+            return Promise.reject('No pending transactions available.');
         }
+
+        // Disable buttons and change text
+        inscribeButton.disabled = true;
+        inscribeAllButton.disabled = true;
+        backButton.disabled = true;
+        inscribeButton.textContent = 'Processing...';
+        inscribeAllButton.textContent = 'Processing...';
 
         const topTransaction = pendingTransactions[0];
         const txHex = topTransaction.hex;
         const ticker = topTransaction.ticker; // Use the ticker from the transaction
 
-        fetch(`/api/v1/send_raw_tx/${ticker}`, {
+        return fetch(`/api/v1/send_raw_tx/${ticker}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -72,11 +127,15 @@ export function inscribeUI() {
             if (data.status === 'success') {
                 const inscriptionName = inscriptionNameInput.value.trim();
                 const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || [];
-                myInscriptions.push({
-                    name: inscriptionName,
-                    txid: data.data.txid
-                });
-                localStorage.setItem('MyInscriptions', JSON.stringify(myInscriptions));
+
+                // Only add to My Inscriptions if the transaction number is 2
+                if (topTransaction.transactionNumber === 2) {
+                    myInscriptions.push({
+                        name: inscriptionName,
+                        txid: data.data.txid
+                    });
+                    localStorage.setItem('MyInscriptions', JSON.stringify(myInscriptions));
+                }
 
                 // Remove the transaction from the pending list
                 pendingTransactions.shift();
@@ -85,41 +144,53 @@ export function inscribeUI() {
                 // Update the displayed transaction list
                 updateTransactionList(pendingTransactions);
 
-                alert(`Transaction sent successfully! TXID: ${data.data.txid}`);
+                if (showAlert) {
+                    alert(`Transaction sent successfully! TXID: ${data.data.txid}`);
+                }
             } else {
                 alert(`Error sending transaction: ${data.message}`);
+                return Promise.reject(`Error sending transaction: ${data.message}`);
             }
         })
         .catch(error => {
             console.error('Error sending transaction:', error);
-            alert('An error occurred while sending the transaction.');
-        });
-    });
-    landingPage.appendChild(inscribeButton);
-
-    // Back button
-    const backButton = document.createElement('button');
-    backButton.textContent = 'Back';
-    backButton.className = 'styled-button'; // Use a class for styling
-    backButton.addEventListener('click', () => {
-        mintFileUI(); // Navigate back to mint file UI
-    });
-    landingPage.appendChild(backButton);
-
-    // Function to update the transaction list
-    function updateTransactionList(transactions) {
-        txList.innerHTML = ''; // Clear existing list
-        transactions.forEach(tx => {
-            const listItem = document.createElement('li');
-            listItem.textContent = `Transaction Number: ${tx.transactionNumber}, TXID: ${tx.txid}`;
-            txList.appendChild(listItem);
+            if (showAlert) {
+                alert('An error occurred while sending the transaction.');
+            }
+            return Promise.reject(error);
+        })
+        .finally(() => {
+            // Re-enable buttons and reset text
+            inscribeButton.disabled = false;
+            inscribeAllButton.disabled = false;
+            backButton.disabled = false;
+            inscribeButton.textContent = 'Inscribe';
+            inscribeAllButton.textContent = 'Inscribe All';
         });
     }
 
-    // Retrieve and display pending transactions
-    const txList = document.createElement('ul');
-    const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
-    const pendingTransactions = mintResponse.pendingTransactions || [];
-    updateTransactionList(pendingTransactions);
-    landingPage.appendChild(txList);
+    // Function to inscribe all transactions
+    function inscribeAllTransactions() {
+        const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
+        const pendingTransactions = mintResponse.pendingTransactions || [];
+
+        function processNextTransaction() {
+            if (pendingTransactions.length === 0) {
+                alert('All transactions processed.');
+                return;
+            }
+
+            inscribeTransaction(false)
+                .then(() => {
+                    setTimeout(() => {
+                        processNextTransaction();
+                    }, 1000); // Wait 1 second before processing the next transaction
+                })
+                .catch(error => {
+                    console.error('Error processing transactions:', error);
+                });
+        }
+
+        processNextTransaction();
+    }
 }

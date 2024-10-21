@@ -1,5 +1,6 @@
 import { mintFileUI } from './mintFileUI.js';
 import { landingPageUI } from './landingPageUI.js'; // Import the landingPageUI function
+import { myInscriptionUI } from './myInscriptionUI.js'; // Import the myInscriptionUI function
 
 
 export function mintSelectionUI() {
@@ -38,6 +39,15 @@ export function mintSelectionUI() {
         mintFileUI(); // Navigate to mint file UI
     });
     landingPage.appendChild(mintFileButton);
+
+    // My Inscriptions button
+    const myInscriptionsButton = document.createElement('button');
+    myInscriptionsButton.textContent = 'My Inscriptions';
+    myInscriptionsButton.className = 'styled-button'; // Use a class for styling
+    myInscriptionsButton.addEventListener('click', () => {
+        myInscriptionUI(); // Navigate to my inscriptions UI
+    });
+    landingPage.appendChild(myInscriptionsButton);
 
     // Back button
     const backButton = document.createElement('button');

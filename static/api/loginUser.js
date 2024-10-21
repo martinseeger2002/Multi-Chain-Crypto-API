@@ -14,18 +14,19 @@ export function loginUser(username, password, keepMeLoggedIn) {
     .then(data => {
         if (data.status === 'success') {
             if (keepMeLoggedIn) {
-                // Store login state in local storage or cookies
                 localStorage.setItem('isLoggedIn', 'true');
             } else {
-                // Clear any existing login state
                 localStorage.removeItem('isLoggedIn');
             }
-            landingPageUI(); // Navigate to mint selection UI
+            return true; // Indicate success
         } else {
-            alert(data.message);
+            return false; // Indicate failure
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        return false; // Indicate failure on error
+    });
 }
 
 // Check login state on page load

@@ -35,6 +35,8 @@ export function addWalletUI() {
     custodialText.textContent = '"Get New Address" creates a Custodial wallet: we have your key but you do not have to wait to use it.';
     custodialText.className = 'info-text red-text'; // Use classes for styling
 
+    // Commenting out the "Generate New Address" button and its text
+    /*
     const generateKeyButton = document.createElement('button');
     generateKeyButton.className = 'styled-button'; // Use a class for styling
     generateKeyButton.textContent = 'Generate New Address';
@@ -43,6 +45,7 @@ export function addWalletUI() {
     const selfCustodialText = document.createElement('div');
     selfCustodialText.textContent = '"Generate New Address" creates a Self-Custodial wallet: your keys are only on your device';
     selfCustodialText.className = 'info-text green-text'; // Use classes for styling
+    */
 
     const waitText = document.createElement('div');
     waitText.textContent = 'If using self-custodial wallet, please wait up to 24 hours for the balance and UTXOs to be scanned.';
@@ -79,12 +82,16 @@ export function addWalletUI() {
     backButton.textContent = 'Back';
     backButton.addEventListener('click', walletUI);
 
+    // Commenting out the addition of the button and text to the form
+    /*
+    form.appendChild(generateKeyButton);
+    form.appendChild(selfCustodialText);
+    */
+
     // Continue with the rest of the form elements
     form.appendChild(dropdown);
     form.appendChild(getNewAddressButton);
     form.appendChild(custodialText);
-    form.appendChild(generateKeyButton);
-    form.appendChild(selfCustodialText);
     form.appendChild(waitText);
     form.appendChild(labelInput);
     form.appendChild(addressInput);
@@ -165,10 +172,7 @@ export function addWalletUI() {
 
     function disableButtons(disable) {
         getNewAddressButton.disabled = disable;
-        generateKeyButton.disabled = disable;
         getNewAddressButton.textContent = disable ? 'Creating Wallet...' : 'Get New Address';
-        generateKeyButton.textContent = disable ? 'Creating Wallet...' : 'Generate New Address';
         getNewAddressButton.style.backgroundColor = disable ? '#555' : '#333';
-        generateKeyButton.style.backgroundColor = disable ? '#555' : '#333';
     }
 }

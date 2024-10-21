@@ -147,13 +147,7 @@ button:hover {
 .landing-page {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #121212;
-    color: #a0b9e6;
-    margin: 0;
-    text-align: center;
+    height: 100vh; /* Full viewport height */
 }
 
 .splash-body {
@@ -237,6 +231,15 @@ button:hover {
 .delete-button {
     background-color: red;
     color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px; /* Space between name button and delete button */
 }
 
 .delete-button:hover {
@@ -353,4 +356,42 @@ select {
     overflow: hidden; /* Hide overflow content */
     text-overflow: ellipsis; /* Add ellipsis for overflow text */
     white-space: nowrap; /* Prevent text from wrapping */
+}
+
+.landing-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full viewport height */
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #000000; /* Black background */
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.tx-list-container {
+    flex: 1;
+    overflow-y: auto; /* Make the list scrollable */
+    padding: 10px;
+}
+
+.transaction-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.styled-button {
+    margin: 5px;
+    width: 100%; /* Full width for stacking */
+}
+
+.inscription-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px; /* Space between list items */
 }

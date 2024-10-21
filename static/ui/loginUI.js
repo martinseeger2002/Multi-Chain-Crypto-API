@@ -46,9 +46,13 @@ export function loginUI() {
 
         if (username && password) {
             loginUser(username, password, keepMeLoggedIn)
-                .then(() => {
-                    // Redirect to landingPageUI on successful login
-                    landingPageUI();
+                .then((success) => {
+                    if (success) {
+                        // Redirect to landingPageUI on successful login
+                        landingPageUI();
+                    } else {
+                        alert('Login failed. Please try again.');
+                    }
                 })
                 .catch(() => {
                     alert('Login failed. Please try again.');

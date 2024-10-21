@@ -55,13 +55,6 @@ export function mintFileUI() {
     });
     landingPage.appendChild(walletDropdown);
 
-    // Sync Wallet button
-    const syncButton = document.createElement('button');
-    syncButton.textContent = 'Sync Wallet';
-    syncButton.className = 'styled-button'; // Use a class for styling
-    syncButton.addEventListener('click', syncWallet);
-    landingPage.appendChild(syncButton);
-
     // UTXO dropdown
     const utxoDropdown = document.createElement('select');
     utxoDropdown.className = 'styled-select'; // Use a class for styling
@@ -225,81 +218,6 @@ export function mintFileUI() {
             result += (hex.length === 2 ? hex : '0' + hex);
         }
         return result.toUpperCase();
-    }
-
-    /**
-     * Function to sync the wallet and fetch UTXOs with script_hex
-     */
-    async function syncWallet() {
-        const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
-        if (!selectedWallet) {
-            alert('Please select a wallet.');
-            return;
-        }
-
-        const { ticker, address } = selectedWallet;
-        disableSyncButton(true);
-
-        const apiUrl = 'https://blockchainplugz.com/api/v1';
-
-        try {
-            // Fetch balance
-            const balanceResponse = await fetch(`${apiUrl}/get_address_balance/${ticker}/${address}`, {
-                headers: {
-                    'X-API-Key': apiKey // Assume apiKey is globally accessible
-                }
-            });
-            const balanceData = await balanceResponse.json();
-            if (balanceData.status === 'success') {
-                selectedWallet.balance = balanceData.data.confirmed_balance;
-                console.log(`Balance updated: ${selectedWallet.balance}`);
-                // Update the balance display if the wallet is currently selected
-                balanceDisplay.textContent = `Balance: ${selectedWallet.balance}`;
-            } else {
-                alert(balanceData.message || 'Error fetching balance.');
-            }
-
-            // Fetch UTXOs
-            const utxoResponse = await fetch(`${apiUrl}/get_tx_unspent/${ticker}/${address}`, {
-                headers: {
-                    'X-API-Key': apiKey // Assume apiKey is globally accessible
-                }
-            });
-            const utxoData = await utxoResponse.json();
-            if (utxoData.status === 'success') {
-                const utxos = utxoData.data.txs.map(tx => ({
-                    txid: tx.txid,
-                    value: tx.value,
-                    confirmations: tx.confirmations,
-                    vout: tx.vout,
-                    script_hex: tx.script_hex // Directly use script_hex from response
-                }));
-
-                selectedWallet.utxos = utxos;
-                console.log('UTXOs updated with script_hex:', selectedWallet.utxos);
-                // Update the UTXO dropdown
-                walletDropdown.dispatchEvent(new Event('change'));
-            } else {
-                alert(utxoData.message || 'Error fetching UTXOs.');
-            }
-        } catch (error) {
-            console.error('Error syncing wallet:', error);
-            alert('An error occurred while syncing the wallet.');
-        } finally {
-            // Save updated wallets back to local storage
-            localStorage.setItem('wallets', JSON.stringify(wallets));
-            disableSyncButton(false);
-        }
-    }
-
-    /**
-     * Function to disable or enable the Sync button
-     * @param {boolean} disable - Whether to disable the button
-     */
-    function disableSyncButton(disable) {
-        syncButton.disabled = disable;
-        syncButton.textContent = disable ? 'Syncing...' : 'Sync Wallet';
-        syncButton.style.backgroundColor = disable ? '#555' : '#1f1f1f';
     }
 
     /**
