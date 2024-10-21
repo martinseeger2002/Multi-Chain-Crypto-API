@@ -482,17 +482,60 @@
                 title: 'Generate Transaction Hex',
                 method: 'POST',
                 path: '/api/v1/generate_tx_hex/{ticker}',
-                instructions: 'Generate a transaction hex string using specified UTXOs, vouts, wallet WIF private key, and multiple receiving addresses and amounts.',
+                instructions: 'Generate a transaction hex string using specified UTXOs, wallet WIF private key, and multiple receiving addresses and amounts.',
                 parameters: [
-                    { name: 'txId', type: 'text', placeholder: 'Transaction ID', required: true },
-                    { name: 'outputIndex', type: 'number', placeholder: 'Output Index', required: true },
-                    { name: 'address', type: 'text', placeholder: 'Address', required: true },
-                    { name: 'script', type: 'text', placeholder: 'Script', required: true },
-                    { name: 'satoshis', type: 'number', placeholder: 'Satoshis', required: true },
-                    { name: 'privateKeyWIF', type: 'text', placeholder: 'Private Key WIF', required: true },
-                    { name: 'fee', type: 'number', placeholder: 'Fee', required: true },
-                    { name: 'changeAddress', type: 'text', placeholder: 'Change Address', required: true },
-                    { name: 'receivingAddresses', type: 'textarea', placeholder: 'Receiving Addresses (JSON Array)', required: true }
+                    { 
+                        name: 'sendingAddress', 
+                        type: 'text', 
+                        placeholder: 'Sending Address', 
+                        required: true 
+                    },
+                    { 
+                        name: 'wifPrivateKey', 
+                        type: 'text', 
+                        placeholder: 'Private Key WIF', 
+                        required: true 
+                    },
+                    { 
+                        name: 'utxos', 
+                        type: 'textarea', 
+                        placeholder: `[
+  {
+    "txId": "txid1",
+    "vout": 0,
+    "amount": 500000,
+    "scriptHash": "scriptHash1"
+  },
+  {
+    "txId": "txid2",
+    "vout": 1,
+    "amount": 300000,
+    "scriptHash": "scriptHash2"
+  }
+]`, 
+                        required: true 
+                    },
+                    { 
+                        name: 'recipients', 
+                        type: 'textarea', 
+                        placeholder: `[
+  { "address": "recipient_address1", "amount": 400000 },
+  { "address": "recipient_address2", "amount": 200000 }
+]`, 
+                        required: true 
+                    },
+                    { 
+                        name: 'fee', 
+                        type: 'number', 
+                        placeholder: 'Fee (satoshis)', 
+                        required: true 
+                    },
+                    { 
+                        name: 'changeAddress', 
+                        type: 'text', 
+                        placeholder: 'Change Address', 
+                        required: true 
+                    }
                 ]
             }
         };

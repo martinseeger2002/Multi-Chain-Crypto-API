@@ -1174,16 +1174,22 @@ def generate_key(ticker):
 @app.route('/api/v1/generate_tx_hex/<ticker>', methods=['POST'])
 @require_api_key
 def generate_tx_hex(ticker):
+    """
+    Generate a Bitcoin transaction hex using the createTxHex.js module.
+
+    :param ticker: The cryptocurrency ticker (e.g., doge, lky, ltc).
+    :return: JSON response containing the transaction hex or an error message.
+    """
     # Determine the command directory and script based on the ticker
     if ticker.lower() == 'doge':
         command_dir = './getOrdTxsDoge'
-        script = 'generateTxHex.js'
+        script = 'createTxHex.js'
     elif ticker.lower() == 'lky':
         command_dir = './getOrdTxsLKY'
-        script = 'generateTxHex.js'
+        script = 'createTxHex.js'
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
-        script = 'generateTxHex.js'
+        script = 'createTxHex.js'
     else:
         return jsonify({
             "status": "error",
@@ -1192,7 +1198,7 @@ def generate_tx_hex(ticker):
 
     # Extract parameters from the request body
     data = request.json
-    required_params = ['txId', 'outputIndex', 'address', 'script', 'satoshis', 'privateKeyWIF', 'fee', 'changeAddress']
+    required_params = ['sendingAddress', 'wifPrivateKey', 'utxos', 'recipients', 'fee', 'changeAddress']
     
     # Check for missing required parameters
     missing_params = [param for param in required_params if param not in data]
@@ -1202,29 +1208,123 @@ def generate_tx_hex(ticker):
             "message": f"Missing required parameters: {', '.join(missing_params)}"
         }), 400
 
-    # Ensure at least one receiving address and amount is provided
-    if 'receivingAddresses' not in data or not isinstance(data['receivingAddresses'], list) or len(data['receivingAddresses']) == 0:
+    # Validate UTXOs
+    utxos = data.get('utxos')
+    if not isinstance(utxos, list) or len(utxos) == 0:
         return jsonify({
             "status": "error",
-            "message": "At least one receiving address and amount must be provided."
+            "message": "UTXOs must be a non-empty list."
         }), 400
+
+    # Validate recipients
+    recipients = data.get('recipients')
+    if not isinstance(recipients, list) or len(recipients) == 0:
+        return jsonify({
+            "status": "error",
+            "message": "Recipients must be a non-empty list."
+        }), 400
+
+    # Ensure amounts are integers (satoshis)
+    for utxo in utxos:
+        if not isinstance(utxo.get('amount'), int):
+            return jsonify({
+                "status": "error",
+                "message": "UTXO amounts must be integers representing satoshis."
+            }), 400
+
+    for recipient in recipients:
+        if not isinstance(recipient.get('amount'), int):
+            return jsonify({
+                "status": "error",
+                "message": "Recipient amounts must be integers representing satoshis."
+            }), 400
+
+    # Prepare the input data for the JavaScript module
+    try:
+        input_data = json.dumps(data)
+    except (TypeError, ValueError) as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Invalid JSON input: {str(e)}"
+        }), 400
+
+    # Execute the JavaScript module to generate the transaction hex
+    try:
+        result = subprocess.run(
+            ['node', script],
+            cwd=command_dir,
+            input=input_data,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        tx_hex = result.stdout.strip()
+        
+        # Optionally, you can add validation to ensure tx_hex is a valid hex string
+        if not all(c in '0123456789abcdefABCDEF' for c in tx_hex) or len(tx_hex) % 2 != 0:
+            return jsonify({
+                "status": "error",
+                "message": "Received invalid transaction hex."
+            }), 500
+
+        return jsonify({
+            "status": "success",
+            "data": {
+                "transaction_hex": tx_hex
+            }
+        }), 200
+
+    except subprocess.CalledProcessError as e:
+        # Log the stderr for debugging purposes
+        app.logger.error(f"createTxHex.js error: {e.stderr}")
+        return jsonify({
+            "status": "error",
+            "message": f"Transaction generation failed: {e.stderr.strip()}"
+        }), 500
+    except Exception as e:
+        app.logger.error(f"Unexpected error: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"An unexpected error occurred: {str(e)}"
+        }), 500
+
+    # Prepare UTXO arguments
+    utxo_args = []
+    for utxo in utxos:
+        utxo_required = ['txId', 'vout', 'amount', 'scriptHash']
+        if not all(param in utxo for param in utxo_required):
+            return jsonify({
+                "status": "error",
+                "message": f"Each UTXO must include the following parameters: {', '.join(utxo_required)}"
+            }), 400
+        utxo_args.extend([
+            utxo['txId'],
+            str(utxo['vout']),
+            str(utxo['amount']),
+            utxo['scriptHash']
+        ])
+
+    # Prepare recipient arguments
+    recipient_args = []
+    for recipient in recipients:
+        if 'address' not in recipient or 'amount' not in recipient:
+            return jsonify({
+                "status": "error",
+                "message": "Each recipient must include both 'address' and 'amount'."
+            }), 400
+        recipient_args.extend([
+            recipient['address'],
+            str(recipient['amount'])
+        ])
 
     # Define the command to run
     command = [
         'node', script,
-        data['txId'], str(data['outputIndex']), data['address'], data['script'], str(data['satoshis']),
-        data['privateKeyWIF'], str(data['fee']), data['changeAddress']
-    ]
-
-    # Add receiving addresses and amounts to the command
-    for entry in data['receivingAddresses']:
-        if 'address' in entry and 'amount' in entry:
-            command.extend([entry['address'], str(entry['amount'])])
-        else:
-            return jsonify({
-                "status": "error",
-                "message": "Each receiving address entry must include both 'address' and 'amount'."
-            }), 400
+        data['sendingAddress'],
+        data['wifPrivateKey'],
+        str(data['fee']),
+        data['changeAddress']
+    ] + utxo_args + recipient_args
 
     try:
         # Run the command and capture the output

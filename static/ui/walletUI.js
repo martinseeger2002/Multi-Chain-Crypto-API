@@ -118,53 +118,37 @@ export function walletUI(selectedWalletLabel = null) {
 
         const apiUrl = 'https://blockchainplugz.com/api/v1';
 
-        Promise.all([
-            fetch(`${apiUrl}/get_address_balance/${ticker}/${address}`, {
-                headers: {
-                    'X-API-Key': apiKey
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Balance Response:', data); // Log the balance response
-                if (data.status === 'success') {
-                    selectedWallet.balance = data.data.confirmed_balance;
-                    balanceDisplay.textContent = `Balance: ${selectedWallet.balance}`;
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching balance:', error);
-                alert('An error occurred while fetching balance.');
-            }),
+        fetch(`${apiUrl}/get_tx_unspent/${ticker}/${address}`, {
+            headers: {
+                'X-API-Key': apiKey
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('UTXO Response:', data); // Log the UTXO response
+            if (data.status === 'success') {
+                selectedWallet.utxos = data.data.txs.map(tx => ({
+                    txid: tx.txid,
+                    value: tx.value,
+                    confirmations: tx.confirmations,
+                    vout: tx.vout,
+                    script_hex: tx.script_hex
+                }));
+                console.log('UTXOs updated:', selectedWallet.utxos); // Log the updated UTXOs
 
-            fetch(`${apiUrl}/get_tx_unspent/${ticker}/${address}`, {
-                headers: {
-                    'X-API-Key': apiKey
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('UTXO Response:', data); // Log the UTXO response
-                if (data.status === 'success') {
-                    selectedWallet.utxos = data.data.txs.map(tx => ({
-                        txid: tx.txid,
-                        value: tx.value,
-                        confirmations: tx.confirmations,
-                        vout: tx.vout,
-                        script_hex: tx.script_hex
-                    }));
-                    console.log('UTXOs updated:', selectedWallet.utxos); // Log the updated UTXOs
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching UTXOs:', error);
-                alert('An error occurred while fetching UTXOs.');
-            })
-        ])
+                // Calculate the balance by summing up the values of UTXOs greater than 0.01
+                selectedWallet.balance = selectedWallet.utxos
+                    .filter(utxo => parseFloat(utxo.value) > 0.01)
+                    .reduce((acc, utxo) => acc + parseFloat(utxo.value), 0);
+                balanceDisplay.textContent = `Balance: ${selectedWallet.balance}`;
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching UTXOs:', error);
+            alert('An error occurred while fetching UTXOs.');
+        })
         .finally(() => {
             // Save updated wallets back to local storage
             localStorage.setItem('wallets', JSON.stringify(wallets));
