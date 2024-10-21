@@ -1,6 +1,7 @@
 import { mintFileUI } from './mintFileUI.js';
 import { landingPageUI } from './landingPageUI.js'; // Import the landingPageUI function
 import { myInscriptionUI } from './myInscriptionUI.js'; // Import the myInscriptionUI function
+import { imageCompressorUI } from './imageCompressorUI.js'; // Import the imageCompressorUI function
 
 
 export function mintSelectionUI() {
@@ -30,6 +31,15 @@ export function mintSelectionUI() {
             console.error('Error fetching mint credits:', error);
             creditsDisplay.textContent = 'Error fetching mint credits';
         });
+
+    // Image Compressor button
+    const imageCompressorButton = document.createElement('button');
+    imageCompressorButton.textContent = 'Image Compressor';
+    imageCompressorButton.className = 'styled-button'; // Use a class for styling
+    imageCompressorButton.addEventListener('click', () => {
+        imageCompressorUI(); // Navigate to image compressor UI
+    });
+    landingPage.appendChild(imageCompressorButton);
 
     // Mint File button
     const mintFileButton = document.createElement('button');
