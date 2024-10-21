@@ -90,7 +90,8 @@ export function inscribeUI() {
 
     // Function to inscribe a single transaction
     function inscribeTransaction(showAlert = true) {
-        const mintCredits = parseInt(creditsDisplay.textContent.split(': ')[1], 10);
+        const mintCreditsText = creditsDisplay.textContent;
+        const mintCredits = mintCreditsText ? parseInt(mintCreditsText.split(': ')[1], 10) : 0;
         if (mintCredits <= 0) {
             alert('Insufficient mint credits.');
             return Promise.reject('Insufficient mint credits.');
@@ -126,7 +127,7 @@ export function inscribeUI() {
         .then(data => {
             if (data.status === 'success') {
                 const inscriptionName = inscriptionNameInput.value.trim();
-                const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || [];
+                const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || {};
 
                 // Only add to My Inscriptions if the transaction number is 2
                 if (topTransaction.transactionNumber === 2) {
@@ -140,6 +141,12 @@ export function inscribeUI() {
                 // Remove the transaction from the pending list
                 pendingTransactions.shift();
                 localStorage.setItem('mintResponse', JSON.stringify({ pendingTransactions }));
+
+                // Remove the used UTXO from the wallet's UTXOs
+                removeUsedUTXO(topTransaction);
+
+                // Clear pending UTXOs
+                clearPendingUTXOs();
 
                 // Update the displayed transaction list
                 updateTransactionList(pendingTransactions);
@@ -167,6 +174,51 @@ export function inscribeUI() {
             inscribeButton.textContent = 'Inscribe';
             inscribeAllButton.textContent = 'Inscribe All';
         });
+    }
+
+    /**
+     * Function to remove the used UTXO from the wallet's UTXOs
+     * @param {Object} transaction - The transaction object containing UTXO details
+     */
+    function removeUsedUTXO(transaction) {
+        try {
+            const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+            const walletIndex = wallets.findIndex(wallet => wallet.label === transaction.walletLabel);
+            if (walletIndex === -1) {
+                console.warn('Wallet not found for the transaction.');
+                return;
+            }
+
+            const wallet = wallets[walletIndex];
+            const utxoIndex = wallet.utxos.findIndex(utxo => utxo.txid === transaction.txid && utxo.vout === transaction.vout);
+            if (utxoIndex === -1) {
+                console.warn('UTXO not found in the wallet.');
+                return;
+            }
+
+            // Remove the UTXO from the wallet's UTXOs
+            wallet.utxos.splice(utxoIndex, 1);
+            console.log(`Removed UTXO ${transaction.txid}:${transaction.vout} from wallet ${wallet.label}.`);
+
+            // Update the wallets in local storage
+            localStorage.setItem('wallets', JSON.stringify(wallets));
+        } catch (error) {
+            console.error('Error removing used UTXO from wallet:', error);
+            alert('An error occurred while updating the wallet UTXOs.');
+        }
+    }
+
+    /**
+     * Function to clear pending UTXOs from local storage
+     */
+    function clearPendingUTXOs() {
+        try {
+            localStorage.removeItem('pendingUTXOs');
+            console.log('Pending UTXOs cleared from local storage.');
+        } catch (error) {
+            console.error('Error clearing pending UTXOs from local storage:', error);
+            alert('An error occurred while clearing pending UTXOs.');
+        }
     }
 
     // Function to inscribe all transactions

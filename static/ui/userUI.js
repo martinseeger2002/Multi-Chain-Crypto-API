@@ -58,6 +58,9 @@ export function userUI() {
         input.name = name;
         input.className = 'styled-input'; // Use a class for styling
 
+        // Set consistent width for input fields
+        input.style.width = '100%'; // Adjust width as needed
+
         container.appendChild(label);
         container.appendChild(input);
         return container;

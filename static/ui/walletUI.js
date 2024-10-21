@@ -3,7 +3,7 @@ import { landingPageUI } from './landingPageUI.js';
 import { viewUtxoUI } from './viewUtxoUI.js';
 import { sendTxUI } from './sendTxUI.js';
 
-export function walletUI(selectedWalletLabel = null) {
+export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWalletLabel') || null) {
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
@@ -29,7 +29,7 @@ export function walletUI(selectedWalletLabel = null) {
         option.value = wallet.label;
         option.textContent = wallet.label;
         if (wallet.label === selectedWalletLabel) {
-            option.selected = true; // Select the newly saved wallet
+            option.selected = true; // Select the stored wallet
         }
         walletDropdown.appendChild(option);
     });
@@ -43,11 +43,6 @@ export function walletUI(selectedWalletLabel = null) {
     const copyButton = document.createElement('button');
     copyButton.textContent = 'Copy Address';
     copyButton.className = 'styled-button'; // Use a class for styling
-
-    const syncButton = document.createElement('button');
-    syncButton.textContent = 'Sync Wallet';
-    syncButton.className = 'styled-button'; // Use a class for styling
-    syncButton.addEventListener('click', syncWallet);
 
     const viewUtxosButton = document.createElement('button');
     viewUtxosButton.textContent = 'View UTXOs';
@@ -72,8 +67,12 @@ export function walletUI(selectedWalletLabel = null) {
             addressDisplay.textContent = selectedWallet.address; // Display only the address
             qrCodeDisplay.src = `https://api.qrserver.com/v1/create-qr-code/?data=${selectedWallet.address}&size=150x150`;
             sendButton.disabled = false; // Enable send button
+
+            // Save the selected wallet label to local storage
+            localStorage.setItem('selectedWalletLabel', selectedWallet.label);
         } else {
             sendButton.disabled = true; // Disable send button if no wallet is selected
+            localStorage.removeItem('selectedWalletLabel');
         }
     });
 
@@ -98,67 +97,73 @@ export function walletUI(selectedWalletLabel = null) {
     backButton.className = 'styled-button back-button'; // Use a class for styling
     backButton.addEventListener('click', landingPageUI);
 
+    // Append elements to the landing page
     landingPage.appendChild(walletDropdown);
     landingPage.appendChild(balanceDisplay);
     landingPage.appendChild(addressDisplay);
     landingPage.appendChild(qrCodeDisplay);
     landingPage.appendChild(copyButton);
-    landingPage.appendChild(syncButton);
     landingPage.appendChild(viewUtxosButton);
     landingPage.appendChild(sendButton);
     landingPage.appendChild(manageWalletsButton);
     landingPage.appendChild(backButton);
 
-    function syncWallet() {
-        const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
-        if (!selectedWallet) return;
+    // Invoke syncAllWallets on page load
+    syncAllWallets();
 
-        const { ticker, address } = selectedWallet;
-        disableSyncButton(true);
+    // Set up periodic syncing every 2 minutes
+    setInterval(syncAllWallets, 120000); // 120,000 milliseconds = 2 minutes
 
+    async function syncAllWallets() {
+        const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
         const apiUrl = 'https://blockchainplugz.com/api/v1';
 
-        fetch(`${apiUrl}/get_tx_unspent/${ticker}/${address}`, {
-            headers: {
-                'X-API-Key': apiKey
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('UTXO Response:', data); // Log the UTXO response
-            if (data.status === 'success') {
-                selectedWallet.utxos = data.data.txs.map(tx => ({
-                    txid: tx.txid,
-                    value: tx.value,
-                    confirmations: tx.confirmations,
-                    vout: tx.vout,
-                    script_hex: tx.script_hex
-                }));
-                console.log('UTXOs updated:', selectedWallet.utxos); // Log the updated UTXOs
+        for (const wallet of wallets) {
+            const { ticker, address } = wallet;
 
-                // Calculate the balance by summing up the values of UTXOs greater than 0.01
-                selectedWallet.balance = selectedWallet.utxos
-                    .filter(utxo => parseFloat(utxo.value) > 0.01)
-                    .reduce((acc, utxo) => acc + parseFloat(utxo.value), 0);
-                balanceDisplay.textContent = `Balance: ${selectedWallet.balance}`;
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching UTXOs:', error);
-            alert('An error occurred while fetching UTXOs.');
-        })
-        .finally(() => {
-            // Save updated wallets back to local storage
-            localStorage.setItem('wallets', JSON.stringify(wallets));
-            disableSyncButton(false);
-        });
-    }
+            try {
+                const response = await fetch(`${apiUrl}/get_tx_unspent/${ticker}/${address}`, {
+                    headers: {
+                        'X-API-Key': apiKey // Ensure apiKey is defined and accessible
+                    }
+                });
 
-    function disableSyncButton(disable) {
-        syncButton.disabled = disable;
-        syncButton.textContent = disable ? 'Syncing...' : 'Sync Wallet';
-        syncButton.style.backgroundColor = disable ? '#555' : '#1f1f1f';
+                const data = await response.json();
+                console.log(`UTXO Response for ${wallet.label}:`, data); // Log the UTXO response
+
+                if (data.status === 'success') {
+                    wallet.utxos = data.data.txs.map(tx => ({
+                        txid: tx.txid,
+                        value: tx.value,
+                        confirmations: tx.confirmations,
+                        vout: tx.vout,
+                        script_hex: tx.script_hex
+                    }));
+                    console.log(`UTXOs updated for ${wallet.label}:`, wallet.utxos); // Log the updated UTXOs
+
+                    // Calculate the balance by summing up the values of UTXOs greater than 0.01
+                    wallet.balance = wallet.utxos
+                        .filter(utxo => parseFloat(utxo.value) > 0.01)
+                        .reduce((acc, utxo) => acc + parseFloat(utxo.value), 0);
+                } else {
+                    alert(`Error syncing wallet "${wallet.label}": ${data.message}`);
+                }
+            } catch (error) {
+                console.error(`Error fetching UTXOs for wallet "${wallet.label}":`, error);
+                alert(`An error occurred while fetching UTXOs for wallet "${wallet.label}".`);
+            }
+        }
+
+        // Save updated wallets back to local storage
+        localStorage.setItem('wallets', JSON.stringify(wallets));
+
+        // Update UI if the selected wallet was synced
+        if (selectedWalletLabel) {
+            const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
+            if (selectedWallet) {
+                balanceDisplay.textContent = `Balance: ${selectedWallet.balance || 'N/A'}`;
+                // Optionally, update other UI elements if needed
+            }
+        }
     }
 }

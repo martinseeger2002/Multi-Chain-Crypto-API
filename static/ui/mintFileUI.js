@@ -6,7 +6,7 @@ import { inscribeUI } from './inscribeUI.js'; // Import the inscribeUI function
 /**
  * Function to initialize and render the Mint File UI.
  */
-export function mintFileUI() {
+export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedWalletLabel') || null) {
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
@@ -51,6 +51,9 @@ export function mintFileUI() {
         const option = document.createElement('option');
         option.value = wallet.label;
         option.textContent = wallet.label;
+        if (wallet.label === selectedWalletLabel) {
+            option.selected = true; // Select the stored wallet
+        }
         walletDropdown.appendChild(option);
     });
     landingPage.appendChild(walletDropdown);
@@ -65,14 +68,26 @@ export function mintFileUI() {
         const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
         if (selectedWallet && selectedWallet.utxos && selectedWallet.utxos.length > 0) {
             utxoDropdown.innerHTML = ''; // Clear existing options
-            selectedWallet.utxos.forEach(utxo => {
-                const option = document.createElement('option');
-                option.value = `${utxo.txid}:${utxo.vout}`; // Combine txid and vout for uniqueness
-                option.textContent = `TXID: ${utxo.txid}, vout: ${utxo.vout}, Value: ${utxo.value}`;
-                utxoDropdown.appendChild(option);
-            });
+            selectedWallet.utxos
+                .filter(utxo => parseFloat(utxo.value) > 0.01) // Filter out UTXOs with value of 0.01 or less
+                .forEach(utxo => {
+                    const option = document.createElement('option');
+                    option.value = `${utxo.txid}:${utxo.vout}`; // Combine txid and vout for uniqueness
+                    option.textContent = `TXID: ${utxo.txid}, vout: ${utxo.vout}, Value: ${utxo.value}`;
+                    utxoDropdown.appendChild(option);
+                });
+            if (selectedWallet.utxos.filter(utxo => parseFloat(utxo.value) > 0.01).length === 0) {
+                utxoDropdown.innerHTML = '<option disabled>No UTXOs available above 0.01</option>';
+            }
         } else {
             utxoDropdown.innerHTML = '<option disabled>No UTXOs available</option>'; // Handle case where no UTXOs are available
+        }
+
+        // Save the selected wallet label to local storage
+        if (selectedWallet) {
+            localStorage.setItem('selectedWalletLabel', selectedWallet.label);
+        } else {
+            localStorage.removeItem('selectedWalletLabel');
         }
     });
 
@@ -165,7 +180,8 @@ export function mintFileUI() {
     clearPendingButton.className = 'styled-button'; // Use a class for styling
     clearPendingButton.addEventListener('click', () => {
         localStorage.removeItem('mintResponse'); // Clear pending transactions from local storage
-        alert('Pending transactions cleared.');
+        localStorage.removeItem('pendingUTXOs'); // Clear pending UTXOs from local storage
+        alert('Pending transactions and UTXOs cleared.');
     });
     landingPage.appendChild(clearPendingButton);
 
@@ -317,6 +333,31 @@ export function mintFileUI() {
                 } catch (error) {
                     console.error('Error saving mintResponse to local storage:', error);
                     alert('An error occurred while saving the mint response.');
+                }
+
+                // **New Code: Save Used UTXO as Pending UTXO**
+                try {
+                    // Retrieve existing pending UTXOs from local storage, or initialize an empty array
+                    let pendingUTXOs = JSON.parse(localStorage.getItem('pendingUTXOs')) || [];
+
+                    // Define the used UTXO
+                    const usedUtxo = {
+                        txid: selectedUtxo.txid,
+                        vout: selectedUtxo.vout
+                    };
+
+                    // Avoid duplicates
+                    const isAlreadyPending = pendingUTXOs.some(utxo => utxo.txid === usedUtxo.txid && utxo.vout === usedUtxo.vout);
+                    if (!isAlreadyPending) {
+                        pendingUTXOs.push(usedUtxo);
+                        localStorage.setItem('pendingUTXOs', JSON.stringify(pendingUTXOs));
+                        console.log('Pending UTXO saved:', usedUtxo);
+                    } else {
+                        console.log('UTXO is already marked as pending:', usedUtxo);
+                    }
+                } catch (error) {
+                    console.error('Error saving pending UTXOs to local storage:', error);
+                    alert('An error occurred while saving the pending UTXO.');
                 }
 
                 localStorage.removeItem('fileToMint'); // Remove file hex from local storage
