@@ -481,7 +481,7 @@ Address.prototype.toObject = Address.prototype.toJSON = function toObject() {
  * @returns {string} Bitcoin address
  */
 Address.prototype.toString = function() {
-  return Base58Check.encode(this.toBuffer());
+  return Base58Check.encode(Buffer.from(this.toBuffer()));
 };
 
 /**

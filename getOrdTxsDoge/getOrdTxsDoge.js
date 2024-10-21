@@ -7,72 +7,65 @@ const mime = require('mime-types')
 const { PrivateKey, Address, Transaction, Script, Opcode } = dogecore
 const { Hash, Signature } = dogecore.crypto
 
-dotenv.config()
+dotenv.config();
 
 if (process.env.TESTNET == 'true') {
-   dogecore.Networks.defaultNetwork = dogecore.Networks.testnet
+   dogecore.Networks.defaultNetwork = dogecore.Networks.testnet;
 }
 
 if (process.env.FEE_PER_KB) {
-   Transaction.FEE_PER_KB = parseInt(process.env.FEE_PER_KB)
+   Transaction.FEE_PER_KB = parseInt(process.env.FEE_PER_KB);
 } else {
-   Transaction.FEE_PER_KB = 10000000
+   Transaction.FEE_PER_KB = 20000000;
 }
 
 async function main() {
-   let cmd = process.argv[2]
+   let cmd = process.argv[2];
 
-   if (cmd == 'mint') {
-       await mint()
+   if (cmd === 'mint') {
+       await mint();
    } else {
-       throw new Error(`unknown command: ${cmd}`)
+       throw new Error(`unknown command: ${cmd}`);
    }
 }
 
-const MAX_SCRIPT_ELEMENT_SIZE = 520
+const MAX_SCRIPT_ELEMENT_SIZE = 520;
 
 async function mint() {
-    const argAddress = process.argv[3];
-    const argContentTypeOrFilename = process.argv[4];
+    // Expected command format:
+    // mint <address> <contentType> <hexData> <sendingAddress> <privKey> <txId> <vout> <script> <satoshis>
+    
+    if (process.argv.length !== 12) {
+        throw new Error(`Invalid number of arguments for 'mint' command.
+Expected format:
+mint <address> <contentType> <hexData> <sendingAddress> <privKey> <txId> <vout> <script> <satoshis>
 
-    let contentType;
-    let data;
-    let argSendingAddress, argPrivKey, argTxId, argVout, argScript, argSatoshis;
-
-    if (fs.existsSync(argContentTypeOrFilename)) {
-        // If the argument is a file path, read the file
-        contentType = mime.contentType(mime.lookup(argContentTypeOrFilename));
-        data = fs.readFileSync(argContentTypeOrFilename);
-
-        // Set subsequent arguments
-        argSendingAddress = process.argv[5];
-        argPrivKey = process.argv[6];
-        argTxId = process.argv[7];
-        argVout = parseInt(process.argv[8]);
-        argScript = process.argv[9];
-        argSatoshis = parseInt(process.argv[10]);
-    } else {
-        // If the argument is not a file path, treat it as content type
-        contentType = argContentTypeOrFilename;
-        const hexData = process.argv[5]; // Assume the next argument is the hex data
-        if (!/^[a-fA-F0-9]*$/.test(hexData)) throw new Error('data must be hex');
-        data = Buffer.from(hexData, 'hex');
-
-        // Update subsequent arguments
-        argSendingAddress = process.argv[6];
-        argPrivKey = process.argv[7];
-        argTxId = process.argv[8];
-        argVout = parseInt(process.argv[9]);
-        argScript = process.argv[10];
-        argSatoshis = parseInt(process.argv[11]);
+Example:
+mint LKDVJJRLA9fYBoU2mKFHzdTRMfpM3gQzfP image/webp 5249464636030000...  LKDVJJRLA9fYBoU2mKFHzdTRMfpM3gQzfP SuZdphgzHbs4wJtPBnv4HH7bWa4PChE7ZKbnRBuVsUL16oR8wpSj b64ebb6e1eb9fb7ec8205fac5033fc970a37d52d9de402d57f6d5f9e0225b7f8 0 76a914ffe97dd8bb7d8fb9e3c74fe463f339d7f50a819c88ac 110000000`);
     }
 
-    if (data.length == 0) {
-        throw new Error('no data to mint');
+    const argAddress = process.argv[3];
+    const contentType = process.argv[4];
+    const hexData = process.argv[5];
+    const argSendingAddress = process.argv[6];
+    const argPrivKey = process.argv[7];
+    const argTxId = process.argv[8];
+    const argVout = parseInt(process.argv[9]);
+    const argScript = process.argv[10];
+    const argSatoshis = parseInt(process.argv[11]);
+
+    if (!/^[a-fA-F0-9]*$/.test(hexData)) {
+        throw new Error('Data must be a valid hex string.');
+    }
+
+    const data = Buffer.from(hexData, 'hex');
+
+    if (data.length === 0) {
+        throw new Error('No data to mint.');
     }
 
     if (contentType.length > MAX_SCRIPT_ELEMENT_SIZE) {
-        throw new Error('content type too long');
+        throw new Error('Content type too long.');
     }
 
     let address = new Address(argAddress);
@@ -101,38 +94,33 @@ async function broadcastAll(txs, retry) {
        hex: tx.toString()
    }));
 
-   const output = {
-       pendingTransactions,
-       instructions: "Broadcast each transaction individually starting with transaction 1."
-   };
-
-   console.log(JSON.stringify(output, null, 2)); // Pretty print the JSON
+   // Output only the pendingTransactions JSON
+   console.log(JSON.stringify({ pendingTransactions }, null, 2));
 }
 
 function bufferToChunk(b, type) {
-   b = Buffer.from(b, type)
+   b = Buffer.from(b, type); // Ensure Buffer.from() is used
    return {
        buf: b.length ? b : undefined,
        len: b.length,
        opcodenum: b.length <= 75 ? b.length : b.length <= 255 ? 76 : 77
-   }
+   };
 }
 
 function numberToChunk(n) {
    return {
-       buf: n <= 16 ? undefined : n < 128 ? Buffer.from([n]) : Buffer.from([n % 256, n / 256]),
+       buf: n <= 16 ? undefined : n < 128 ? Buffer.from([n]) : Buffer.from([n % 256, Math.floor(n / 256)]), // Ensure Buffer.from() is used
        len: n <= 16 ? 0 : n < 128 ? 1 : 2,
-       opcodenum: n == 0 ? 0 : n <= 16 ? 80 + n : n < 128 ? 1 : 2
-   }
+       opcodenum: n === 0 ? 0 : n <= 16 ? 80 + n : n < 128 ? 1 : 2
+   };
 }
-
 
 function opcodeToChunk(op) {
-   return { opcodenum: op }
+   return { opcodenum: op };
 }
 
-const MAX_CHUNK_LEN = 240
-const MAX_PAYLOAD_LEN = 1500
+const MAX_CHUNK_LEN = 240;
+const MAX_PAYLOAD_LEN = 1500;
 
 function inscribe(wallet, address, contentType, data) {
     let txs = [];
@@ -164,12 +152,13 @@ function inscribe(wallet, address, contentType, data) {
     while (inscription.chunks.length) {
         let partial = new Script();
 
-        if (txs.length == 0) {
+        if (txs.length === 0) {
             partial.chunks.push(inscription.chunks.shift());
         }
 
         while (partial.toBuffer().length <= MAX_PAYLOAD_LEN && inscription.chunks.length) {
             partial.chunks.push(inscription.chunks.shift());
+            if (inscription.chunks.length === 0) break; // Prevent shifting undefined
             partial.chunks.push(inscription.chunks.shift());
         }
 
@@ -205,7 +194,7 @@ function inscribe(wallet, address, contentType, data) {
 
         if (p2shInput) {
             let signature = Transaction.sighash.sign(tx, privateKey, Signature.SIGHASH_ALL, 0, lastLock);
-            let txsignature = Buffer.concat([signature.toBuffer(), Buffer.from([Signature.SIGHASH_ALL])]);
+            let txsignature = Buffer.concat([signature.toBuffer(), Buffer.from([Signature.SIGHASH_ALL])]); // Ensure Buffer.from() is used
 
             let unlock = new Script();
             unlock.chunks = unlock.chunks.concat(lastPartial.chunks);
@@ -237,26 +226,26 @@ function inscribe(wallet, address, contentType, data) {
         lastPartial = partial;
     }
 
-    let tx = new Transaction();
+    let finalTx = new Transaction();
     if (p2shInput) {
-        tx.addInput(p2shInput);
-        tx.to(address, 100000);
-        fund(wallet, tx);
+        finalTx.addInput(p2shInput);
+        finalTx.to(address, 100000);
+        fund(wallet, finalTx);
 
-        let signature = Transaction.sighash.sign(tx, privateKey, Signature.SIGHASH_ALL, 0, lastLock);
-        let txsignature = Buffer.concat([signature.toBuffer(), Buffer.from([Signature.SIGHASH_ALL])]);
+        let signature = Transaction.sighash.sign(finalTx, privateKey, Signature.SIGHASH_ALL, 0, lastLock);
+        let txsignature = Buffer.concat([signature.toBuffer(), Buffer.from([Signature.SIGHASH_ALL])]); // Ensure Buffer.from() is used
 
         let unlock = new Script();
         unlock.chunks = unlock.chunks.concat(lastPartial.chunks);
         unlock.chunks.push(bufferToChunk(txsignature));
         unlock.chunks.push(bufferToChunk(lastLock.toBuffer()));
-        tx.inputs[0].setScript(unlock);
+        finalTx.inputs[0].setScript(unlock);
 
-        updateWallet(wallet, tx);
-        txs.push(tx);
+        updateWallet(wallet, finalTx);
+        txs.push(finalTx);
 
         // Log final transaction details
-        console.log(`Final transaction: ${tx.hash}`);
+        console.log(`Final transaction: ${finalTx.hash}`);
     } else {
         console.error('Failed to create final transaction due to missing input.');
     }
@@ -278,43 +267,41 @@ function fund(wallet, tx) {
     tx.sign(wallet.privkey);
 
     if (tx.inputAmount < tx.outputAmount + tx.getFee()) {
-        throw new Error('not enough funds');
+        throw new Error('Not enough funds.');
     }
 }
 
 function updateWallet(wallet, tx) {
    wallet.utxos = wallet.utxos.filter(utxo => {
        for (const input of tx.inputs) {
-           if (input.prevTxId.toString('hex') == utxo.txid && input.outputIndex == utxo.vout) {
-               return false
+           if (input.prevTxId.toString('hex') === utxo.txid && input.outputIndex === utxo.vout) {
+               return false;
            }
        }
-       return true
-   })
+       return true;
+   });
 
-   tx.outputs
-       .forEach((output, vout) => {
-           if (output.script.toAddress().toString() == wallet.address) {
-               wallet.utxos.push({
-                   txid: tx.hash,
-                   vout,
-                   script: output.script.toHex(),
-                   satoshis: output.satoshis
-               })
-           }
-       })
+   tx.outputs.forEach((output, vout) => {
+       if (output.script.toAddress().toString() === wallet.address) {
+           wallet.utxos.push({
+               txid: tx.hash,
+               vout,
+               script: output.script.toHex(),
+               satoshis: output.satoshis
+           });
+       }
+   });
 }
 
 function chunkToNumber(chunk) {
-   if (chunk.opcodenum == 0) return 0
-   if (chunk.opcodenum == 1) return chunk.buf[0]
-   if (chunk.opcodenum == 2) return chunk.buf[1] * 255 + chunk.buf[0]
-   if (chunk.opcodenum > 80 && chunk.opcodenum <= 96) return chunk.opcodenum - 80
-   return undefined
+   if (chunk.opcodenum === 0) return 0;
+   if (chunk.opcodenum === 1) return chunk.buf[0];
+   if (chunk.opcodenum === 2) return chunk.buf[1] * 255 + chunk.buf[0];
+   if (chunk.opcodenum > 80 && chunk.opcodenum <= 96) return chunk.opcodenum - 80;
+   return undefined;
 }
 
-
 main().catch(e => {
-   let reason = e.response && e.response.data && e.response.data.error && e.response.data.error.message
-   console.error(reason ? e.message + ':' + reason : e.message)
-})
+   let reason = e.response && e.response.data && e.response.data.error && e.response.data.error.message;
+   console.error(reason ? e.message + ':' + reason : e.message);
+});

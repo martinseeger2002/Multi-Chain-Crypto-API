@@ -126,25 +126,6 @@ function numberToChunk(n) {
    }
 }
 
-function IdToChunk(inscription_id) {
-   // Remove "i0" if present at the end of the txid
-   let txid = "";
-   if (inscription_id.endsWith('i0')) {
-       txid = inscription_id.slice(0, -2);
-   } else {
-       throw new Error("provide your inscription id ending with 'i0'");
-   }
-
-   // Reverse the bytes of the TXID
-   const reversedTxidBuffer = Buffer.from(txid, 'hex').reverse();
-
-   return {
-       buf: reversedTxidBuffer,
-       len: 32,
-       opcodenum: 32
-   };
-
-}
 
 function opcodeToChunk(op) {
    return { opcodenum: op }

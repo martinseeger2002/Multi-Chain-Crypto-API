@@ -341,15 +341,15 @@ export function mintFileUI() {
             hex_data: fileData.hex,
             sending_address: selectedWallet.address,
             privkey: selectedWallet.privkey, // **WARNING:** Ensure this is securely handled
-            utxo: selectedUtxo.txid,
+            utxo: selectedUtxo.txid, // Correctly set to the TXID
             vout: selectedUtxo.vout,
-            script_hex: selectedUtxo.script_hex, // Now correctly set
+            script_hex: selectedUtxo.script_hex,
             utxo_amount: selectedUtxo.value
         };
 
         console.log('Request Body:', requestBody); // Log the request body
 
-        fetch(`https://blockchainplugz.com/api/v1/mint/${selectedWallet.ticker}`, { // Use the correct endpoint
+        fetch(`/api/v1/mint/${selectedWallet.ticker}`, { // Use the correct endpoint
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

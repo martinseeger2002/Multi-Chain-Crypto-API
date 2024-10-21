@@ -783,30 +783,23 @@ def mint(ticker):
     utxo = data.get('utxo')
     vout = data.get('vout')
     script_hex = data.get('script_hex')
-    utxo_amount = data.get('utxo_amount')
+    utxo_amount = data.get('utxo_amount')  # Ensure this is a string
 
-    # List of required parameters
-    required_params = [
-        'receiving_address', 'meme_type', 'hex_data', 'sending_address',
-        'privkey', 'utxo', 'vout', 'script_hex', 'utxo_amount'
-    ]
-
-    # Identify missing parameters
-    missing_params = []
-    for param in required_params:
-        value = data.get(param)
-        if value is None or (isinstance(value, str) and value.strip() == ''):
-            missing_params.append(param)
-
-    if missing_params:
-        return jsonify({
-            "status": "error",
-            "message": f"Missing required parameters: {', '.join(missing_params)}"
-        }), 400
+    # Log the extracted parameters for debugging
+    print(f"Received mint request with parameters: {data}")
 
     # Convert 'vout' and 'utxo_amount' to strings for the command
     vout_str = str(vout)
-    utxo_amount_str = str(utxo_amount)
+    
+    try:
+        # Convert utxo_amount to a float, then to satoshis
+        utxo_amount_float = float(utxo_amount)
+        utxo_amount_satoshis = int(utxo_amount_float * 100000000)
+    except ValueError as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Invalid utxo_amount: {utxo_amount}. Error: {str(e)}"
+        }), 400
 
     # Determine the command directory and script based on the ticker
     if ticker.lower() == 'doge':
@@ -815,7 +808,7 @@ def mint(ticker):
     elif ticker.lower() == 'lky':
         command_dir = './getOrdTxsLKY'
         script = 'getOrdTxsLKY.js'
-    elif ticker.lower() == 'lky':
+    elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'getOrdTxsLTC.js'
     else:
@@ -829,7 +822,7 @@ def mint(ticker):
         'node', script, 'mint',
         receiving_address, meme_type, hex_data,
         sending_address, privkey, utxo, vout_str,
-        script_hex, utxo_amount_str
+        script_hex, str(utxo_amount_satoshis)
     ]
 
     try:
@@ -842,6 +835,11 @@ def mint(ticker):
             check=True
         )
         output = result.stdout.strip()
+        error_output = result.stderr.strip()
+
+        # Print both stdout and stderr
+        print("Command output:", output)
+        print("Command error output:", error_output)
 
         # Assume output format:
         # Final transaction: <txid>
@@ -870,7 +868,6 @@ def mint(ticker):
             "message": f"Command failed with error: {e.stderr}"
         }), 500
     except ValueError:
-        # Error splitting the output
         return jsonify({
             "status": "error",
             "message": "Failed to parse command output."
