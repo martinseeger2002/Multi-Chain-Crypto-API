@@ -347,6 +347,9 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
 
                     localStorage.setItem('mintResponse', JSON.stringify({ pendingTransactions }));
                     console.log('Mint response saved successfully.');
+                    
+                    // Navigate to inscribe UI instead of alert
+                    inscribeUI();
                 } catch (error) {
                     console.error('Error saving mintResponse to local storage:', error);
                     alert('An error occurred while saving the mint response.');
@@ -378,7 +381,6 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
                 }
 
                 localStorage.removeItem('fileToMint'); // Remove file hex from local storage
-                alert('Transaction generated successfully!');
             } else {
                 // Handle cases where pendingTransactions is missing or empty
                 console.error('Mint API did not return pendingTransactions or it is empty:', data);

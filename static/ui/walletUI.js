@@ -50,7 +50,7 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
     viewUtxosButton.addEventListener('click', () => viewUtxoUI(walletDropdown.value));
 
     const sendButton = document.createElement('button');
-    sendButton.textContent = 'Send';
+    sendButton.textContent = 'Send Coming Soon';
     sendButton.className = 'styled-button'; // Use a class for styling
     sendButton.disabled = true; // Disable by default
     sendButton.addEventListener('click', () => sendTxUI(walletDropdown.value));
