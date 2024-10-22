@@ -105,13 +105,13 @@ export function inscribeUI() {
 
         const topTransaction = pendingTransactions[0];
         const txHex = topTransaction.hex;
-        const ticker = topTransaction.ticker; // Use the ticker from the transaction
+        const ticker = topTransaction.ticker;
 
         return fetch(`/api/v1/send_raw_tx/${ticker}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-API-Key': apiKey // Ensure the API key is included here
+                'X-API-Key': apiKey
             },
             body: JSON.stringify({ tx_hex: txHex })
         })
@@ -121,7 +121,6 @@ export function inscribeUI() {
                 const inscriptionName = inscriptionNameInput.value.trim();
                 const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || [];
 
-                // Only add to My Inscriptions if the transaction number is 2
                 if (topTransaction.transactionNumber === 2) {
                     myInscriptions.push({
                         name: inscriptionName,
@@ -131,22 +130,8 @@ export function inscribeUI() {
                 }
 
                 // Remove the transaction from the pending list
-                const completedTransaction = pendingTransactions.shift();
+                pendingTransactions.shift();
                 localStorage.setItem('mintResponse', JSON.stringify({ pendingTransactions }));
-
-                // Retrieve and remove the pending UTXO from local storage
-                const pendingUtxo = JSON.parse(localStorage.getItem('pendingUtxo'));
-                if (pendingUtxo) {
-                    localStorage.removeItem('pendingUtxo');
-                }
-
-                // Remove the UTXO from the wallet's UTXO list
-                const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
-                const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
-                if (selectedWallet) {
-                    selectedWallet.utxos = selectedWallet.utxos.filter(utxo => utxo.txid !== pendingUtxo.txid);
-                    localStorage.setItem('wallets', JSON.stringify(wallets));
-                }
 
                 // Update the pending transactions counter
                 updatePendingTxCounter(pendingTransactions.length);
@@ -189,6 +174,8 @@ export function inscribeUI() {
 
             inscribeTransaction(false)
                 .then(() => {
+                    // Ensure the pendingTransactions array is updated after each successful transaction
+                    pendingTransactions = JSON.parse(localStorage.getItem('mintResponse')).pendingTransactions || [];
                     setTimeout(() => {
                         processNextTransaction();
                     }, 1000); // Wait 1 second before processing the next transaction

@@ -128,7 +128,7 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
 
     // File selection label
     const fileLabel = document.createElement('div');
-    fileLabel.className = 'file-label'; // Use a class for styling
+    fileLabel.className = 'file-label styled-button'; // Add styled-button class for styling
 
     // SVG Icon for the file label
     const svgIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
