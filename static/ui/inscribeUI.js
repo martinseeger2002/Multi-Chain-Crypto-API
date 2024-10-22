@@ -105,13 +105,13 @@ export function inscribeUI() {
 
         const topTransaction = pendingTransactions[0];
         const txHex = topTransaction.hex;
-        const ticker = topTransaction.ticker;
+        const ticker = topTransaction.ticker; // Use the ticker from the transaction
 
         return fetch(`/api/v1/send_raw_tx/${ticker}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-API-Key': apiKey
+                'X-API-Key': apiKey // Ensure the API key is included here
             },
             body: JSON.stringify({ tx_hex: txHex })
         })
@@ -121,6 +121,7 @@ export function inscribeUI() {
                 const inscriptionName = inscriptionNameInput.value.trim();
                 const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || [];
 
+                // Only add to My Inscriptions if the transaction number is 2
                 if (topTransaction.transactionNumber === 2) {
                     myInscriptions.push({
                         name: inscriptionName,
@@ -135,6 +136,22 @@ export function inscribeUI() {
 
                 // Update the pending transactions counter
                 updatePendingTxCounter(pendingTransactions.length);
+
+                // Call the remove mint credit API
+                fetch('/api/v1/remove_mint_credit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(creditResponse => creditResponse.json())
+                .then(creditData => {
+                    if (creditData.status === 'success') {
+                        creditsDisplay.textContent = `Mint Credits: ${creditData.credits}`;
+                    } else {
+                        console.error('Error removing mint credit:', creditData.message);
+                    }
+                });
 
                 if (showAlert) {
                     alert(`Transaction sent successfully! TXID: ${data.data.txid}`);
