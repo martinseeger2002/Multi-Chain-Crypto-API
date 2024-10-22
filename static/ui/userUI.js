@@ -1,4 +1,5 @@
 import { landingPageUI } from './landingPageUI.js';
+import { loginUI } from './loginUI.js'; // Import loginUI to redirect after logout
 
 export function userUI() {
     const landingPage = document.getElementById('landing-page');
@@ -36,12 +37,21 @@ export function userUI() {
 
     landingPage.appendChild(form);
 
+    // Create Back button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
     backButton.className = 'styled-button back-button'; // Use a class for styling
     backButton.addEventListener('click', landingPageUI);
 
     landingPage.appendChild(backButton);
+
+    // Create Logout button
+    const logoutButton = document.createElement('button');
+    logoutButton.textContent = 'Logout';
+    logoutButton.className = 'styled-button logout-button'; // Use a class for styling
+    logoutButton.addEventListener('click', handleLogout);
+
+    landingPage.appendChild(logoutButton);
 
     // Fetch user data and populate fields
     fetchUserData();
@@ -138,5 +148,14 @@ export function userUI() {
             console.error('Error updating credentials:', error);
             alert('An error occurred while updating credentials.');
         });
+    }
+
+    function handleLogout() {
+        // Remove login state from localStorage
+        localStorage.removeItem('isLoggedIn');
+        console.log('User has been logged out.');
+
+        // Redirect to login UI
+        loginUI();
     }
 }
