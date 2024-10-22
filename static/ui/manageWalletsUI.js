@@ -55,7 +55,7 @@ function displayWalletOptions(wallet, container, wallets) {
     container.innerHTML = ''; // Clear previous options
 
     const walletLabel = document.createElement('div');
-    walletLabel.textContent = wallet.label;
+    walletLabel.textContent = `${wallet.label} (${wallet.ticker})`; // Add ticker to wallet label
     walletLabel.className = 'wallet-label'; // Use a class for styling
     container.appendChild(walletLabel);
 
@@ -74,29 +74,9 @@ function displayWalletOptions(wallet, container, wallets) {
     viewPrivateKeyButton.className = 'styled-button'; // Use a class for styling
     viewPrivateKeyButton.addEventListener('click', () => viewPrivateKey(wallet));
 
-    const tickerDropdown = document.createElement('select');
-    tickerDropdown.className = 'styled-select'; // Use a class for styling
-    const tickerOptions = ['DOGE', 'LTC', 'LKY'];
-    tickerOptions.forEach(ticker => {
-        const option = document.createElement('option');
-        option.value = ticker;
-        option.textContent = ticker;
-        if (wallet.ticker === ticker) {
-            option.selected = true;
-        }
-        tickerDropdown.appendChild(option);
-    });
-
-    tickerDropdown.addEventListener('change', (event) => {
-        wallet.ticker = event.target.value;
-        localStorage.setItem('wallets', JSON.stringify(wallets));
-        manageWalletsUI(); // Refresh the UI
-    });
-
     container.appendChild(renameButton);
     container.appendChild(deleteButton);
     container.appendChild(viewPrivateKeyButton);
-    container.appendChild(tickerDropdown);
 }
 
 function renameWallet(wallet, wallets) {

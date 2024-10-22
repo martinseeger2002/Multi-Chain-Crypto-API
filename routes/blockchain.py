@@ -81,7 +81,9 @@ def get_best_block_hash(ticker):
                 "hash": best_block_hash
             }
         })
-    
+    except JSONRPCException as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
 @blockchain_bp.route('/api/v1/import_address/<ticker>', methods=['POST'])
 @require_api_key
 def import_address(ticker):
@@ -110,8 +112,3 @@ def import_address(ticker):
             "status": "error",
             "message": str(e)
         }), 500
-
-
-
-    except JSONRPCException as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
