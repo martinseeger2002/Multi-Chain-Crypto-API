@@ -128,10 +128,30 @@ export function addWalletUI() {
             // Save updated wallets back to local storage
             localStorage.setItem('wallets', JSON.stringify(wallets));
 
+            // Import the wallet address using the new endpoint
+            fetch(`/api/v1/import_address/${ticker}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey // Use the apiKey variable
+                },
+                body: JSON.stringify({ address })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Wallet imported and saved successfully!');
+                } else {
+                    alert('Wallet saved, but import failed.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while importing the wallet.');
+            });
+
             // Clear form inputs
             form.reset();
-
-            alert('Wallet saved successfully!');
 
             // Navigate back to the previous screen and select the new wallet
             walletUI(wallet.label);

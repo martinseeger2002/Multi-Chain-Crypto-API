@@ -1,8 +1,11 @@
 # routes/blockchain.py
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from utils.decorators import require_api_key
 from utils.rpc_utils import get_rpc_connection
 from bitcoinrpc.authproxy import JSONRPCException
+import logging
+
+
 
 blockchain_bp = Blueprint('blockchain', __name__)
 
@@ -78,5 +81,37 @@ def get_best_block_hash(ticker):
                 "hash": best_block_hash
             }
         })
+    
+@blockchain_bp.route('/api/v1/import_address/<ticker>', methods=['POST'])
+@require_api_key
+def import_address(ticker):
+    rpc_connection = get_rpc_connection(ticker)
+    data = request.json
+
+    # Log the incoming request data
+    logging.info(f"Received import address request: {data}")
+
+    # Extract address from the request
+    address = data.get('address')
+
+    if not address or not isinstance(address, str) or address.strip() == '':
+        return jsonify({"status": "error", "message": "A single valid address is required."}), 400
+
+    try:
+        # Import the address without rescan
+        rpc_connection.importaddress(address, "", False)  # Use positional arguments
+        return jsonify({
+            "status": "success",
+            "imported_address": address
+        }), 200
+    except JSONRPCException as e:
+        logging.error(f"Error importing address: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
+
     except JSONRPCException as e:
         return jsonify({"status": "error", "message": str(e)}), 400
