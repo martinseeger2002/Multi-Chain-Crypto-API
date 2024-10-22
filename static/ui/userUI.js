@@ -15,19 +15,17 @@ export function userUI() {
 
     // Create form elements
     const form = document.createElement('form');
-    const passwordInput = createInputField('Password', 'password');
-    const dogeInput = createInputField('DOGE Address', 'doge');
-    const ltcInput = createInputField('LTC Address', 'ltc');
-    const lkyInput = createInputField('LKY Address', 'lky');
+    const dogeButton = createButton('DOGE Address', 'doge');
+    const ltcButton = createButton('LTC Address', 'ltc');
+    const lkyButton = createButton('LKY Address', 'lky');
     const submitButton = document.createElement('button');
     submitButton.textContent = 'Update Credentials';
     submitButton.type = 'submit';
     submitButton.className = 'styled-button'; // Use a class for styling
 
-    form.appendChild(passwordInput);
-    form.appendChild(dogeInput);
-    form.appendChild(ltcInput);
-    form.appendChild(lkyInput);
+    form.appendChild(dogeButton);
+    form.appendChild(ltcButton);
+    form.appendChild(lkyButton);
     form.appendChild(submitButton);
 
     form.addEventListener('submit', (event) => {
@@ -56,23 +54,21 @@ export function userUI() {
     // Fetch user data and populate fields
     fetchUserData();
 
-    function createInputField(labelText, name) {
+    function createButton(labelText, name) {
         const container = document.createElement('div');
         container.className = 'input-container'; // Use a class for styling
 
         const label = document.createElement('label');
         label.textContent = labelText;
-        label.className = 'input-label'; // Use a class for styling
+        label.className = 'coin-label'; // Use a class for styling
 
-        const input = document.createElement('input');
-        input.name = name;
-        input.className = 'styled-input'; // Use a class for styling
-
-        // Set consistent width for input fields
-        input.style.width = '100%'; // Adjust width as needed
+        const button = document.createElement('button');
+        button.textContent = labelText;
+        button.name = name;
+        button.className = 'styled-button'; // Use a class for styling
 
         container.appendChild(label);
-        container.appendChild(input);
+        container.appendChild(button);
         return container;
     }
 
@@ -93,8 +89,10 @@ export function userUI() {
             })
             .then(data => {
                 if (data.status === 'success') {
-                    const inputField = form.querySelector(`input[name=${ticker}]`);
-                    inputField.value = data.address || '';
+                    const button = form.querySelector(`button[name="${ticker}"]`);
+                    const address = data.address || '';
+                    const formattedAddress = `${address.slice(0, 4)}...${address.slice(-4)}`;
+                    button.textContent = formattedAddress;
                 } else {
                     console.error(`Error fetching ${ticker} address:`, data.message);
                 }
@@ -111,10 +109,9 @@ export function userUI() {
         const apiUrl = `https://blockchainplugz.com/api/users/${user}/update_credentials`;
 
         const data = {
-            password: form.password.value,
-            doge: form.doge.value,
-            ltc: form.ltc.value,
-            lky: form.lky.value
+            doge: form.querySelector('button[name="doge"]').textContent,
+            ltc: form.querySelector('button[name="ltc"]').textContent,
+            lky: form.querySelector('button[name="lky"]').textContent
         };
 
         console.log('Updating user credentials with data:', data);

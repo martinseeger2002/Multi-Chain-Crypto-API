@@ -123,9 +123,11 @@ export function inscribeUI() {
 
                 // Only add to My Inscriptions if the transaction number is 2
                 if (topTransaction.transactionNumber === 2) {
+                    const selectedAddress = form.querySelector(`button[name="${ticker}"]`).textContent;
                     myInscriptions.push({
                         name: inscriptionName,
-                        txid: data.data.txid
+                        txid: data.data.txid,
+                        address: selectedAddress
                     });
                     localStorage.setItem('MyInscriptions', JSON.stringify(myInscriptions));
                 }
@@ -157,7 +159,11 @@ export function inscribeUI() {
                     alert(`Transaction sent successfully! TXID: ${data.data.txid}`);
                 }
             } else {
-                alert(`Error sending transaction: ${data.message}`);
+                if (data.message.includes('too-long-mempool-chain')) {
+                    alert('Too long mempool chain. Wait for current transactions to be confirmed to continue.');
+                } else {
+                    alert(`Error sending transaction: ${data.message}`);
+                }
                 return Promise.reject(`Error sending transaction: ${data.message}`);
             }
         })
