@@ -1,184 +1,193 @@
-import { mintSelectionUI } from './mintSelectionUI.js'; // Import the mintSelectionUI function
+import { mintSelectionUI } from './mintSelectionUI.js'; // Import your mintSelectionUI function
 
 export function imageCompressorUI() {
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
-    // Create Title
+    // Title
     const title = document.createElement('h1');
     title.textContent = 'Image Compressor';
-    title.className = 'page-title'; // Use a class for styling
+    title.className = 'page-title';
     landingPage.appendChild(title);
 
     // Back Button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
-    backButton.className = 'styled-button back-button'; // Use a class for styling
+    backButton.className = 'styled-button back-button';
     backButton.addEventListener('click', () => {
-        mintSelectionUI(); // Navigate back to mint selection UI
+        mintSelectionUI();
     });
     landingPage.appendChild(backButton);
 
-    // Open Image Button
-    const openImageLabel = document.createElement('label');
-    openImageLabel.className = 'styled-button open-image-button'; // Use a class for styling
-    openImageLabel.textContent = 'Choose File';
+    // File Input
+    const fileInputLabel = document.createElement('label');
+    fileInputLabel.className = 'styled-button';
+    fileInputLabel.textContent = 'Choose File';
 
-    const openImageButton = document.createElement('input');
-    openImageButton.type = 'file';
-    openImageButton.accept = 'image/*';
-    openImageButton.style.display = 'none'; // Hide the default file input
-    openImageButton.addEventListener('change', handleImageSelection);
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    fileInput.addEventListener('change', handleFileSelection);
 
-    openImageLabel.appendChild(openImageButton);
-    landingPage.appendChild(openImageLabel);
+    fileInputLabel.appendChild(fileInput);
+    landingPage.appendChild(fileInputLabel);
+
+    // Quality Slider
+    const qualityContainer = document.createElement('div');
+    qualityContainer.className = 'slider-container';
+    qualityContainer.style.width = '300px'; // Set a fixed width for consistency
+
+    const qualityLabel = document.createElement('label');
+    qualityLabel.textContent = 'Compression Quality: ';
+    qualityContainer.appendChild(qualityLabel);
+
+    const qualityValue = document.createElement('span');
+    qualityValue.textContent = '0.9';
+
+    const qualitySlider = document.createElement('input');
+    qualitySlider.type = 'range';
+    qualitySlider.min = '0.1';
+    qualitySlider.max = '1';
+    qualitySlider.step = '0.01';
+    qualitySlider.value = '0.9';
+    qualitySlider.addEventListener('input', () => {
+        qualityValue.textContent = qualitySlider.value;
+    });
+    qualityContainer.appendChild(qualitySlider);
+    qualityContainer.appendChild(qualityValue);
+    landingPage.appendChild(qualityContainer);
+
+    // Scale Slider
+    const scaleContainer = document.createElement('div');
+    scaleContainer.className = 'slider-container';
+    scaleContainer.style.width = '300px'; // Set the same fixed width
+
+    const scaleLabel = document.createElement('label');
+    scaleLabel.textContent = 'Scale: ';
+    scaleContainer.appendChild(scaleLabel);
+
+    const scaleValue = document.createElement('span');
+    scaleValue.textContent = '0.9';
+
+    const scaleSlider = document.createElement('input');
+    scaleSlider.type = 'range';
+    scaleSlider.min = '0.1';
+    scaleSlider.max = '1';
+    scaleSlider.step = '0.01';
+    scaleSlider.value = '0.9';
+    scaleSlider.addEventListener('input', () => {
+        scaleValue.textContent = scaleSlider.value;
+    });
+    scaleContainer.appendChild(scaleSlider);
+    scaleContainer.appendChild(scaleValue);
+    landingPage.appendChild(scaleContainer);
 
     // Compress Button
     const compressButton = document.createElement('button');
     compressButton.textContent = 'Compress';
-    compressButton.className = 'styled-button compress-button'; // Use a class for styling
+    compressButton.className = 'styled-button';
     compressButton.addEventListener('click', compressImage);
     landingPage.appendChild(compressButton);
-
-    // Image Display Area
-    const imageDisplay = document.createElement('img');
-    imageDisplay.className = 'compressed-image';
-    imageDisplay.style.maxWidth = '100%'; // Ensure the image fits the viewport
-    imageDisplay.style.height = 'auto';
-    landingPage.appendChild(imageDisplay);
 
     // Progress Display
     const progressDisplay = document.createElement('p');
     progressDisplay.className = 'progress-display';
     landingPage.appendChild(progressDisplay);
 
-    // Function to Handle Image Selection
-    function handleImageSelection(event) {
-        const file = event.target.files[0];
-        if (file) {
-            // Display the selected image (optional)
-            const imageUrl = URL.createObjectURL(file);
+    // Image Display
+    const imageDisplay = document.createElement('img');
+    imageDisplay.className = 'compressed-image';
+    imageDisplay.style.maxWidth = '50vw'; // Set to half the viewport width
+    imageDisplay.style.maxHeight = '50vh'; // Set to half the viewport height
+    imageDisplay.style.objectFit = 'contain'; // Maintain aspect ratio
+    landingPage.appendChild(imageDisplay);
+
+    // Selected File Reference
+    let selectedFile = null;
+
+    // Handle File Selection
+    function handleFileSelection(event) {
+        selectedFile = event.target.files[0];
+        if (selectedFile) {
+            const imageUrl = URL.createObjectURL(selectedFile);
             imageDisplay.src = imageUrl;
-            console.log('Selected file:', file);
+            progressDisplay.textContent = `Original File Size: ${(selectedFile.size / 1024).toFixed(2)} KB`;
         }
     }
 
-    // Function to Compress the Image
+    // Compress Image Function
     async function compressImage() {
-        const file = openImageButton.files[0];
-        if (!file) {
+        if (!selectedFile) {
             alert('Please select an image first.');
             return;
         }
+
+        const quality = parseFloat(qualitySlider.value);
+        const scale = parseFloat(scaleSlider.value);
 
         progressDisplay.textContent = 'Compressing... Please wait.';
         compressButton.disabled = true;
 
         try {
-            const imageBitmap = await createImageBitmap(file);
-            const originalWidth = imageBitmap.width;
-            const originalHeight = imageBitmap.height;
-
+            const imageBitmap = await createImageBitmap(selectedFile);
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            let bestScale = 0.01; // Start with 1%
-            let bestQuality = 0.01; // Start with 1%
-            let bestBlob = null;
+            // Set canvas dimensions
+            const newWidth = Math.round(imageBitmap.width * scale);
+            const newHeight = Math.round(imageBitmap.height * scale);
+            canvas.width = newWidth;
+            canvas.height = newHeight;
 
-            // Initialize previous settings
-            let previousScale = bestScale;
-            let previousQuality = bestQuality;
-            let previousBlob = null;
+            // Draw image onto canvas
+            ctx.drawImage(imageBitmap, 0, 0, newWidth, newHeight);
 
-            // Outer Loop: Iterate through scales from 1% to 100% in 5% steps
-            for (let scalePercent = 1; scalePercent <= 100; scalePercent += 5) {
-                const scale = scalePercent / 100;
+            // Convert canvas to data URL with specified quality
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
 
-                // Calculate new dimensions based on current scale
-                const newWidth = Math.max(Math.round(originalWidth * scale), 1);
-                const newHeight = Math.max(Math.round(originalHeight * scale), 1);
+            // Convert data URL to Blob
+            const compressedBlob = dataURLToBlob(dataUrl);
 
-                canvas.width = newWidth;
-                canvas.height = newHeight;
+            // Create object URL for compressed image
+            const compressedImageUrl = URL.createObjectURL(compressedBlob);
 
-                ctx.drawImage(imageBitmap, 0, 0, newWidth, newHeight);
+            // Display compressed image
+            imageDisplay.onload = () => {
+                // Adjust the image size to fit the viewport
+                imageDisplay.style.width = 'auto';
+                imageDisplay.style.height = 'auto';
+            };
+            imageDisplay.src = compressedImageUrl; // Set the source after onload is defined
 
-                let suitableQualityFound = false;
-                let currentBestQuality = 0.01;
-                let currentBestBlob = null;
+            // Display compression details with an additional 20 KB
+            const blobSizeKB = (compressedBlob.size / 1024).toFixed(2);
+            const adjustedSizeKB = (parseFloat(blobSizeKB) + 20).toFixed(2);
+            progressDisplay.textContent = `Compression completed. Quality: ${(quality * 100).toFixed(0)}%, Scale: ${(scale * 100).toFixed(0)}%, File Size: ${adjustedSizeKB} KB`;
 
-                // Inner Loop: Iterate through qualities from 1% to 100%
-                for (let qualityPercent = 1; qualityPercent <= 100; qualityPercent++) {
-                    const quality = qualityPercent / 100;
-
-                    // Compress the image to WebP format with the current quality
-                    const blob = await new Promise((resolve) => {
-                        canvas.toBlob(resolve, 'image/webp', quality);
-                    });
-
-                    if (blob.size <= 100 * 1024) { // 100KB
-                        // Update current best quality and blob at this scale
-                        currentBestQuality = quality;
-                        currentBestBlob = blob;
-                        suitableQualityFound = true;
-                        // Continue to find a higher quality within this scale
-                    } else {
-                        // Since we're iterating quality from low to high,
-                        // once size exceeds 100KB, no need to check higher qualities
-                        break;
-                    }
-
-                    // Yield to the event loop every 10 quality iterations to keep UI responsive
-                    if (qualityPercent % 10 === 0) {
-                        await new Promise((resolve) => setTimeout(resolve, 0));
-                    }
-                }
-
-                if (suitableQualityFound) {
-                    // Update the bestScale, bestQuality, and bestBlob
-                    bestScale = scale;
-                    bestQuality = currentBestQuality;
-                    bestBlob = currentBestBlob;
-
-                    // Update previous settings for potential fallback
-                    previousScale = bestScale;
-                    previousQuality = bestQuality;
-                    previousBlob = bestBlob;
-
-                    // Check if we've reached the maximum scale
-                    if (scalePercent + 5 > 100) {
-                        break;
-                    }
-                } else {
-                    // No suitable quality found at this scale, use previous settings
-                    break;
-                }
-
-                // Yield to the event loop every 10 scale iterations to keep UI responsive
-                if (scalePercent % 10 === 0) {
-                    await new Promise((resolve) => setTimeout(resolve, 0));
-                }
-            }
-
-            if (bestBlob) {
-                const imageUrl = URL.createObjectURL(bestBlob);
-                imageDisplay.src = imageUrl;
-                progressDisplay.textContent = `Compression successful! Scale: ${(bestScale * 100).toFixed(0)}%, Quality: ${(bestQuality * 100).toFixed(0)}%, File size: ${(bestBlob.size / 1024).toFixed(2)}KB`;
-                console.log('Compressed image blob:', bestBlob);
-                console.log(`Final Quality: ${(bestQuality * 100).toFixed(0)}%, Scale: ${(bestScale * 100).toFixed(0)}%`);
-            } else {
-                progressDisplay.textContent = 'Unable to compress image to under 100KB with the current settings.';
-                alert('Unable to compress image to under 100KB. Consider using a different image or adjusting the compression parameters.');
-            }
+            console.log('Compressed image blob:', compressedBlob);
         } catch (error) {
-            console.error('Error compressing image:', error);
-            alert('An error occurred during image compression.');
+            console.error('Compression error:', error);
+            alert('An error occurred during compression.');
             progressDisplay.textContent = '';
         } finally {
             compressButton.disabled = false;
         }
     }
 
-    // Add more UI elements for image compressor as needed
+    // Helper function to convert data URL to Blob
+    function dataURLToBlob(dataUrl) {
+        const arr = dataUrl.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+
+        return new Blob([u8arr], { type: mime });
+    }
 }

@@ -15,8 +15,15 @@ export function viewUtxoUI(selectedLabel) {
     if (selectedWallet && selectedWallet.utxos) {
         selectedWallet.utxos.forEach(utxo => {
             const utxoDiv = document.createElement('div');
-            utxoDiv.textContent = `TXID: ${utxo.txid}, Value: ${utxo.value}, Confirmations: ${utxo.confirmations}, Vout: ${utxo.vout}`;
+            utxoDiv.textContent = `Value: ${utxo.value}, Confirmations: ${utxo.confirmations}`;
             utxoDiv.className = 'utxo-item'; // Use a class for styling
+
+            // Add click event listener to show txid and vout
+            utxoDiv.addEventListener('click', () => {
+                const message = `${utxo.txid}:${utxo.vout}`;
+                alert(message); // Display the message in a prompt
+            });
+
             landingPage.appendChild(utxoDiv);
         });
     } else {
@@ -28,7 +35,7 @@ export function viewUtxoUI(selectedLabel) {
 
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
-    backButton.className = 'styled-button back-button'; // Use a class for styling
+    backButton.className = 'button'; // Use a class for styling
     backButton.addEventListener('click', walletUI);
     landingPage.appendChild(backButton);
 }

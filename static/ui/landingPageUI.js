@@ -29,7 +29,7 @@ export function landingPageUI() {
     const buttons = [
         { text: 'Wallet', onClick: walletUI },
         { text: 'Mint', onClick: mintSelectionUI },
-        { text: 'Play to Earn', onClick: () => { /* Add functionality here */ } },
+        { text: 'Messaging Coming Soon', onClick: () => { /* Add functionality here */ } },
         { text: 'User', onClick: userUI }
     ];
 

@@ -131,9 +131,23 @@ export function inscribeUI() {
                 }
 
                 // Remove the transaction from the pending list
-                pendingTransactions.shift();
+                const completedTransaction = pendingTransactions.shift();
                 localStorage.setItem('mintResponse', JSON.stringify({ pendingTransactions }));
-                
+
+                // Retrieve and remove the pending UTXO from local storage
+                const pendingUtxo = JSON.parse(localStorage.getItem('pendingUtxo'));
+                if (pendingUtxo) {
+                    localStorage.removeItem('pendingUtxo');
+                }
+
+                // Remove the UTXO from the wallet's UTXO list
+                const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+                const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
+                if (selectedWallet) {
+                    selectedWallet.utxos = selectedWallet.utxos.filter(utxo => utxo.txid !== pendingUtxo.txid);
+                    localStorage.setItem('wallets', JSON.stringify(wallets));
+                }
+
                 // Update the pending transactions counter
                 updatePendingTxCounter(pendingTransactions.length);
 
