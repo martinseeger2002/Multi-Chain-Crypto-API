@@ -107,7 +107,7 @@ export function myInscriptionUI() {
         iframe.style.border = 'none';
         iframeWrapper.appendChild(iframe);
 
-        const contentUrl = `https://blockchainplugz.com/content/${txid}i0`;
+        const contentUrl = `https://www.blockchainplugz.com/content/${txid}i0`;
 
         fetch(contentUrl, { method: 'HEAD' })
             .then(response => {

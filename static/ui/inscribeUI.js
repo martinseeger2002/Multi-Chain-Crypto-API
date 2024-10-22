@@ -15,7 +15,12 @@ export function inscribeUI() {
     creditsDisplay.className = 'credits-display'; // Use a class for styling
     landingPage.appendChild(creditsDisplay);
 
-    // Fetch and update mint credits
+    // Pending Transactions Counter
+    const pendingTxDisplay = document.createElement('p');
+    pendingTxDisplay.className = 'pending-tx-display'; // Use a class for styling
+    landingPage.appendChild(pendingTxDisplay);
+
+    // Fetch and update mint credits and pending transactions
     fetch('/api/v1/mint_credits')
         .then(response => response.json())
         .then(data => {
@@ -30,6 +35,12 @@ export function inscribeUI() {
             creditsDisplay.textContent = 'Error fetching mint credits';
         });
 
+    // Initialize Pending Transactions Counter
+    const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
+    let pendingTransactions = mintResponse.pendingTransactions || [];
+    updatePendingTxCounter(pendingTransactions.length);
+    pendingTxDisplay.textContent = `Pending Transactions: ${pendingTransactions.length}`;
+
     // Inscription Name Input
     const inscriptionNameInput = document.createElement('input');
     inscriptionNameInput.type = 'text';
@@ -39,66 +50,47 @@ export function inscribeUI() {
 
     // Button container
     const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'button-container';
+    buttonContainer.className = 'button-container'; // Ensure this class stacks buttons vertically via CSS
     landingPage.appendChild(buttonContainer);
 
     // Inscribe button
     const inscribeButton = document.createElement('button');
     inscribeButton.textContent = 'Inscribe';
-    inscribeButton.className = 'styled-button'; // Use a class for styling
+    inscribeButton.className = 'splash-enter-button'; // Updated to match mainSplashUI styling
     inscribeButton.addEventListener('click', () => inscribeTransaction());
     buttonContainer.appendChild(inscribeButton);
 
     // Inscribe All button
     const inscribeAllButton = document.createElement('button');
     inscribeAllButton.textContent = 'Inscribe All';
-    inscribeAllButton.className = 'styled-button'; // Use a class for styling
+    inscribeAllButton.className = 'splash-enter-button'; // Updated to match mainSplashUI styling
     inscribeAllButton.addEventListener('click', () => inscribeAllTransactions());
     buttonContainer.appendChild(inscribeAllButton);
 
     // Back button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
-    backButton.className = 'styled-button'; // Use a class for styling
+    backButton.className = 'splash-enter-button'; // Updated to match mainSplashUI styling
     backButton.addEventListener('click', () => {
         mintFileUI(); // Navigate back to mint file UI
     });
     buttonContainer.appendChild(backButton);
 
-    // Container for the transaction list
-    const txListContainer = document.createElement('div');
-    txListContainer.className = 'tx-list-container';
-    landingPage.appendChild(txListContainer);
-
-    // Retrieve and display pending transactions
-    const txList = document.createElement('ul');
-    txList.className = 'transaction-list'; // Add a class for styling
-    const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
-    const pendingTransactions = mintResponse.pendingTransactions || [];
-    updateTransactionList(pendingTransactions);
-    txListContainer.appendChild(txList);
-
-    // Function to update the transaction list
-    function updateTransactionList(transactions) {
-        txList.innerHTML = ''; // Clear existing list
-        transactions.forEach(tx => {
-            const listItem = document.createElement('li');
-            listItem.textContent = `Transaction Number: ${tx.transactionNumber}, TXID: ${tx.txid}`;
-            txList.appendChild(listItem);
-        });
+    // Function to update the pending transactions counter
+    function updatePendingTxCounter(count) {
+        pendingTxDisplay.textContent = `Pending Transactions: ${count}`;
     }
 
     // Function to inscribe a single transaction
     function inscribeTransaction(showAlert = true) {
-        const mintCreditsText = creditsDisplay.textContent;
-        const mintCredits = mintCreditsText ? parseInt(mintCreditsText.split(': ')[1], 10) : 0;
+        const mintCredits = parseInt(creditsDisplay.textContent.split(': ')[1], 10);
         if (mintCredits <= 0) {
             alert('Insufficient mint credits.');
             return Promise.reject('Insufficient mint credits.');
         }
 
         const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
-        const pendingTransactions = mintResponse.pendingTransactions || [];
+        pendingTransactions = mintResponse.pendingTransactions || [];
         if (pendingTransactions.length === 0) {
             alert('No pending transactions available.');
             return Promise.reject('No pending transactions available.');
@@ -127,7 +119,7 @@ export function inscribeUI() {
         .then(data => {
             if (data.status === 'success') {
                 const inscriptionName = inscriptionNameInput.value.trim();
-                const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || {};
+                const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || [];
 
                 // Only add to My Inscriptions if the transaction number is 2
                 if (topTransaction.transactionNumber === 2) {
@@ -141,15 +133,9 @@ export function inscribeUI() {
                 // Remove the transaction from the pending list
                 pendingTransactions.shift();
                 localStorage.setItem('mintResponse', JSON.stringify({ pendingTransactions }));
-
-                // Remove the used UTXO from the wallet's UTXOs
-                removeUsedUTXO(topTransaction);
-
-                // Clear pending UTXOs
-                clearPendingUTXOs();
-
-                // Update the displayed transaction list
-                updateTransactionList(pendingTransactions);
+                
+                // Update the pending transactions counter
+                updatePendingTxCounter(pendingTransactions.length);
 
                 if (showAlert) {
                     alert(`Transaction sent successfully! TXID: ${data.data.txid}`);
@@ -176,55 +162,10 @@ export function inscribeUI() {
         });
     }
 
-    /**
-     * Function to remove the used UTXO from the wallet's UTXOs
-     * @param {Object} transaction - The transaction object containing UTXO details
-     */
-    function removeUsedUTXO(transaction) {
-        try {
-            const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
-            const walletIndex = wallets.findIndex(wallet => wallet.label === transaction.walletLabel);
-            if (walletIndex === -1) {
-                console.warn('Wallet not found for the transaction.');
-                return;
-            }
-
-            const wallet = wallets[walletIndex];
-            const utxoIndex = wallet.utxos.findIndex(utxo => utxo.txid === transaction.txid && utxo.vout === transaction.vout);
-            if (utxoIndex === -1) {
-                console.warn('UTXO not found in the wallet.');
-                return;
-            }
-
-            // Remove the UTXO from the wallet's UTXOs
-            wallet.utxos.splice(utxoIndex, 1);
-            console.log(`Removed UTXO ${transaction.txid}:${transaction.vout} from wallet ${wallet.label}.`);
-
-            // Update the wallets in local storage
-            localStorage.setItem('wallets', JSON.stringify(wallets));
-        } catch (error) {
-            console.error('Error removing used UTXO from wallet:', error);
-            alert('An error occurred while updating the wallet UTXOs.');
-        }
-    }
-
-    /**
-     * Function to clear pending UTXOs from local storage
-     */
-    function clearPendingUTXOs() {
-        try {
-            localStorage.removeItem('pendingUTXOs');
-            console.log('Pending UTXOs cleared from local storage.');
-        } catch (error) {
-            console.error('Error clearing pending UTXOs from local storage:', error);
-            alert('An error occurred while clearing pending UTXOs.');
-        }
-    }
-
     // Function to inscribe all transactions
     function inscribeAllTransactions() {
-        const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
-        const pendingTransactions = mintResponse.pendingTransactions || [];
+        mintResponse.pendingTransactions = pendingTransactions;
+        localStorage.setItem('mintResponse', JSON.stringify(mintResponse));
 
         function processNextTransaction() {
             if (pendingTransactions.length === 0) {

@@ -15,4 +15,4 @@ rpc_configs = {
     for section in config.sections()
 }
 
-API_KEY = 'lucky1'  # Ensure this is the correct API key
+API_KEY = 'plugz1234'  # Ensure this is the correct API key

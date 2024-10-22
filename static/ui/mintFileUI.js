@@ -73,7 +73,7 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
                 .forEach(utxo => {
                     const option = document.createElement('option');
                     option.value = `${utxo.txid}:${utxo.vout}`; // Combine txid and vout for uniqueness
-                    option.textContent = `TXID: ${utxo.txid}, vout: ${utxo.vout}, Value: ${utxo.value}`;
+                    option.textContent = utxo.value; // Display only the UTXO amount
                     utxoDropdown.appendChild(option);
                 });
             if (selectedWallet.utxos.filter(utxo => parseFloat(utxo.value) > 0.01).length === 0) {
@@ -91,6 +91,12 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
         }
     });
 
+    // **Added Code: Trigger UTXO loading on page load if a wallet is selected**
+    if (selectedWalletLabel) {
+        walletDropdown.value = selectedWalletLabel;
+        walletDropdown.dispatchEvent(new Event('change')); // Trigger the change event to load UTXOs
+    }
+
     // Log selected UTXO information
     utxoDropdown.addEventListener('change', () => {
         if (utxoDropdown.value) {
@@ -106,7 +112,7 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
     // Receiving address input
     const addressInput = document.createElement('input');
     addressInput.type = 'text';
-    addressInput.placeholder = 'Enter receiving address';
+    addressInput.placeholder = 'Enter receiving address (optional)';
     addressInput.className = 'styled-input'; // Use a class for styling
     landingPage.appendChild(addressInput);
 
@@ -200,24 +206,35 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
      */
     function handleFileSelect(event) {
         const file = event.target.files[0];
-        if (file && file.size <= 100 * 1024) { // 100 KB limit
+        if (file && file.size <= 65 * 1024) { // 100 KB limit
             const reader = new FileReader();
             reader.onload = function(e) {
                 const base64 = e.target.result.split(',')[1];
                 const hex = base64ToHex(base64);
                 const mimeType = file.type;
-                const receivingAddress = addressInput.value.trim(); // Get and trim the receiving address
-                if (!receivingAddress) {
-                    alert('Please enter a receiving address.');
-                    return;
+                const receivingAddressInput = addressInput.value.trim(); // Get and trim the receiving address
+                const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
+                let receivingAddress;
+
+                if (!receivingAddressInput) {
+                    if (selectedWallet && selectedWallet.address) {
+                        receivingAddress = selectedWallet.address; // Use the selected wallet's address
+                        console.log('No receiving address entered. Using selected wallet\'s address:', receivingAddress);
+                    } else {
+                        alert('Please enter a receiving address.');
+                        return;
+                    }
+                } else {
+                    receivingAddress = receivingAddressInput;
                 }
+
                 // **IMPORTANT:** Storing sensitive data like addresses should be done securely
                 localStorage.setItem('fileToMint', JSON.stringify({ mimeType, hex, receivingAddress }));
                 console.log('File and address saved to local storage:', { mimeType, hex, receivingAddress });
             };
             reader.readAsDataURL(file);
         } else {
-            alert('File must be under 100 KB.');
+            alert('File must be under 65 KB.');
         }
     }
 
