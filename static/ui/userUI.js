@@ -77,37 +77,32 @@ export function userUI() {
     }
 
     function fetchUserData() {
-        const apiUrl = 'https://blockchainplugz.com/api/users';
-        console.log('Fetching user data from:', apiUrl);
+        const tickers = ['doge', 'ltc', 'lky'];
+        tickers.forEach(ticker => {
+            const apiUrl = `/api/v1/wallet/${ticker}`;
+            console.log(`Fetching ${ticker.toUpperCase()} address from:`, apiUrl);
 
-        fetch(apiUrl, {
-            headers: {
-                'X-API-Key': apiKey // Ensure you have the API key available
-            }
-        })
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.text(); // Get the response as text
-        })
-        .then(text => {
-            console.log('Response text:', text); // Log the raw response text
-            try {
-                const users = JSON.parse(text); // Attempt to parse the text as JSON
-                console.log('Fetched users:', users); // Print the entire response
-                const user = users.find(u => u.user === 'exampleUser'); // Replace with actual user logic
-                if (user) {
-                    dogeInput.querySelector('input').value = user.doge || '';
-                    ltcInput.querySelector('input').value = user.ltc || '';
-                    lkyInput.querySelector('input').value = user.lky || '';
+            fetch(apiUrl, {
+                headers: {
+                    'X-API-Key': apiKey // Ensure you have the API key available
                 }
-            } catch (e) {
-                console.error('Error parsing JSON:', e);
-                alert('An error occurred while processing user data.');
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-            alert('An error occurred while fetching user data.');
+            })
+            .then(response => {
+                console.log(`Response status for ${ticker}:`, response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    const inputField = form.querySelector(`input[name=${ticker}]`);
+                    inputField.value = data.address || '';
+                } else {
+                    console.error(`Error fetching ${ticker} address:`, data.message);
+                }
+            })
+            .catch(error => {
+                console.error(`Error fetching ${ticker} address:`, error);
+                alert(`An error occurred while fetching ${ticker.toUpperCase()} address.`);
+            });
         });
     }
 
