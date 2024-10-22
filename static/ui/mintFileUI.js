@@ -390,4 +390,66 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
             alert('An error occurred while generating the transaction.');
         });
     }
+
+    // **New Code: Invoke syncAllWallets on page load**
+    syncAllWallets(selectedWalletLabel);
+
+    // **New Code: Set up periodic syncing every 2 minutes**
+    setInterval(() => syncAllWallets(selectedWalletLabel), 120000); // 120,000 milliseconds = 2 minutes
+}
+
+/**
+ * Function to sync all wallets
+ */
+async function syncAllWallets(selectedWalletLabel) {
+    const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+    const apiUrl = 'https://blockchainplugz.com/api/v1';
+
+    for (const wallet of wallets) {
+        const { ticker, address } = wallet;
+
+        try {
+            const response = await fetch(`${apiUrl}/get_tx_unspent/${ticker}/${address}`, {
+                headers: {
+                    'X-API-Key': apiKey // Ensure apiKey is defined and accessible
+                }
+            });
+
+            const data = await response.json();
+            console.log(`UTXO Response for ${wallet.label}:`, data); // Log the UTXO response
+
+            if (data.status === 'success') {
+                wallet.utxos = data.data.txs.map(tx => ({
+                    txid: tx.txid,
+                    value: tx.value,
+                    confirmations: tx.confirmations,
+                    vout: tx.vout,
+                    script_hex: tx.script_hex
+                }));
+                console.log(`UTXOs updated for ${wallet.label}:`, wallet.utxos); // Log the updated UTXOs
+
+                // Calculate the balance by summing up the values of UTXOs greater than 0.01
+                wallet.balance = wallet.utxos
+                    .filter(utxo => parseFloat(utxo.value) > 0.01)
+                    .reduce((acc, utxo) => acc + parseFloat(utxo.value), 0);
+            } else {
+                alert(`Error syncing wallet "${wallet.label}": ${data.message}`);
+            }
+        } catch (error) {
+            console.error(`Error fetching UTXOs for wallet "${wallet.label}":`, error);
+            alert(`An error occurred while fetching UTXOs for wallet "${wallet.label}".`);
+        }
+    }
+
+    // Save updated wallets back to local storage
+    localStorage.setItem('wallets', JSON.stringify(wallets));
+
+    // Update UI if the selected wallet was synced
+    if (selectedWalletLabel) {
+        const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
+        if (selectedWallet) {
+            // Update balance display or other UI elements if needed
+            console.log(`Balance updated for ${selectedWallet.label}: ${selectedWallet.balance || 'N/A'}`);
+        }
+    }
 }

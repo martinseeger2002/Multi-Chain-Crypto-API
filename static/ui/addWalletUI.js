@@ -93,9 +93,28 @@ export function addWalletUI() {
     form.appendChild(getNewAddressButton);
     form.appendChild(custodialText);
     form.appendChild(waitText);
+
+    // Create and append label for Wallet Label input
+    const labelInputLabel = document.createElement('label');
+    labelInputLabel.textContent = 'Wallet Label';
+    labelInputLabel.className = 'small-text'; // Apply small text class
+    form.appendChild(labelInputLabel);
     form.appendChild(labelInput);
+
+    // Create and append label for Address input
+    const addressInputLabel = document.createElement('label');
+    addressInputLabel.textContent = 'Address';
+    addressInputLabel.className = 'small-text'; // Apply small text class
+    form.appendChild(addressInputLabel);
     form.appendChild(addressInput);
+
+    // Create and append label for WIF Private Key input
+    const wifPrivkeyInputLabel = document.createElement('label');
+    wifPrivkeyInputLabel.textContent = 'WIF Private Key';
+    wifPrivkeyInputLabel.className = 'small-text'; // Apply small text class
+    form.appendChild(wifPrivkeyInputLabel);
     form.appendChild(wifPrivkeyInput);
+
     form.appendChild(importText);
     form.appendChild(saveButton);
 
