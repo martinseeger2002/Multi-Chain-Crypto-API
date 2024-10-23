@@ -35,6 +35,18 @@ export function userUI() {
 
     landingPage.appendChild(form);
 
+
+        // **New Code: Clear Pending Transactions Button**
+        const clearPendingButton = document.createElement('button');
+        clearPendingButton.textContent = 'Clear Pending';
+        clearPendingButton.className = 'styled-button'; // Use a class for styling
+        clearPendingButton.addEventListener('click', () => {
+            localStorage.removeItem('mintResponse'); // Clear pending transactions from local storage
+            localStorage.removeItem('pendingUTXOs'); // Clear pending UTXOs from local storage
+        alert('Pending transactions and UTXOs cleared.');
+        });
+    landingPage.appendChild(clearPendingButton);
+
     // Create Back button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';

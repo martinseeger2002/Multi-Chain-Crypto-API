@@ -166,30 +166,10 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
 
     // Generate Transactions button
     const generateTxButton = document.createElement('button');
-    generateTxButton.textContent = 'Generate Transactions';
+    generateTxButton.textContent = 'Inscribe';
     generateTxButton.className = 'styled-button'; // Use a class for styling
     generateTxButton.addEventListener('click', generateTransactions);
     landingPage.appendChild(generateTxButton);
-
-    // Inscribe button
-    const inscribeButton = document.createElement('button');
-    inscribeButton.textContent = 'Inscribe';
-    inscribeButton.className = 'styled-button'; // Use a class for styling
-    inscribeButton.addEventListener('click', () => {
-        inscribeUI(); // Navigate to inscribe UI
-    });
-    landingPage.appendChild(inscribeButton);
-
-    // **New Code: Clear Pending Transactions Button**
-    const clearPendingButton = document.createElement('button');
-    clearPendingButton.textContent = 'Clear Pending';
-    clearPendingButton.className = 'styled-button'; // Use a class for styling
-    clearPendingButton.addEventListener('click', () => {
-        localStorage.removeItem('mintResponse'); // Clear pending transactions from local storage
-        localStorage.removeItem('pendingUTXOs'); // Clear pending UTXOs from local storage
-        alert('Pending transactions and UTXOs cleared.');
-    });
-    landingPage.appendChild(clearPendingButton);
 
     // Back button
     const backButton = document.createElement('button');
@@ -257,6 +237,14 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
      * Function to generate transactions
      */
     function generateTransactions() {
+        // Check for pending transactions
+        const pendingTransactions = JSON.parse(localStorage.getItem('mintResponse'))?.pendingTransactions || [];
+        if (pendingTransactions.length > 0) {
+            alert('There are pending transactions. Continuing to inscribe UI.');
+            inscribeUI(); // Navigate to inscribe UI
+            return; // Exit the function early
+        }
+
         const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
         if (!selectedWallet) {
             alert('Please select a wallet.');
@@ -455,3 +443,4 @@ async function syncAllWallets(selectedWalletLabel) {
         }
     }
 }
+
