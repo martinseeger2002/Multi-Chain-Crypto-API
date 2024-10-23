@@ -443,4 +443,3 @@ async function syncAllWallets(selectedWalletLabel) {
         }
     }
 }
-

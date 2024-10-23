@@ -1,4 +1,5 @@
 import { mintSelectionUI } from './mintSelectionUI.js'; // Import your mintSelectionUI function
+import { mintFileUI } from './mintFileUI.js';
 
 export function imageCompressorUI() {
     const landingPage = document.getElementById('landing-page');
@@ -108,7 +109,51 @@ export function imageCompressorUI() {
     const generateButton = document.createElement('button');
     generateButton.textContent = 'Generate Transactions';
     generateButton.className = 'styled-button';
-    // Currently does nothing
+    generateButton.addEventListener('click', () => {
+        if (imageDisplay.src) {
+            fetch(imageDisplay.src)
+                .then(response => response.blob())
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const dataUrl = reader.result;
+                        const [header, base64Data] = dataUrl.split(',');
+                        const mimeMatch = header.match(/:(.*?);/);
+
+                        if (mimeMatch && mimeMatch[1]) {
+                            const mimeType = mimeMatch[1];
+                            console.log('MIME Type:', mimeType);
+                            console.log('Base64 Data:', base64Data);
+
+                            // Calculate and display the size from Base64
+                            const base64SizeKB = calculateBase64Size(base64Data);
+                            progressDisplay.textContent = `Compression completed. Quality: ${(qualitySlider.value * 100).toFixed(0)}%, Scale: ${(scaleSlider.value * 100).toFixed(0)}%, File Size: ${base64SizeKB} KB`;
+
+                            if (base64SizeKB < 65) {
+                                const hexData = base64ToHex(base64Data);
+                                console.log('Hex Data:', hexData);
+
+                                // Save MIME type and hex data to local storage
+                                localStorage.setItem('pendingHexData', JSON.stringify({ mimeType, hexData }));
+
+                                // Navigate to mintFileUI
+                                mintFileUI();
+                            } else {
+                                alert('Image larger than 65 KB. Increase compression and try again.');
+                            }
+                        } else {
+                            console.error('Failed to extract MIME type.');
+                        }
+                    };
+                    reader.readAsDataURL(blob);
+                })
+                .catch(error => {
+                    console.error('Error fetching blob:', error);
+                });
+        } else {
+            console.log('No image data available.');
+        }
+    });
     landingPage.appendChild(generateButton);
 
     // Back Button
@@ -177,10 +222,9 @@ export function imageCompressorUI() {
             };
             imageDisplay.src = compressedImageUrl; // Set the source after onload is defined
 
-            // Display compression details with an additional 20 KB
+            // Display compression details without the additional 20 KB
             const blobSizeKB = (compressedBlob.size / 1024).toFixed(2);
-            const adjustedSizeKB = (parseFloat(blobSizeKB) + 20).toFixed(2);
-            progressDisplay.textContent = `Compression completed. Quality: ${(quality * 100).toFixed(0)}%, Scale: ${(scale * 100).toFixed(0)}%, File Size: ${adjustedSizeKB} KB`;
+            progressDisplay.textContent = `Compression completed. Quality: ${(quality * 100).toFixed(0)}%, Scale: ${(scale * 100).toFixed(0)}%, File Size: ${blobSizeKB} KB`;
 
             console.log('Compressed image blob:', compressedBlob);
         } catch (error) {
@@ -206,5 +250,24 @@ export function imageCompressorUI() {
         }
 
         return new Blob([u8arr], { type: mime });
+    }
+
+    // Function to calculate the size of a Base64 string
+    function calculateBase64Size(base64String) {
+        const padding = (base64String.match(/=+$/) || [''])[0].length;
+        const base64Length = base64String.length;
+        const sizeInBytes = (base64Length * 3) / 4 - padding;
+        return (sizeInBytes / 1024).toFixed(2); // Convert to KB
+    }
+
+    // Function to convert Base64 to Hex
+    function base64ToHex(base64String) {
+        const raw = atob(base64String);
+        let result = '';
+        for (let i = 0; i < raw.length; i++) {
+            const hex = raw.charCodeAt(i).toString(16);
+            result += (hex.length === 2 ? hex : '0' + hex);
+        }
+        return result.toUpperCase();
     }
 }
