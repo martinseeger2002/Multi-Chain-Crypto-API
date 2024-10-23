@@ -10,15 +10,6 @@ export function imageCompressorUI() {
     title.className = 'page-title';
     landingPage.appendChild(title);
 
-    // Back Button
-    const backButton = document.createElement('button');
-    backButton.textContent = 'Back';
-    backButton.className = 'styled-button back-button';
-    backButton.addEventListener('click', () => {
-        mintSelectionUI();
-    });
-    landingPage.appendChild(backButton);
-
     // File Input
     const fileInputLabel = document.createElement('label');
     fileInputLabel.className = 'styled-button';
@@ -33,56 +24,6 @@ export function imageCompressorUI() {
     fileInputLabel.appendChild(fileInput);
     landingPage.appendChild(fileInputLabel);
 
-    // Quality Slider
-    const qualityContainer = document.createElement('div');
-    qualityContainer.className = 'slider-container';
-    qualityContainer.style.width = '300px'; // Set a fixed width for consistency
-
-    const qualityLabel = document.createElement('label');
-    qualityLabel.textContent = 'Compression Quality: ';
-    qualityContainer.appendChild(qualityLabel);
-
-    const qualityValue = document.createElement('span');
-    qualityValue.textContent = '0.9';
-
-    const qualitySlider = document.createElement('input');
-    qualitySlider.type = 'range';
-    qualitySlider.min = '0.1';
-    qualitySlider.max = '1';
-    qualitySlider.step = '0.01';
-    qualitySlider.value = '0.9';
-    qualitySlider.addEventListener('input', () => {
-        qualityValue.textContent = qualitySlider.value;
-    });
-    qualityContainer.appendChild(qualitySlider);
-    qualityContainer.appendChild(qualityValue);
-    landingPage.appendChild(qualityContainer);
-
-    // Scale Slider
-    const scaleContainer = document.createElement('div');
-    scaleContainer.className = 'slider-container';
-    scaleContainer.style.width = '300px'; // Set the same fixed width
-
-    const scaleLabel = document.createElement('label');
-    scaleLabel.textContent = 'Scale: ';
-    scaleContainer.appendChild(scaleLabel);
-
-    const scaleValue = document.createElement('span');
-    scaleValue.textContent = '0.9';
-
-    const scaleSlider = document.createElement('input');
-    scaleSlider.type = 'range';
-    scaleSlider.min = '0.1';
-    scaleSlider.max = '1';
-    scaleSlider.step = '0.01';
-    scaleSlider.value = '0.9';
-    scaleSlider.addEventListener('input', () => {
-        scaleValue.textContent = scaleSlider.value;
-    });
-    scaleContainer.appendChild(scaleSlider);
-    scaleContainer.appendChild(scaleValue);
-    landingPage.appendChild(scaleContainer);
-
     // Compress Button
     const compressButton = document.createElement('button');
     compressButton.textContent = 'Compress';
@@ -95,13 +36,89 @@ export function imageCompressorUI() {
     progressDisplay.className = 'progress-display';
     landingPage.appendChild(progressDisplay);
 
+    // Image Container
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'image-container';
+    imageContainer.style.position = 'relative';
+    imageContainer.style.width = '200px'; // Updated width
+    imageContainer.style.height = '200px'; // Updated height
+    imageContainer.style.border = '1px solid #ccc'; // Optional border
+    imageContainer.style.margin = '20px auto'; // Center the container
+    landingPage.appendChild(imageContainer);
+
     // Image Display
     const imageDisplay = document.createElement('img');
     imageDisplay.className = 'compressed-image';
-    imageDisplay.style.maxWidth = '50vw'; // Set to half the viewport width
-    imageDisplay.style.maxHeight = '50vh'; // Set to half the viewport height
-    imageDisplay.style.objectFit = 'contain'; // Maintain aspect ratio
-    landingPage.appendChild(imageDisplay);
+    imageDisplay.style.maxWidth = '100%';
+    imageDisplay.style.maxHeight = '100%';
+    imageDisplay.style.objectFit = 'contain';
+    imageContainer.appendChild(imageDisplay);
+
+    // Compression Quality Slider ('C')
+    const qualitySliderContainer = document.createElement('div');
+    qualitySliderContainer.style.position = 'absolute';
+    qualitySliderContainer.style.top = '0';
+    qualitySliderContainer.style.left = '-100px'; // Move further outside
+    qualitySliderContainer.style.height = '100%';
+    qualitySliderContainer.style.display = 'flex';
+    qualitySliderContainer.style.flexDirection = 'column';
+    qualitySliderContainer.style.alignItems = 'center';
+
+    const qualitySlider = document.createElement('input');
+    qualitySlider.type = 'range';
+    qualitySlider.min = '0.1';
+    qualitySlider.max = '1';
+    qualitySlider.step = '0.01';
+    qualitySlider.value = '0.9';
+    qualitySlider.style.transform = 'rotate(270deg)';
+    qualitySlider.style.width = '100px'; // Length of the slider
+    qualitySlider.addEventListener('input', () => {
+        // Optionally update something
+    });
+    qualitySliderContainer.appendChild(qualitySlider);
+
+    imageContainer.appendChild(qualitySliderContainer);
+
+    // Scale Slider ('S')
+    const scaleSliderContainer = document.createElement('div');
+    scaleSliderContainer.style.position = 'absolute';
+    scaleSliderContainer.style.top = '0';
+    scaleSliderContainer.style.right = '-100px'; // Move further outside
+    scaleSliderContainer.style.height = '100%';
+    scaleSliderContainer.style.display = 'flex';
+    scaleSliderContainer.style.flexDirection = 'column';
+    scaleSliderContainer.style.alignItems = 'center';
+
+    const scaleSlider = document.createElement('input');
+    scaleSlider.type = 'range';
+    scaleSlider.min = '0.1';
+    scaleSlider.max = '1';
+    scaleSlider.step = '0.01';
+    scaleSlider.value = '0.9';
+    scaleSlider.style.transform = 'rotate(270deg)';
+    scaleSlider.style.width = '100px'; // Length of the slider
+    scaleSlider.addEventListener('input', () => {
+        // Optionally update something
+    });
+    scaleSliderContainer.appendChild(scaleSlider);
+
+    imageContainer.appendChild(scaleSliderContainer);
+
+    // Generate Transactions Button
+    const generateButton = document.createElement('button');
+    generateButton.textContent = 'Generate Transactions';
+    generateButton.className = 'styled-button';
+    // Currently does nothing
+    landingPage.appendChild(generateButton);
+
+    // Back Button
+    const backButton = document.createElement('button');
+    backButton.textContent = 'Back';
+    backButton.className = 'styled-button back-button';
+    backButton.addEventListener('click', () => {
+        mintSelectionUI();
+    });
+    landingPage.appendChild(backButton);
 
     // Selected File Reference
     let selectedFile = null;
@@ -154,7 +171,7 @@ export function imageCompressorUI() {
 
             // Display compressed image
             imageDisplay.onload = () => {
-                // Adjust the image size to fit the viewport
+                // Adjust the image size to fit the container
                 imageDisplay.style.width = 'auto';
                 imageDisplay.style.height = 'auto';
             };

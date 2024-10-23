@@ -522,7 +522,7 @@ select {
 .button-container {
     display: flex;
     flex-direction: column; /* Stack buttons vertically */
-    gap: 10px; /* Space between buttons */
+    gap: 5px; /* Space between buttons */
 }
 
 .inscribe-main {

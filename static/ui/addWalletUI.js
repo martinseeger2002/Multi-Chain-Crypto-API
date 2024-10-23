@@ -26,10 +26,15 @@ export function addWalletUI() {
         dropdown.appendChild(option);
     });
 
+    let skipImport = false; // Flag to track if address import should be skipped
+
     const getNewAddressButton = document.createElement('button');
     getNewAddressButton.className = 'styled-button'; // Use a class for styling
     getNewAddressButton.textContent = 'Get New Address';
-    getNewAddressButton.addEventListener('click', () => handleButtonClick('get_new_address_and_privkey'));
+    getNewAddressButton.addEventListener('click', () => {
+        handleButtonClick('get_new_address_and_privkey');
+        skipImport = true; // Set flag to true when "Get New Address" is pressed
+    });
 
     const custodialText = document.createElement('div');
     custodialText.textContent = '"Get New Address" creates a Custodial wallet: we have your key but you do not have to wait to use it.';
@@ -147,30 +152,37 @@ export function addWalletUI() {
             // Save updated wallets back to local storage
             localStorage.setItem('wallets', JSON.stringify(wallets));
 
-            // Import the wallet address using the new endpoint
-            fetch(`/api/v1/import_address/${ticker}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-Key': apiKey // Use the apiKey variable
-                },
-                body: JSON.stringify({ address })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Wallet imported and saved successfully!');
-                } else {
-                    alert('Wallet saved, but import failed.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while importing the wallet.');
-            });
+            if (!skipImport) { // Check the flag before importing
+                // Import the wallet address using the new endpoint
+                fetch(`/api/v1/import_address/${ticker}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey // Use the apiKey variable
+                    },
+                    body: JSON.stringify({ address })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Wallet imported and saved successfully!');
+                    } else {
+                        alert('Wallet saved, but import failed.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while importing the wallet.');
+                });
+            } else {
+                alert('Wallet saved');
+            }
 
             // Clear form inputs
             form.reset();
+
+            // Reset the flag after saving
+            skipImport = false;
 
             // Navigate back to the previous screen and select the new wallet
             walletUI(wallet.label);
