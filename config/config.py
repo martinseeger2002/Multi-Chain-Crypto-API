@@ -2,7 +2,7 @@
 import configparser
 
 config = configparser.ConfigParser()
-config.read('RPC2.conf')
+config.read('./config/RPC2.conf')
 
 # Store configurations for each ticker
 rpc_configs = {

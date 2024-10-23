@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, send_file, jsonify, make_response,
 import re
 import sqlite3
 import base64
-from getOrdContent import process_tx
+from utils.getOrdContent import process_tx
 from db.db_utils import get_content_db_connection
 
 
@@ -31,7 +31,7 @@ def landing_page():
 
 @main_bp.route('/api_tester.html')
 def api_tester():
-    return send_file('api_tester.html')
+    return render_template('api_tester.html')
 
 @main_bp.route('/content/<txid>i0', methods=['GET'])
 def display_content(txid, processed_txids=None):

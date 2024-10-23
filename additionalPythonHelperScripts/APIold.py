@@ -12,7 +12,7 @@ import requests
 import sqlite3
 import json
 import logging
-from getOrdContent import process_tx
+from utils.getOrdContent import process_tx
 from flask_cors import CORS
 import base64
 import re

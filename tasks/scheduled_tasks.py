@@ -24,6 +24,29 @@ def trigger_blockchain_rescan():
             print(f"Blockchain rescan started for {ticker}: {result}")
         except JSONRPCException as e:
             print(f"Error triggering blockchain rescan for {ticker}: {e}")
+
+def load_ltc_wallet():
+    cfg = rpc_configs.get("LTC")
+    if not cfg:
+        print("LTC configuration not found.")
+        return
+
+    try:
+        rpc_connection = AuthServiceProxy(
+            f"http://{cfg['rpc_user']}:{cfg['rpc_password']}@{cfg['rpc_host']}:{cfg['rpc_port']}"
+        )
+        wallet_name = "/wallets/wallet.dat"  # Replace with your actual wallet file name
+        try:
+            rpc_connection.loadwallet(wallet_name)
+            print(f"LTC wallet {wallet_name} loaded successfully.")
+        except JSONRPCException as e:
+            if "already loaded" in str(e):
+                print(f"LTC wallet {wallet_name} is already loaded.")
+            else:
+                print(f"Failed to load LTC wallet {wallet_name}: {e}")
+    except JSONRPCException as e:
+        print(f"Error loading LTC wallet: {e}")
+
         
 def reset_daily_request_counts():
     conn = sqlite3.connect('./db/APIkeys.db')

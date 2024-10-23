@@ -29,8 +29,9 @@ export function landingPageUI() {
     const buttons = [
         { text: 'Wallet', onClick: walletUI },
         { text: 'Mint', onClick: mintSelectionUI },
-        { text: 'Messaging Coming Soon', onClick: () => { /* Add functionality here */ } },
-        { text: 'User', onClick: userUI }
+        { text: 'Vault (Coming Soon)', onClick: () => { /* Add functionality here */ } },
+        { text: 'User', onClick: userUI },
+        { text: 'Buy Mint Credits (Coming Soon)', onClick: () => { /* Add functionality here */ } } // New button
     ];
 
     buttons.forEach(({ text, onClick }) => {

@@ -12,7 +12,7 @@ from routes.blockchain import blockchain_bp
 from routes.network import network_bp
 from routes.minting import minting_bp
 from routes.user import user_bp
-from tasks.scheduled_tasks import scheduler
+from tasks.scheduled_tasks import scheduler, load_ltc_wallet
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Replace with a secure key
@@ -36,4 +36,5 @@ scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
 if __name__ == '__main__':
+    load_ltc_wallet()
     app.run(host='0.0.0.0', port=8069, debug=True)

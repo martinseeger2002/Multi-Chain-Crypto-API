@@ -10,7 +10,7 @@ config = configparser.ConfigParser()
 config.read('RPC.conf')
 
 # Global database path
-DB_PATH = './db/content.db'
+DB_PATH = '../db/content.db'
 
 # Store configurations for each ticker
 rpc_configs = {
