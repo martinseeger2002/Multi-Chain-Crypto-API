@@ -7,14 +7,14 @@ export function imageCompressorUI() {
 
     // Title
     const title = document.createElement('h1');
-    title.textContent = 'Image Compressor';
+    title.textContent = 'Mint Image';
     title.className = 'page-title';
     landingPage.appendChild(title);
 
     // File Input
     const fileInputLabel = document.createElement('label');
     fileInputLabel.className = 'styled-button';
-    fileInputLabel.textContent = 'Choose File';
+    fileInputLabel.textContent = 'Choose Image';
 
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -58,8 +58,8 @@ export function imageCompressorUI() {
     // Compression Quality Slider ('C')
     const qualitySliderContainer = document.createElement('div');
     qualitySliderContainer.style.position = 'absolute';
-    qualitySliderContainer.style.top = '0';
-    qualitySliderContainer.style.left = '-100px'; // Move further outside
+    qualitySliderContainer.style.top = '50px';
+    qualitySliderContainer.style.left = '-200px'; // Move further outside
     qualitySliderContainer.style.height = '100%';
     qualitySliderContainer.style.display = 'flex';
     qualitySliderContainer.style.flexDirection = 'column';
@@ -68,11 +68,11 @@ export function imageCompressorUI() {
     const qualitySlider = document.createElement('input');
     qualitySlider.type = 'range';
     qualitySlider.min = '0.1';
-    qualitySlider.max = '1';
+    qualitySlider.max = '0.8';
     qualitySlider.step = '0.01';
-    qualitySlider.value = '0.9';
+    qualitySlider.value = '0.8';
     qualitySlider.style.transform = 'rotate(270deg)';
-    qualitySlider.style.width = '100px'; // Length of the slider
+    qualitySlider.style.width = '300px'; // Length of the slider
     qualitySlider.addEventListener('input', () => {
         // Optionally update something
     });
@@ -83,8 +83,8 @@ export function imageCompressorUI() {
     // Scale Slider ('S')
     const scaleSliderContainer = document.createElement('div');
     scaleSliderContainer.style.position = 'absolute';
-    scaleSliderContainer.style.top = '0';
-    scaleSliderContainer.style.right = '-100px'; // Move further outside
+    scaleSliderContainer.style.top = '50px';
+    scaleSliderContainer.style.right = '-200px'; // Move further outside
     scaleSliderContainer.style.height = '100%';
     scaleSliderContainer.style.display = 'flex';
     scaleSliderContainer.style.flexDirection = 'column';
@@ -93,11 +93,11 @@ export function imageCompressorUI() {
     const scaleSlider = document.createElement('input');
     scaleSlider.type = 'range';
     scaleSlider.min = '0.1';
-    scaleSlider.max = '1';
+    scaleSlider.max = '0.8';
     scaleSlider.step = '0.01';
-    scaleSlider.value = '0.9';
+    scaleSlider.value = '0.8';
     scaleSlider.style.transform = 'rotate(270deg)';
-    scaleSlider.style.width = '100px'; // Length of the slider
+    scaleSlider.style.width = '300px'; // Length of the slider
     scaleSlider.addEventListener('input', () => {
         // Optionally update something
     });
@@ -107,9 +107,16 @@ export function imageCompressorUI() {
 
     // Generate Transactions Button
     const generateButton = document.createElement('button');
-    generateButton.textContent = 'Generate Transactions';
+    generateButton.textContent = 'Next';
     generateButton.className = 'styled-button';
     generateButton.addEventListener('click', () => {
+        const pendingHexData = localStorage.getItem('pendingTransactions');
+        if (pendingHexData) {
+            alert('There are pending transactions. Continuing to inscribe UI.');
+            mintImageUI();
+            return;
+        }
+
         if (imageDisplay.src) {
             fetch(imageDisplay.src)
                 .then(response => response.blob())
@@ -127,14 +134,14 @@ export function imageCompressorUI() {
 
                             // Calculate and display the size from Base64
                             const base64SizeKB = calculateBase64Size(base64Data);
-                            progressDisplay.textContent = `Compression completed. Quality: ${(qualitySlider.value * 100).toFixed(0)}%, Scale: ${(scaleSlider.value * 100).toFixed(0)}%, File Size: ${base64SizeKB} KB`;
+                            progressDisplay.textContent = `Compressed, Q : ${(qualitySlider.value * 100).toFixed(0)}%, S : ${(scaleSlider.value * 100).toFixed(0)}%, Size: ${base64SizeKB} KB`;
 
                             if (base64SizeKB < 45) {
                                 const hexData = base64ToHex(base64Data);
                                 console.log('Hex Data:', hexData);
 
                                 // Save MIME type and hex data to local storage
-                                localStorage.setItem('pendingHexData', JSON.stringify({ mimeType, hexData }));
+                                localStorage.setItem('pendingTransactions', JSON.stringify({ mimeType, hexData }));
                                 console.log('Saved pendingHexData:', { mimeType, hexData });
 
                                 // Navigate to mintImageUI
@@ -175,7 +182,7 @@ export function imageCompressorUI() {
         if (selectedFile) {
             const imageUrl = URL.createObjectURL(selectedFile);
             imageDisplay.src = imageUrl;
-            progressDisplay.textContent = `Original File Size: ${(selectedFile.size / 1024).toFixed(2)} KB`;
+            progressDisplay.textContent = `${(selectedFile.size / 1024).toFixed(2)} KB`;
         }
     }
 
@@ -230,7 +237,7 @@ export function imageCompressorUI() {
             const displayedSizeKB = (blobSizeKB * 1.33).toFixed(2); // Add 33% to the displayed size
 
             // Update the progress display with the adjusted size for display only
-            progressDisplay.textContent = `Compression completed. Quality: ${(quality * 100).toFixed(0)}%, Scale: ${(scale * 100).toFixed(0)}%, File Size: ${displayedSizeKB} KB (actual: ${blobSizeKB} KB)`;
+            progressDisplay.textContent = `${displayedSizeKB} KB`;
 
             console.log('Compressed image blob:', compressedBlob);
         } catch (error) {

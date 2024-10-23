@@ -53,12 +53,19 @@ export function inscribeUI() {
     buttonContainer.className = 'button-container'; // Ensure this class stacks buttons vertically via CSS
     landingPage.appendChild(buttonContainer);
 
-    // Inscribe button (formerly Inscribe All)
+    // Inscribe button
     const inscribeButton = document.createElement('button');
-    inscribeButton.textContent = 'Inscribe'; // Change text to "Inscribe"
+    inscribeButton.textContent = 'Inscribe';
     inscribeButton.className = 'splash-enter-button'; // Updated to match mainSplashUI styling
-    inscribeButton.addEventListener('click', () => inscribeAllTransactions());
+    inscribeButton.addEventListener('click', () => inscribeTransaction());
     buttonContainer.appendChild(inscribeButton);
+
+    // Inscribe All button
+    const inscribeAllButton = document.createElement('button');
+    inscribeAllButton.textContent = 'Inscribe All';
+    inscribeAllButton.className = 'splash-enter-button'; // Updated to match mainSplashUI styling
+    inscribeAllButton.addEventListener('click', () => inscribeAllTransactions());
+    buttonContainer.appendChild(inscribeAllButton);
 
     // Back button
     const backButton = document.createElement('button');
@@ -91,8 +98,10 @@ export function inscribeUI() {
 
         // Disable buttons and change text
         inscribeButton.disabled = true;
+        inscribeAllButton.disabled = true;
         backButton.disabled = true;
         inscribeButton.textContent = 'Processing...';
+        inscribeAllButton.textContent = 'Processing...';
 
         const topTransaction = pendingTransactions[0];
         const txHex = topTransaction.hex;
@@ -114,11 +123,9 @@ export function inscribeUI() {
 
                 // Only add to My Inscriptions if the transaction number is 2
                 if (topTransaction.transactionNumber === 2) {
-                    const selectedAddress = selectedWallet.address; // Use the selected wallet's address
                     myInscriptions.push({
                         name: inscriptionName,
-                        txid: data.data.txid,
-                        address: selectedAddress // Add the selected wallet's address
+                        txid: data.data.txid
                     });
                     localStorage.setItem('MyInscriptions', JSON.stringify(myInscriptions));
                 }
@@ -150,17 +157,7 @@ export function inscribeUI() {
                     alert(`Transaction sent successfully! TXID: ${data.data.txid}`);
                 }
             } else {
-                if (data.message.includes('too-long-mempool-chain')) {
-                    alert('Too long mempool chain. Wait for current transactions to be confirmed to continue.');
-                } else if (data.message.includes('transaction already in block chain')) {
-                    // Remove the transaction from the pending list if it's already in the blockchain
-                    pendingTransactions.shift();
-                    localStorage.setItem('mintResponse', JSON.stringify({ pendingTransactions }));
-                    updatePendingTxCounter(pendingTransactions.length);
-                    alert('Transaction already in blockchain. Removed from pending list.');
-                } else {
-                    alert(`Error sending transaction: ${data.message}`);
-                }
+                alert(`Error sending transaction: ${data.message}`);
                 return Promise.reject(`Error sending transaction: ${data.message}`);
             }
         })
@@ -174,8 +171,10 @@ export function inscribeUI() {
         .finally(() => {
             // Re-enable buttons and reset text
             inscribeButton.disabled = false;
+            inscribeAllButton.disabled = false;
             backButton.disabled = false;
             inscribeButton.textContent = 'Inscribe';
+            inscribeAllButton.textContent = 'Inscribe All';
         });
     }
 
