@@ -1,5 +1,5 @@
 import { mintSelectionUI } from './mintSelectionUI.js'; // Import your mintSelectionUI function
-import { mintFileUI } from './mintFileUI.js';
+import { mintImageUI } from './mintImageUI.js';
 
 export function imageCompressorUI() {
     const landingPage = document.getElementById('landing-page');
@@ -135,9 +135,10 @@ export function imageCompressorUI() {
 
                                 // Save MIME type and hex data to local storage
                                 localStorage.setItem('pendingHexData', JSON.stringify({ mimeType, hexData }));
+                                console.log('Saved pendingHexData:', { mimeType, hexData });
 
-                                // Navigate to mintFileUI
-                                mintFileUI();
+                                // Navigate to mintImageUI
+                                mintImageUI();
                             } else {
                                 alert('Image larger than 65 KB. Increase compression and try again.');
                             }
