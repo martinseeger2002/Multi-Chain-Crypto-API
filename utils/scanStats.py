@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 config = configparser.ConfigParser()
 config.read('RPC2.conf')
 
-DB_DIR = './db'
+DB_DIR = '../db'
 
 def get_rpc_url(coin):
     rpc_user = config[coin]['rpcuser']

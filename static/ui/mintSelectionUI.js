@@ -9,7 +9,7 @@ export function mintSelectionUI() {
     landingPage.innerHTML = ''; // Clear existing content
 
     const title = document.createElement('h1');
-    title.textContent = 'Mint Selection';
+    title.textContent = 'Mint';
     title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
@@ -34,7 +34,7 @@ export function mintSelectionUI() {
 
     // Image Compressor button
     const imageCompressorButton = document.createElement('button');
-    imageCompressorButton.textContent = 'Image Compressor';
+    imageCompressorButton.textContent = 'Mint Image';
     imageCompressorButton.className = 'styled-button'; // Use a class for styling
     imageCompressorButton.addEventListener('click', () => {
         imageCompressorUI(); // Navigate to image compressor UI

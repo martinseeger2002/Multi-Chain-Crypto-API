@@ -166,7 +166,7 @@ export function mintFileUI(selectedWalletLabel = localStorage.getItem('selectedW
 
     // Generate Transactions button
     const generateTxButton = document.createElement('button');
-    generateTxButton.textContent = 'Inscribe';
+    generateTxButton.textContent = 'Next';
     generateTxButton.className = 'styled-button'; // Use a class for styling
     generateTxButton.addEventListener('click', generateTransactions);
     landingPage.appendChild(generateTxButton);

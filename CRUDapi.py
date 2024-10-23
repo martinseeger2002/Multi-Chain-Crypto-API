@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, session, render_template, redirect, u
 from functools import wraps
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
-from scanStats import get_db_connection, get_last_scanned_block, get_wallet_count, get_rpc_connection, retry_rpc_call
+from utils.scanStats import get_db_connection, get_last_scanned_block, get_wallet_count, get_rpc_connection, retry_rpc_call
 import bcrypt
 
 
