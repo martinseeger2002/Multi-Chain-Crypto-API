@@ -110,7 +110,7 @@ export function imageCompressorUI() {
     generateButton.textContent = 'Next';
     generateButton.className = 'styled-button';
     generateButton.addEventListener('click', () => {
-        const pendingHexData = localStorage.getItem('pendingTransactions');
+        const pendingHexData = readFromLocalStorage('pendingHexData'); // Use helper function
         if (pendingHexData) {
             alert('There are pending transactions. Continuing to inscribe UI.');
             mintImageUI();
@@ -141,8 +141,7 @@ export function imageCompressorUI() {
                                 console.log('Hex Data:', hexData);
 
                                 // Save MIME type and hex data to local storage
-                                localStorage.setItem('pendingTransactions', JSON.stringify({ mimeType, hexData }));
-                                console.log('Saved pendingHexData:', { mimeType, hexData });
+                                writeToLocalStorage('pendingHexData', { mimeType, hexData }); // Use helper function
 
                                 // Navigate to mintImageUI
                                 mintImageUI();
@@ -282,5 +281,24 @@ export function imageCompressorUI() {
             result += (hex.length === 2 ? hex : '0' + hex);
         }
         return result.toUpperCase();
+    }
+
+    // Helper function to read from localStorage with logging
+    function readFromLocalStorage(key) {
+        const data = localStorage.getItem(key);
+        try {
+            const parsedData = JSON.parse(data);
+            console.log(`Read from localStorage [${key}]:`, parsedData);
+            return parsedData;
+        } catch (error) {
+            console.error(`Error parsing JSON from localStorage [${key}]:`, error);
+            return null; // Return null if parsing fails
+        }
+    }
+
+    // Helper function to write to localStorage with logging
+    function writeToLocalStorage(key, value) {
+        console.log(`Write to localStorage [${key}]:`, value);
+        localStorage.setItem(key, JSON.stringify(value));
     }
 }

@@ -38,12 +38,16 @@ export function userUI() {
 
         // **New Code: Clear Pending Transactions Button**
         const clearPendingButton = document.createElement('button');
-        clearPendingButton.textContent = 'Clear Pending';
+        clearPendingButton.textContent = 'Clear Cache';
         clearPendingButton.className = 'styled-button'; // Use a class for styling
         clearPendingButton.addEventListener('click', () => {
-            localStorage.removeItem('mintResponse'); // Clear pending transactions from local storage
-            localStorage.removeItem('pendingUTXOs'); // Clear pending UTXOs from local storage
-        alert('Pending transactions and UTXOs cleared.');
+            localStorage.removeItem('selectedWalletLabel'); // Clear selected wallet label
+            localStorage.removeItem('pendingHexData'); // Clear pending hex data
+            localStorage.removeItem('mintResponse'); // Clear mint response
+            localStorage.removeItem('transactionHexes'); // Clear transaction hexes
+            localStorage.removeItem('pendingUTXOs'); // Clear pending UTXOs
+            localStorage.removeItem('fileToMint'); // Clear file to mint data
+        alert('Cache cleared.');
         });
     landingPage.appendChild(clearPendingButton);
 
