@@ -129,7 +129,7 @@ export function imageCompressorUI() {
                             const base64SizeKB = calculateBase64Size(base64Data);
                             progressDisplay.textContent = `Compression completed. Quality: ${(qualitySlider.value * 100).toFixed(0)}%, Scale: ${(scaleSlider.value * 100).toFixed(0)}%, File Size: ${base64SizeKB} KB`;
 
-                            if (base64SizeKB < 65) {
+                            if (base64SizeKB < 45) {
                                 const hexData = base64ToHex(base64Data);
                                 console.log('Hex Data:', hexData);
 
@@ -140,7 +140,7 @@ export function imageCompressorUI() {
                                 // Navigate to mintImageUI
                                 mintImageUI();
                             } else {
-                                alert('Image larger than 65 KB. Increase compression and try again.');
+                                alert('Image larger than 50 KB. Increase compression and try again.');
                             }
                         } else {
                             console.error('Failed to extract MIME type.');
@@ -223,9 +223,14 @@ export function imageCompressorUI() {
             };
             imageDisplay.src = compressedImageUrl; // Set the source after onload is defined
 
-            // Display compression details without the additional 20 KB
+            // Calculate the actual blob size in KB
             const blobSizeKB = (compressedBlob.size / 1024).toFixed(2);
-            progressDisplay.textContent = `Compression completed. Quality: ${(quality * 100).toFixed(0)}%, Scale: ${(scale * 100).toFixed(0)}%, File Size: ${blobSizeKB} KB`;
+            
+            // Calculate the displayed size with an additional 33% for display purposes only
+            const displayedSizeKB = (blobSizeKB * 1.33).toFixed(2); // Add 33% to the displayed size
+
+            // Update the progress display with the adjusted size for display only
+            progressDisplay.textContent = `Compression completed. Quality: ${(quality * 100).toFixed(0)}%, Scale: ${(scale * 100).toFixed(0)}%, File Size: ${displayedSizeKB} KB (actual: ${blobSizeKB} KB)`;
 
             console.log('Compressed image blob:', compressedBlob);
         } catch (error) {
