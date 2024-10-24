@@ -61,7 +61,6 @@ export function mintImageUI(selectedWalletLabel = readFromLocalStorage('selected
     const defaultOption = document.createElement('option');
     defaultOption.textContent = 'Select a Wallet';
     defaultOption.disabled = true;
-    defaultOption.selected = true;
     walletDropdown.appendChild(defaultOption);
 
     wallets.forEach(wallet => {
@@ -108,7 +107,7 @@ export function mintImageUI(selectedWalletLabel = readFromLocalStorage('selected
         }
     });
 
-    // **Added Code: Trigger UTXO loading on page load if a wallet is selected**
+    // **Ensure the selected wallet is loaded on initialization**
     if (selectedWalletLabel) {
         walletDropdown.value = selectedWalletLabel;
         walletDropdown.dispatchEvent(new Event('change')); // Trigger the change event to load UTXOs

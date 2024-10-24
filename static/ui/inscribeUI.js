@@ -120,12 +120,14 @@ export function inscribeUI() {
             if (data.status === 'success') {
                 const inscriptionName = inscriptionNameInput.value.trim();
                 const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || [];
+                const selectedWalletLabel = localStorage.getItem('selectedWalletLabel') || 'Unknown Wallet';
 
                 // Only add to My Inscriptions if the transaction number is 2
                 if (topTransaction.transactionNumber === 2) {
                     myInscriptions.push({
                         name: inscriptionName,
-                        txid: data.data.txid
+                        txid: data.data.txid,
+                        sendingaddress: selectedWalletLabel // Add the selected wallet label
                     });
                     localStorage.setItem('MyInscriptions', JSON.stringify(myInscriptions));
                 }

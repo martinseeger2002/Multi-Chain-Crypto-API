@@ -19,6 +19,8 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
     walletDropdown.className = 'styled-select'; // Use a class for styling
     const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
 
+    console.log('Loaded wallets:', wallets); // Debug: Log loaded wallets
+
     const defaultOption = document.createElement('option');
     defaultOption.textContent = 'Select a Wallet';
     defaultOption.disabled = true;
@@ -28,9 +30,6 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
         const option = document.createElement('option');
         option.value = wallet.label;
         option.textContent = wallet.label;
-        if (wallet.label === selectedWalletLabel) {
-            option.selected = true; // Select the stored wallet
-        }
         walletDropdown.appendChild(option);
     });
 
@@ -76,10 +75,14 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
         }
     });
 
-    // Trigger change event to update UI with the selected wallet's details
+    // Ensure the selected wallet is highlighted on initialization
     if (selectedWalletLabel) {
-        walletDropdown.dispatchEvent(new Event('change'));
+        console.log('Setting selected wallet:', selectedWalletLabel); // Debug: Log selected wallet
+        walletDropdown.value = selectedWalletLabel;
+        walletDropdown.dispatchEvent(new Event('change')); // Trigger the change event to update UI
     } else if (wallets.length > 0) {
+        console.log('No selected wallet, defaulting to first wallet'); // Debug: Log default selection
+        walletDropdown.value = wallets[0].label; // Default to the first wallet if none is selected
         walletDropdown.dispatchEvent(new Event('change'));
     }
 
