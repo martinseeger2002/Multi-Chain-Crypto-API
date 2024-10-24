@@ -25,7 +25,7 @@ export function userUI() {
 
     // **New Code: Clear Pending Transactions Button**
     const clearPendingButton = document.createElement('button');
-    clearPendingButton.textContent = 'Clear Cache';
+    clearPendingButton.textContent = 'Clear Mint Cache';
     clearPendingButton.className = 'styled-button'; // Use a class for styling
     clearPendingButton.addEventListener('click', () => {
         localStorage.removeItem('selectedWalletLabel'); // Clear selected wallet label
