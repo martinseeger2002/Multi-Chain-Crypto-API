@@ -38,6 +38,14 @@ export function userUI() {
     });
     landingPage.appendChild(clearPendingButton);
 
+    // Create Change Password button
+    const changePasswordButton = document.createElement('button');
+    changePasswordButton.textContent = 'Change Password';
+    changePasswordButton.className = 'styled-button change-password-button'; // Use a class for styling
+    changePasswordButton.addEventListener('click', handleChangePassword);
+
+    landingPage.appendChild(changePasswordButton);
+
     // Create Back button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
@@ -102,6 +110,99 @@ export function userUI() {
         backButton.className = 'styled-button back-button';
         backButton.addEventListener('click', userUI); // Reload initial userUI state
         landingPage.appendChild(backButton);
+    }
+
+    function handleChangePassword() {
+        // Remove all button elements
+        landingPage.innerHTML = '';
+
+        // Create new password input interface
+        const newPasswordTitle = document.createElement('h2');
+        newPasswordTitle.textContent = 'Enter New Password';
+        landingPage.appendChild(newPasswordTitle);
+
+        const newPasswordInput = createPasswordInput();
+        landingPage.appendChild(newPasswordInput.container);
+
+        const reenterPasswordTitle = document.createElement('h2');
+        reenterPasswordTitle.textContent = 'Re-enter New Password';
+        landingPage.appendChild(reenterPasswordTitle);
+
+        const reenterPasswordInput = createPasswordInput();
+        landingPage.appendChild(reenterPasswordInput.container);
+
+        // Create submit button
+        const submitButton = document.createElement('button');
+        submitButton.textContent = 'Submit';
+        submitButton.className = 'styled-button';
+        submitButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            const newPassword = newPasswordInput.input.value.trim();
+            const reenteredPassword = reenterPasswordInput.input.value.trim();
+
+            if (newPassword && newPassword === reenteredPassword) {
+                updatePassword(newPassword);
+            } else {
+                alert('Passwords do not match. Please try again.');
+            }
+        });
+        landingPage.appendChild(submitButton);
+
+        // Create back button
+        const backButton = document.createElement('button');
+        backButton.textContent = 'Back';
+        backButton.className = 'styled-button back-button';
+        backButton.addEventListener('click', userUI); // Reload initial userUI state
+        landingPage.appendChild(backButton);
+    }
+
+    function createPasswordInput() {
+        const container = document.createElement('div');
+        container.className = 'password-container';
+
+        const input = document.createElement('input');
+        input.type = 'password';
+        input.className = 'password-input';
+
+        const toggleButton = document.createElement('span');
+        toggleButton.textContent = '👁️';
+        toggleButton.className = 'toggle-password';
+        toggleButton.addEventListener('click', () => {
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        });
+
+        container.appendChild(input);
+        container.appendChild(toggleButton);
+
+        return { container, input };
+    }
+
+    function updatePassword(newPassword) {
+        const apiUrl = '/api/v1/user/update_password';
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': apiKey // Ensure you have the API key available
+            },
+            body: JSON.stringify({ new_password: newPassword })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Password updated successfully.');
+            } else {
+                alert(`Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating password:', error);
+            alert('An error occurred while updating the password.');
+        });
     }
 
     function validateAndUpdateAddress(ticker, newAddress) {

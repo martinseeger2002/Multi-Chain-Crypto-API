@@ -5,6 +5,7 @@ from db.db_utils import get_db_connection
 import bcrypt
 from config.config import API_KEY
 from flask import current_app
+import bcrypt
 
 wallet_bp = Blueprint('wallet', __name__)
 
@@ -151,13 +152,15 @@ def update_password():
         if not new_password:
             return jsonify({"status": "error", "message": "New password not provided"}), 400
 
+        # Hash the new password using bcrypt
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
         try:
             # Update the password for the user
-            # Assuming passwords are stored securely (e.g., hashed)
-            cursor.execute('UPDATE users SET password = ? WHERE user = ?', (new_password, username))
+            cursor.execute('UPDATE users SET password = ? WHERE user = ?', (hashed_password, username))
             conn.commit()
             current_app.logger.info(f"Password updated for user {username}.")
             return jsonify({"status": "success", "message": "Password updated successfully"}), 200
@@ -169,4 +172,4 @@ def update_password():
         finally:
             conn.close()
 
-    return jsonify({"status": "error", "message": "User not logged in"}), 401    
+    return jsonify({"status": "error", "message": "User not logged in"}), 401
