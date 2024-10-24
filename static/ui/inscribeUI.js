@@ -55,7 +55,7 @@ export function inscribeUI() {
 
     // Inscribe All button
     const inscribeAllButton = document.createElement('button');
-    inscribeAllButton.textContent = 'Inscribe';
+    inscribeAllButton.textContent = 'Inscribe All';
     inscribeAllButton.className = 'splash-enter-button'; // Updated to match mainSplashUI styling
     inscribeAllButton.addEventListener('click', () => inscribeAllTransactions());
     buttonContainer.appendChild(inscribeAllButton);
@@ -113,16 +113,12 @@ export function inscribeUI() {
                 const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || [];
                 const selectedWalletLabel = localStorage.getItem('selectedWalletLabel') || 'Unknown Wallet';
 
-                // Retrieve the list of wallets and find the selected wallet
-                const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
-                const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
-
                 // Only add to My Inscriptions if the transaction number is 2
                 if (topTransaction.transactionNumber === 2) {
                     myInscriptions.push({
                         name: inscriptionName,
                         txid: data.data.txid,
-                        sendingaddress: selectedWallet ? selectedWallet.label : 'Unknown Wallet'
+                        sendingaddress: selectedWalletLabel // Add the selected wallet label
                     });
                     localStorage.setItem('MyInscriptions', JSON.stringify(myInscriptions));
                 }

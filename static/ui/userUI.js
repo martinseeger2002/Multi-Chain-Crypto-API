@@ -15,40 +15,27 @@ export function userUI() {
 
     // Create form elements
     const form = document.createElement('form');
-    const dogeButton = createButton('DOGE Address', 'doge');
-    const ltcButton = createButton('LTC Address', 'ltc');
-    const lkyButton = createButton('LKY Address', 'lky');
-    const submitButton = document.createElement('button');
-    submitButton.textContent = 'Update Credentials';
-    submitButton.type = 'submit';
-    submitButton.className = 'styled-button'; // Use a class for styling
+    const dogeButton = createButton('Dogecoin', 'doge');
+    const lkyButton = createButton('Luckycoin', 'lky');
 
     form.appendChild(dogeButton);
-    form.appendChild(ltcButton);
     form.appendChild(lkyButton);
-    form.appendChild(submitButton);
-
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        updateUserCredentials();
-    });
 
     landingPage.appendChild(form);
 
-
-        // **New Code: Clear Pending Transactions Button**
-        const clearPendingButton = document.createElement('button');
-        clearPendingButton.textContent = 'Clear Cache';
-        clearPendingButton.className = 'styled-button'; // Use a class for styling
-        clearPendingButton.addEventListener('click', () => {
-            localStorage.removeItem('selectedWalletLabel'); // Clear selected wallet label
-            localStorage.removeItem('pendingHexData'); // Clear pending hex data
-            localStorage.removeItem('mintResponse'); // Clear mint response
-            localStorage.removeItem('transactionHexes'); // Clear transaction hexes
-            localStorage.removeItem('pendingUTXOs'); // Clear pending UTXOs
-            localStorage.removeItem('fileToMint'); // Clear file to mint data
+    // **New Code: Clear Pending Transactions Button**
+    const clearPendingButton = document.createElement('button');
+    clearPendingButton.textContent = 'Clear Cache';
+    clearPendingButton.className = 'styled-button'; // Use a class for styling
+    clearPendingButton.addEventListener('click', () => {
+        localStorage.removeItem('selectedWalletLabel'); // Clear selected wallet label
+        localStorage.removeItem('pendingHexData'); // Clear pending hex data
+        localStorage.removeItem('mintResponse'); // Clear mint response
+        localStorage.removeItem('transactionHexes'); // Clear transaction hexes
+        localStorage.removeItem('pendingUTXOs'); // Clear pending UTXOs
+        localStorage.removeItem('fileToMint'); // Clear file to mint data
         alert('Cache cleared.');
-        });
+    });
     landingPage.appendChild(clearPendingButton);
 
     // Create Back button
@@ -70,26 +57,101 @@ export function userUI() {
     // Fetch user data and populate fields
     fetchUserData();
 
-    function createButton(labelText, name) {
-        const container = document.createElement('div');
-        container.className = 'input-container'; // Use a class for styling
-
-        const label = document.createElement('label');
-        label.textContent = labelText;
-        label.className = 'coin-label'; // Use a class for styling
-
+    function createButton(buttonText, name) {
         const button = document.createElement('button');
-        button.textContent = labelText;
+        button.textContent = buttonText;
         button.name = name;
         button.className = 'styled-button'; // Use a class for styling
+        button.addEventListener('click', () => handleAddressButtonClick(name));
+        return button;
+    }
 
-        container.appendChild(label);
-        container.appendChild(button);
-        return container;
+    function handleAddressButtonClick(ticker) {
+        // Remove all button elements
+        landingPage.innerHTML = '';
+
+        // Create new title
+        const newTitle = document.createElement('h1');
+        newTitle.textContent = `${ticker.charAt(0).toUpperCase() + ticker.slice(1)} Address`;
+        newTitle.className = 'page-title';
+        landingPage.appendChild(newTitle);
+
+        // Create text entry box
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = form.querySelector(`button[name="${ticker}"]`).getAttribute('data-address') || '';
+        input.className = 'address-input';
+        landingPage.appendChild(input);
+
+        // Create submit button
+        const submitButton = document.createElement('button');
+        submitButton.textContent = 'Submit';
+        submitButton.className = 'styled-button';
+        submitButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            const newAddress = input.value.trim();
+            if (newAddress) {
+                validateAndUpdateAddress(ticker, newAddress);
+            }
+        });
+        landingPage.appendChild(submitButton);
+
+        // Create back button
+        const backButton = document.createElement('button');
+        backButton.textContent = 'Back';
+        backButton.className = 'styled-button back-button';
+        backButton.addEventListener('click', userUI); // Reload initial userUI state
+        landingPage.appendChild(backButton);
+    }
+
+    function validateAndUpdateAddress(ticker, newAddress) {
+        const validationUrl = `/api/v1/is_valid_address/${ticker}/${newAddress}`;
+        fetch(validationUrl, {
+            method: 'GET',
+            headers: {
+                'X-API-Key': apiKey // Ensure you have the API key available
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' && data.data.is_valid) {
+                updateWalletAddress(ticker, newAddress);
+            } else {
+                alert('Invalid address. Please enter a valid address.');
+            }
+        })
+        .catch(error => {
+            console.error('Error validating address:', error);
+            alert('An error occurred while validating the address.');
+        });
+    }
+
+    function updateWalletAddress(ticker, newAddress) {
+        const apiUrl = `/api/v1/wallet/${ticker}`;
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': apiKey // Ensure you have the API key available
+            },
+            body: JSON.stringify({ address: newAddress })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Wallet address updated successfully.');
+            } else {
+                alert(`Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating wallet address:', error);
+            alert('An error occurred while updating the wallet address.');
+        });
     }
 
     function fetchUserData() {
-        const tickers = ['doge', 'ltc', 'lky'];
+        const tickers = ['doge', 'lky'];
         tickers.forEach(ticker => {
             const apiUrl = `/api/v1/wallet/${ticker}`;
             console.log(`Fetching ${ticker.toUpperCase()} address from:`, apiUrl);
@@ -107,8 +169,7 @@ export function userUI() {
                 if (data.status === 'success') {
                     const button = form.querySelector(`button[name="${ticker}"]`);
                     const address = data.address || '';
-                    const formattedAddress = `${address.slice(0, 4)}...${address.slice(-4)}`;
-                    button.textContent = formattedAddress;
+                    button.setAttribute('data-address', address); // Store the address in a data attribute
                 } else {
                     console.error(`Error fetching ${ticker} address:`, data.message);
                 }
@@ -117,44 +178,6 @@ export function userUI() {
                 console.error(`Error fetching ${ticker} address:`, error);
                 alert(`An error occurred while fetching ${ticker.toUpperCase()} address.`);
             });
-        });
-    }
-
-    function updateUserCredentials() {
-        const user = 'exampleUser'; // Replace with actual user identifier
-        const apiUrl = `https://blockchainplugz.com/api/users/${user}/update_credentials`;
-
-        const data = {
-            doge: form.querySelector('button[name="doge"]').textContent,
-            ltc: form.querySelector('button[name="ltc"]').textContent,
-            lky: form.querySelector('button[name="lky"]').textContent
-        };
-
-        console.log('Updating user credentials with data:', data);
-
-        fetch(apiUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': apiKey // Ensure you have the API key available
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Update response:', data);
-            if (data.message) {
-                alert(data.message);
-            } else if (data.error) {
-                alert(data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error updating credentials:', error);
-            alert('An error occurred while updating credentials.');
         });
     }
 

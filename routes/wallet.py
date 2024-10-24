@@ -100,3 +100,73 @@ def get_wallet_address(ticker):
             return jsonify({"status": "error", "message": "Address not found"}), 404
 
     return jsonify({"status": "error", "message": "User not logged in"}), 401
+
+@wallet_bp.route('/api/v1/wallet/<ticker>', methods=['POST'])
+def update_wallet_address(ticker):
+    if 'user' in session:
+        username = session['user']
+        data = request.get_json()
+        new_address = data.get('address')
+
+        if not new_address:
+            return jsonify({"status": "error", "message": "New address not provided"}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Map the ticker to the corresponding column name in the database
+        column_map = {
+            'doge': 'doge',
+            'ltc': 'ltc',
+            'lky': 'lky'
+        }
+        column_name = column_map.get(ticker.lower())
+
+        if not column_name:
+            return jsonify({"status": "error", "message": "Invalid ticker"}), 400
+
+        try:
+            # Update the wallet address for the user by ticker
+            cursor.execute(f'UPDATE users SET {column_name} = ? WHERE user = ?', (new_address, username))
+            conn.commit()
+            current_app.logger.info(f"Wallet address updated for user {username} and ticker {ticker}.")
+            return jsonify({"status": "success", "message": "Wallet address updated"}), 200
+
+        except Exception as e:
+            current_app.logger.error(f"Error updating wallet address for user {username} and ticker {ticker}: {str(e)}")
+            return jsonify({"status": "error", "message": "An error occurred while updating wallet address"}), 500
+
+        finally:
+            conn.close()
+
+    return jsonify({"status": "error", "message": "User not logged in"}), 401
+
+@wallet_bp.route('/api/v1/user/update_password', methods=['POST'])
+def update_password():
+    if 'user' in session:
+        username = session['user']
+        data = request.get_json()
+        new_password = data.get('new_password')
+
+        if not new_password:
+            return jsonify({"status": "error", "message": "New password not provided"}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        try:
+            # Update the password for the user
+            # Assuming passwords are stored securely (e.g., hashed)
+            cursor.execute('UPDATE users SET password = ? WHERE user = ?', (new_password, username))
+            conn.commit()
+            current_app.logger.info(f"Password updated for user {username}.")
+            return jsonify({"status": "success", "message": "Password updated successfully"}), 200
+
+        except Exception as e:
+            current_app.logger.error(f"Error updating password for user {username}: {str(e)}")
+            return jsonify({"status": "error", "message": "An error occurred while updating password"}), 500
+
+        finally:
+            conn.close()
+
+    return jsonify({"status": "error", "message": "User not logged in"}), 401    
