@@ -4,27 +4,32 @@ export function viewUtxoUI(selectedLabel) {
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
-    const title = document.createElement('h1');
-    title.textContent = 'UTXOs';
-    title.className = 'page-title'; // Use a class for styling
-    landingPage.appendChild(title);
+    // Create and style the iframe
+    const iframe = document.createElement('iframe');
+    iframe.className = 'scrollable-iframe'; // Add a class for styling
+    iframe.style.width = '300px'; // Set width
+    iframe.style.height = '550px'; // Set height to make it shorter
+    iframe.style.border = '1px solid #000'; // Add border
+    iframe.style.overflow = 'auto'; // Enable scrolling
+    landingPage.appendChild(iframe);
 
+    // Retrieve the selected wallet's UTXOs
     const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
     const selectedWallet = wallets.find(wallet => wallet.label === selectedLabel);
 
     if (selectedWallet && selectedWallet.utxos) {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write('<html><body style="background-color: black; color: white;"></body></html>');
+        doc.close();
+        const body = doc.body;
+
+        // Display UTXOs in the iframe
         selectedWallet.utxos.forEach(utxo => {
-            const utxoDiv = document.createElement('div');
-            utxoDiv.textContent = `Value: ${utxo.value}, Confirmations: ${utxo.confirmations}`;
+            const utxoDiv = doc.createElement('div');
             utxoDiv.className = 'utxo-item'; // Use a class for styling
-
-            // Add click event listener to show txid and vout
-            utxoDiv.addEventListener('click', () => {
-                const message = `${utxo.txid}:${utxo.vout}`;
-                alert(message); // Display the message in a prompt
-            });
-
-            landingPage.appendChild(utxoDiv);
+            utxoDiv.textContent = `TXID: ${utxo.txid}, Value: ${utxo.value}, Confirmations: ${utxo.confirmations}`;
+            body.appendChild(utxoDiv);
         });
     } else {
         const noUtxosMessage = document.createElement('div');
@@ -33,9 +38,10 @@ export function viewUtxoUI(selectedLabel) {
         landingPage.appendChild(noUtxosMessage);
     }
 
+    // Back button to return to the wallet UI
     const backButton = document.createElement('button');
     backButton.textContent = 'Back';
-    backButton.className = 'button'; // Use a class for styling
+    backButton.className = 'styled-button'; // Use a class for styling
     backButton.addEventListener('click', walletUI);
     landingPage.appendChild(backButton);
 }

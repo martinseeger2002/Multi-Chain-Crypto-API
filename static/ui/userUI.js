@@ -15,8 +15,8 @@ export function userUI() {
 
     // Create form elements
     const form = document.createElement('form');
-    const dogeButton = createButton('Dogecoin', 'doge');
-    const lkyButton = createButton('Luckycoin', 'lky');
+    const dogeButton = createButton('Dogecoin Vault', 'doge');
+    const lkyButton = createButton('Luckycoin Vault', 'lky');
 
     form.appendChild(dogeButton);
     form.appendChild(lkyButton);
