@@ -52,7 +52,7 @@ export function mintSelectionUI() {
 
     // My Inscriptions button
     const myInscriptionsButton = document.createElement('button');
-    myInscriptionsButton.textContent = 'My Inscriptions';
+    myInscriptionsButton.textContent = 'My Collections';
     myInscriptionsButton.className = 'styled-button'; // Use a class for styling
     myInscriptionsButton.addEventListener('click', () => {
         myInscriptionUI(); // Navigate to my inscriptions UI
