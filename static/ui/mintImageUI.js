@@ -1,29 +1,7 @@
-import { mintSelectionUI } from './mintSelectionUI.js'; // Import the mintSelectionUI function
-import { inscribeUI } from './inscribeUI.js'; // Import the inscribeUI function
+import { mintSelectionUI } from './mintSelectionUI.js';
+import { inscribeUI } from './inscribeUI.js';
 
-// Helper function to read from localStorage with logging
-function readFromLocalStorage(key) {
-    const data = localStorage.getItem(key);
-    try {
-        const parsedData = JSON.parse(data);
-        console.log(`Read from localStorage [${key}]:`, parsedData);
-        return parsedData;
-    } catch (error) {
-        console.error(`Error parsing JSON from localStorage [${key}]:`, error);
-        return null; // Return null if parsing fails
-    }
-}
-
-// Helper function to write to localStorage with logging
-function writeToLocalStorage(key, value) {
-    console.log(`Write to localStorage [${key}]:`, value);
-    localStorage.setItem(key, JSON.stringify(value));
-}
-
-/**
- * Function to initialize and render the Mint Image UI.
- */
-export function mintImageUI(selectedWalletLabel = readFromLocalStorage('selectedWalletLabel') || null) {
+export function mintImageUI(selectedWalletLabel = localStorage.getItem('selectedWalletLabel') || null) {
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
@@ -56,11 +34,12 @@ export function mintImageUI(selectedWalletLabel = readFromLocalStorage('selected
     // Wallet dropdown
     const walletDropdown = document.createElement('select');
     walletDropdown.className = 'styled-select'; // Use a class for styling
-    const wallets = readFromLocalStorage('wallets') || [];
+    const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
 
     const defaultOption = document.createElement('option');
     defaultOption.textContent = 'Select a Wallet';
     defaultOption.disabled = true;
+    defaultOption.selected = true;
     walletDropdown.appendChild(defaultOption);
 
     wallets.forEach(wallet => {
@@ -101,13 +80,13 @@ export function mintImageUI(selectedWalletLabel = readFromLocalStorage('selected
 
         // Save the selected wallet label to local storage
         if (selectedWallet) {
-            writeToLocalStorage('selectedWalletLabel', selectedWallet.label);
+            localStorage.setItem('selectedWalletLabel', selectedWallet.label);
         } else {
             localStorage.removeItem('selectedWalletLabel');
         }
     });
 
-    // **Ensure the selected wallet is loaded on initialization**
+    // Trigger UTXO loading on page load if a wallet is selected
     if (selectedWalletLabel) {
         walletDropdown.value = selectedWalletLabel;
         walletDropdown.dispatchEvent(new Event('change')); // Trigger the change event to load UTXOs
@@ -148,12 +127,9 @@ export function mintImageUI(selectedWalletLabel = readFromLocalStorage('selected
     });
     landingPage.appendChild(backButton);
 
-    /**
-     * Function to generate transactions
-     */
     function generateTransactions() {
         // Check for pending transactions
-        const pendingTransactions = readFromLocalStorage('mintResponse')?.pendingTransactions || [];
+        const pendingTransactions = JSON.parse(localStorage.getItem('mintResponse'))?.pendingTransactions || [];
         if (pendingTransactions.length > 0) {
             alert('There are pending transactions. Continuing to inscribe UI.');
             inscribeUI(); // Navigate to inscribe UI
@@ -176,8 +152,7 @@ export function mintImageUI(selectedWalletLabel = readFromLocalStorage('selected
 
         console.log('Selected UTXO for Transaction:', selectedUtxo); // Log selected UTXO
 
-        // **Use pending hex data from local storage**
-        const pendingHexData = readFromLocalStorage('pendingHexData'); // Use helper function
+        const pendingHexData = JSON.parse(localStorage.getItem('pendingHexData'));
         if (!pendingHexData) {
             alert('No pending hex data found. Please ensure the data is available.');
             return;
@@ -215,62 +190,46 @@ export function mintImageUI(selectedWalletLabel = readFromLocalStorage('selected
         .then(data => {
             console.log('Response Data:', JSON.stringify(data, null, 2)); // Log the response data in a readable format
 
-            // **Adjusting the Success Condition**
             if (data.pendingTransactions && Array.isArray(data.pendingTransactions) && data.pendingTransactions.length > 0) {
                 console.log('Pending Transactions:', data.pendingTransactions); // Log pending transactions
 
-                // **Save Transaction Hexes to a List**
                 try {
-                    // Retrieve existing hexes from local storage, or initialize an empty array
-                    let existingHexes = readFromLocalStorage('transactionHexes') || [];
-
-                    // Extract hex data from pendingTransactions
+                    let existingHexes = JSON.parse(localStorage.getItem('transactionHexes')) || [];
                     const newHexes = data.pendingTransactions.map(tx => tx.hex);
-
-                    // Append new hexes to the existing list
                     existingHexes.push(...newHexes);
-
-                    // Save the updated list back to local storage
-                    writeToLocalStorage('transactionHexes', existingHexes);
+                    localStorage.setItem('transactionHexes', JSON.stringify(existingHexes));
                     console.log('Transaction hexes saved successfully:', newHexes);
                 } catch (error) {
                     console.error('Error saving transaction hexes to local storage:', error);
                     alert('An error occurred while saving the transaction hexes.');
                 }
 
-                // **Optional:** Save the entire response to local storage
                 try {
                     const pendingTransactions = data.pendingTransactions.map(tx => ({
                         ...tx,
-                        ticker: selectedWallet.ticker // Add the ticker to each transaction
+                        ticker: selectedWallet.ticker
                     }));
 
-                    writeToLocalStorage('mintResponse', { pendingTransactions });
+                    localStorage.setItem('mintResponse', JSON.stringify({ pendingTransactions }));
                     console.log('Mint response saved successfully.');
                     
-                    // Navigate to inscribe UI instead of alert
                     inscribeUI();
                 } catch (error) {
                     console.error('Error saving mintResponse to local storage:', error);
                     alert('An error occurred while saving the mint response.');
                 }
 
-                // **New Code: Save Used UTXO as Pending UTXO**
                 try {
-                    // Retrieve existing pending UTXOs from local storage, or initialize an empty array
-                    let pendingUTXOs = readFromLocalStorage('pendingUTXOs') || [];
-
-                    // Define the used UTXO
+                    let pendingUTXOs = JSON.parse(localStorage.getItem('pendingUTXOs')) || [];
                     const usedUtxo = {
                         txid: selectedUtxo.txid,
                         vout: selectedUtxo.vout
                     };
 
-                    // Avoid duplicates
                     const isAlreadyPending = pendingUTXOs.some(utxo => utxo.txid === usedUtxo.txid && utxo.vout === usedUtxo.vout);
                     if (!isAlreadyPending) {
                         pendingUTXOs.push(usedUtxo);
-                        writeToLocalStorage('pendingUTXOs', pendingUTXOs);
+                        localStorage.setItem('pendingUTXOs', JSON.stringify(pendingUTXOs));
                         console.log('Pending UTXO saved:', usedUtxo);
                     } else {
                         console.log('UTXO is already marked as pending:', usedUtxo);
@@ -280,31 +239,24 @@ export function mintImageUI(selectedWalletLabel = readFromLocalStorage('selected
                     alert('An error occurred while saving the pending UTXO.');
                 }
 
-                localStorage.removeItem('pendingHexData'); // Remove pending hex data from local storage
+                localStorage.removeItem('pendingHexData');
             } else {
-                // Handle cases where pendingTransactions is missing or empty
                 console.error('Mint API did not return pendingTransactions or it is empty:', data);
                 alert(data.message || 'An error occurred.');
             }
         })
         .catch(error => {
-            console.error('Error generating transaction:', error); // Log the full error
+            console.error('Error generating transaction:', error);
             alert('An error occurred while generating the transaction.');
         });
     }
 
-    // **New Code: Invoke syncAllWallets on page load**
     syncAllWallets(selectedWalletLabel);
-
-    // **New Code: Set up periodic syncing every 2 minutes**
-    setInterval(() => syncAllWallets(selectedWalletLabel), 120000); // 120,000 milliseconds = 2 minutes
+    setInterval(() => syncAllWallets(selectedWalletLabel), 120000);
 }
 
-/**
- * Function to sync all wallets
- */
 async function syncAllWallets(selectedWalletLabel) {
-    const wallets = readFromLocalStorage('wallets') || [];
+    const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
     const apiUrl = 'https://blockchainplugz.com/api/v1';
 
     for (const wallet of wallets) {
@@ -313,12 +265,12 @@ async function syncAllWallets(selectedWalletLabel) {
         try {
             const response = await fetch(`${apiUrl}/get_tx_unspent/${ticker}/${address}`, {
                 headers: {
-                    'X-API-Key': apiKey // Ensure apiKey is defined and accessible
+                    'X-API-Key': apiKey
                 }
             });
 
             const data = await response.json();
-            console.log(`UTXO Response for ${wallet.label}:`, data); // Log the UTXO response
+            console.log(`UTXO Response for ${wallet.label}:`, data);
 
             if (data.status === 'success') {
                 wallet.utxos = data.data.txs.map(tx => ({
@@ -328,9 +280,8 @@ async function syncAllWallets(selectedWalletLabel) {
                     vout: tx.vout,
                     script_hex: tx.script_hex
                 }));
-                console.log(`UTXOs updated for ${wallet.label}:`, wallet.utxos); // Log the updated UTXOs
+                console.log(`UTXOs updated for ${wallet.label}:`, wallet.utxos);
 
-                // Calculate the balance by summing up the values of UTXOs greater than 0.01
                 wallet.balance = wallet.utxos
                     .filter(utxo => parseFloat(utxo.value) > 0.01)
                     .reduce((acc, utxo) => acc + parseFloat(utxo.value), 0);
@@ -343,14 +294,11 @@ async function syncAllWallets(selectedWalletLabel) {
         }
     }
 
-    // Save updated wallets back to local storage
-    writeToLocalStorage('wallets', wallets);
+    localStorage.setItem('wallets', JSON.stringify(wallets));
 
-    // Update UI if the selected wallet was synced
     if (selectedWalletLabel) {
         const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
         if (selectedWallet) {
-            // Update balance display or other UI elements if needed
             console.log(`Balance updated for ${selectedWallet.label}: ${selectedWallet.balance || 'N/A'}`);
         }
     }
