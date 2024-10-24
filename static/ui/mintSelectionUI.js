@@ -2,6 +2,7 @@ import { mintFileUI } from './mintFileUI.js';
 import { landingPageUI } from './landingPageUI.js'; // Import the landingPageUI function
 import { myInscriptionUI } from './myInscriptionUI.js'; // Import the myInscriptionUI function
 import { imageCompressorUI } from './imageCompressorUI.js'; // Import the imageCompressorUI function
+import { textHexerUI } from './textHexerUI.js'; // Import the textHexerUI function
 
 
 export function mintSelectionUI() {
@@ -49,6 +50,15 @@ export function mintSelectionUI() {
         mintFileUI(); // Navigate to mint file UI
     });
     landingPage.appendChild(mintFileButton);
+
+    // Mint Text button
+    const mintTextButton = document.createElement('button');
+    mintTextButton.textContent = 'Mint Text';
+    mintTextButton.className = 'styled-button'; // Use a class for styling
+    mintTextButton.addEventListener('click', () => {
+        textHexerUI(); // Navigate to text hexer UI
+    });
+    landingPage.appendChild(mintTextButton);
 
     // My Inscriptions button
     const myInscriptionsButton = document.createElement('button');

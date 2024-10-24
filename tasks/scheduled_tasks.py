@@ -6,13 +6,6 @@ import time
 from config.config import rpc_configs
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 
-def run_scan_and_import():
-    try:
-        subprocess.run(["python3", "scanAndImportNew.py"], check=True)
-        print("scanAndImportNew.py executed successfully")
-    except subprocess.CalledProcessError as e:
-        print(f"Error running scanAndImportNew.py: {e}")
-
 def trigger_blockchain_rescan():
     for ticker, cfg in rpc_configs.items():
         try:
@@ -66,7 +59,6 @@ def reset_daily_request_counts():
     conn.close()
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=run_scan_and_import, trigger="interval", minutes=2.5)
 scheduler.add_job(
     func=trigger_blockchain_rescan,
     trigger='cron',

@@ -41,16 +41,19 @@ export function addWalletUI() {
     custodialText.className = 'info-text red-text'; // Use classes for styling
 
     // Commenting out the "Generate New Address" button and its text
-    /*
+   
     const generateKeyButton = document.createElement('button');
     generateKeyButton.className = 'styled-button'; // Use a class for styling
     generateKeyButton.textContent = 'Generate New Address';
-    generateKeyButton.addEventListener('click', () => handleButtonClick('generate_key'));
+    generateKeyButton.addEventListener('click', () => {
+        handleButtonClick('generate_key');
+        skipImport = true; // Set flag to true when "Generate New Address" is pressed
+    });
 
     const selfCustodialText = document.createElement('div');
     selfCustodialText.textContent = '"Generate New Address" creates a Self-Custodial wallet: your keys are only on your device';
     selfCustodialText.className = 'info-text green-text'; // Use classes for styling
-    */
+    
 
     const waitText = document.createElement('div');
     waitText.textContent = 'If using self-custodial wallet, please wait up to 24 hours for the balance and UTXOs to be scanned.';
@@ -88,10 +91,10 @@ export function addWalletUI() {
     backButton.addEventListener('click', walletUI);
 
     // Commenting out the addition of the button and text to the form
-    /*
+    
     form.appendChild(generateKeyButton);
     form.appendChild(selfCustodialText);
-    */
+    
 
     // Continue with the rest of the form elements
     form.appendChild(dropdown);
@@ -103,21 +106,18 @@ export function addWalletUI() {
     const labelInputLabel = document.createElement('label');
     labelInputLabel.textContent = 'Wallet Label';
     labelInputLabel.className = 'small-text'; // Apply small text class
-    form.appendChild(labelInputLabel);
     form.appendChild(labelInput);
 
     // Create and append label for Address input
     const addressInputLabel = document.createElement('label');
     addressInputLabel.textContent = 'Address';
     addressInputLabel.className = 'small-text'; // Apply small text class
-    form.appendChild(addressInputLabel);
     form.appendChild(addressInput);
 
     // Create and append label for WIF Private Key input
     const wifPrivkeyInputLabel = document.createElement('label');
     wifPrivkeyInputLabel.textContent = 'WIF Private Key';
     wifPrivkeyInputLabel.className = 'small-text'; // Apply small text class
-    form.appendChild(wifPrivkeyInputLabel);
     form.appendChild(wifPrivkeyInput);
 
     form.appendChild(importText);

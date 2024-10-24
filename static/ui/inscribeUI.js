@@ -55,7 +55,7 @@ export function inscribeUI() {
 
     // Inscribe All button
     const inscribeAllButton = document.createElement('button');
-    inscribeAllButton.textContent = 'Inscribe All';
+    inscribeAllButton.textContent = 'Inscribe';
     inscribeAllButton.className = 'splash-enter-button'; // Updated to match mainSplashUI styling
     inscribeAllButton.addEventListener('click', () => inscribeAllTransactions());
     buttonContainer.appendChild(inscribeAllButton);
