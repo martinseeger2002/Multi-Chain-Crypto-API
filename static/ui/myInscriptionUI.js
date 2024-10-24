@@ -26,15 +26,40 @@ export function myInscriptionUI() {
     });
     landingPage.appendChild(backButton);
 
-    // Scrollable text container
-    const textContainer = document.createElement('div');
-    textContainer.className = 'scrollable-text-container'; // Add a class for styling
-    landingPage.appendChild(textContainer);
+    // Scrollable iframe container
+    const iframe = document.createElement('iframe');
+    iframe.className = 'scrollable-iframe'; // Add a class for styling
+    iframe.style.width = '300px'; // Set width
+    iframe.style.height = '550px'; // Set height to make it shorter
+    iframe.style.border = '1px solid #000'; // Add border
+    iframe.style.overflow = 'auto'; // Enable scrolling
+    landingPage.appendChild(iframe);
+
+    // Copy to Clipboard button
+    const copyButton = document.createElement('button');
+    copyButton.textContent = 'Copy to Clipboard';
+    copyButton.className = 'styled-button'; // Use a class for styling
+    copyButton.addEventListener('click', () => {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const pre = doc.querySelector('pre');
+        if (pre) {
+            navigator.clipboard.writeText(pre.textContent).then(() => {
+                alert('JSON data copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    });
+    landingPage.appendChild(copyButton);
 
     // Function to display the wallet list
     function showWalletList() {
         currentState = 'walletList';
-        textContainer.innerHTML = ''; // Clear text container
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write('<html><body style="background-color: black; color: white;"></body></html>');
+        doc.close();
+        const body = doc.body;
 
         // Retrieve and process 'MyInscriptions' from localStorage
         const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || [];
@@ -50,40 +75,80 @@ export function myInscriptionUI() {
             addressMap[address].push(inscription);
         });
 
-        // Display the addresses with the number of inscriptions
+        // Display the addresses with clickable links for JSON views
         for (const address in addressMap) {
-            const addressItem = document.createElement('div');
+            const addressItem = doc.createElement('div');
             addressItem.className = 'address-item'; // Use a class for styling
-            addressItem.textContent = `${address} (${addressMap[address].length})`;
-            addressItem.style.cursor = 'pointer'; // Indicate that it's clickable
+            addressItem.textContent = address;
+            body.appendChild(addressItem);
 
-            // Click event to display inscriptions for this address
-            addressItem.addEventListener('click', () => {
-                showInscriptionsForAddress(address, addressMap[address]);
+            // Create links for Ordinals Wallet and Doggy Market
+            const ordinalsLink = doc.createElement('div');
+            ordinalsLink.className = 'json-link'; // Use a class for styling
+            ordinalsLink.textContent = 'Ordinals Wallet json';
+            ordinalsLink.style.cursor = 'pointer';
+            ordinalsLink.style.marginLeft = '20px'; // Indent the link
+            ordinalsLink.addEventListener('click', () => {
+                showOrdinalsJson(addressMap[address]);
             });
+            body.appendChild(ordinalsLink);
 
-            textContainer.appendChild(addressItem);
+            const doggyLink = doc.createElement('div');
+            doggyLink.className = 'json-link'; // Use a class for styling
+            doggyLink.textContent = 'Doggy Market json';
+            doggyLink.style.cursor = 'pointer';
+            doggyLink.style.marginLeft = '20px'; // Indent the link
+            doggyLink.addEventListener('click', () => {
+                showDoggyJson(addressMap[address]);
+            });
+            body.appendChild(doggyLink);
         }
     }
 
-    // Function to display inscriptions for a specific address
-    function showInscriptionsForAddress(address, inscriptions) {
+    // Function to display Ordinals Wallet JSON
+    function showOrdinalsJson(inscriptions) {
         currentState = 'jsonView';
-        textContainer.innerHTML = ''; // Clear text container
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write('<html><body style="background-color: black; color: white;"></body></html>');
+        doc.close();
+        const body = doc.body;
 
-        // Create a preformatted text element to display JSON data
-        const pre = document.createElement('pre');
-        pre.className = 'json-display'; // Use a class for styling
-
-        // Prepare the data to display
         const dataToDisplay = inscriptions.map(inscription => ({
-            name: inscription.name,
-            txid: inscription.txid
+            id: `${inscription.txid}i0`,
+            meta: {
+                name: inscription.name
+            }
         }));
 
+        const pre = doc.createElement('pre');
+        pre.className = 'json-display'; // Use a class for styling
         pre.textContent = JSON.stringify(dataToDisplay, null, 2); // Pretty print with indentation
-        textContainer.appendChild(pre);
+        body.appendChild(pre);
     }
+
+    // Function to display Doggy Market JSON
+    function showDoggyJson(inscriptions) {
+        currentState = 'jsonView';
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write('<html><body style="background-color: black; color: white;"></body></html>');
+        doc.close();
+        const body = doc.body;
+
+        const dataToDisplay = inscriptions.map(inscription => ({
+            inscriptionId: `${inscription.txid}i0`,
+            name: inscription.name
+        }));
+
+        const pre = doc.createElement('pre');
+        pre.className = 'json-display'; // Use a class for styling
+        pre.textContent = JSON.stringify(dataToDisplay, null, 2); // Pretty print with indentation
+        body.appendChild(pre);
+    }
+
+    // Append the back button below the iframe
+    landingPage.appendChild(backButton);
 
     // Initialize the UI by showing the wallet list
     showWalletList();
