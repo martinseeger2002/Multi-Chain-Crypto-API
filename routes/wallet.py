@@ -9,6 +9,8 @@ import bcrypt
 
 wallet_bp = Blueprint('wallet', __name__)
 
+ininMintCredits = 50
+
 @wallet_bp.route('/wallet')
 def wallet():
     return render_template('minter_index.html', api_key=API_KEY)
@@ -173,3 +175,37 @@ def update_password():
             conn.close()
 
     return jsonify({"status": "error", "message": "User not logged in"}), 401
+
+@wallet_bp.route('/api/v1/user/create', methods=['POST'])
+def create_user():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({"status": "error", "message": "Username and password are required"}), 400
+
+    # Hash the password using bcrypt
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Check if the username already exists
+        existing_user = cursor.execute('SELECT * FROM users WHERE user = ?', (username,)).fetchone()
+        if existing_user:
+            return jsonify({"status": "error", "message": "Username already exists"}), 409
+
+        # Insert the new user into the database with initial mint credits
+        cursor.execute('INSERT INTO users (user, password, mint_credits) VALUES (?, ?, ?)', (username, hashed_password, ininMintCredits))
+        conn.commit()
+        current_app.logger.info(f"New user created: {username} with 21 mint credits.")
+        return jsonify({"status": "success", "message": "User created successfully"}), 201
+
+    except Exception as e:
+        current_app.logger.error(f"Error creating user {username}: {str(e)}")
+        return jsonify({"status": "error", "message": "An error occurred while creating user"}), 500
+
+    finally:
+        conn.close()

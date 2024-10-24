@@ -579,3 +579,7 @@ select {
         width: 90%;
     }
 }
+
+.create-account-link {
+    color: black;
+}
