@@ -53,16 +53,9 @@ export function inscribeUI() {
     buttonContainer.className = 'button-container'; // Ensure this class stacks buttons vertically via CSS
     landingPage.appendChild(buttonContainer);
 
-    // Inscribe button
-    const inscribeButton = document.createElement('button');
-    inscribeButton.textContent = 'Inscribe';
-    inscribeButton.className = 'splash-enter-button'; // Updated to match mainSplashUI styling
-    inscribeButton.addEventListener('click', () => inscribeTransaction());
-    buttonContainer.appendChild(inscribeButton);
-
     // Inscribe All button
     const inscribeAllButton = document.createElement('button');
-    inscribeAllButton.textContent = 'Inscribe All';
+    inscribeAllButton.textContent = 'Inscribe';
     inscribeAllButton.className = 'splash-enter-button'; // Updated to match mainSplashUI styling
     inscribeAllButton.addEventListener('click', () => inscribeAllTransactions());
     buttonContainer.appendChild(inscribeAllButton);
@@ -97,10 +90,8 @@ export function inscribeUI() {
         }
 
         // Disable buttons and change text
-        inscribeButton.disabled = true;
         inscribeAllButton.disabled = true;
         backButton.disabled = true;
-        inscribeButton.textContent = 'Processing...';
         inscribeAllButton.textContent = 'Processing...';
 
         const topTransaction = pendingTransactions[0];
@@ -122,12 +113,16 @@ export function inscribeUI() {
                 const myInscriptions = JSON.parse(localStorage.getItem('MyInscriptions')) || [];
                 const selectedWalletLabel = localStorage.getItem('selectedWalletLabel') || 'Unknown Wallet';
 
+                // Retrieve the list of wallets and find the selected wallet
+                const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+                const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
+
                 // Only add to My Inscriptions if the transaction number is 2
                 if (topTransaction.transactionNumber === 2) {
                     myInscriptions.push({
                         name: inscriptionName,
                         txid: data.data.txid,
-                        sendingaddress: selectedWalletLabel // Add the selected wallet label
+                        sendingaddress: selectedWallet ? selectedWallet.label : 'Unknown Wallet'
                     });
                     localStorage.setItem('MyInscriptions', JSON.stringify(myInscriptions));
                 }
@@ -172,10 +167,8 @@ export function inscribeUI() {
         })
         .finally(() => {
             // Re-enable buttons and reset text
-            inscribeButton.disabled = false;
             inscribeAllButton.disabled = false;
             backButton.disabled = false;
-            inscribeButton.textContent = 'Inscribe';
             inscribeAllButton.textContent = 'Inscribe All';
         });
     }
