@@ -254,3 +254,71 @@ def generate_tx_hex(ticker):
             "status": "error",
             "message": f"An unexpected error occurred: {str(e)}"
         }), 500
+
+@minting_bp.route('/api/v1/generate_key/<ticker>', methods=['GET'])
+@require_api_key
+def generate_key(ticker):
+    # Determine the command directory and script based on the ticker
+    if ticker.lower() == 'doge':
+        command_dir = './getOrdTxsDoge'
+        script = 'generateKey.js'
+    elif ticker.lower() == 'lky':
+        command_dir = './getOrdTxsLKY'
+        script = 'generateKey.js'
+    elif ticker.lower() == 'ltc':
+        command_dir = './getOrdTxsLTC'
+        script = 'generateKey.js'
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Unsupported ticker type."
+        }), 400
+
+    # Define the command to run
+    command = ['node', script]
+
+    try:
+        # Run the command and capture the output
+        result = subprocess.run(
+            command,
+            cwd=command_dir,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        output = result.stdout.strip()
+
+        # Assuming the output is in the format:
+        # New WIF Private Key: <privkey>
+        # Corresponding Address: <address>
+        lines = output.split('\n')
+        privkey = lines[0].split(': ')[1]
+        new_address = lines[1].split(': ')[1]
+
+        # Import the new address without rescan
+        rpc_connection = get_rpc_connection(ticker)
+        rpc_connection.importaddress(new_address, "", False)  # Use positional arguments
+
+        # Return the output as JSON in the specified format
+        return jsonify({
+            "status": "success",
+            "data": {
+                "new_address": new_address,
+                "privkey": privkey
+            }
+        })
+    except subprocess.CalledProcessError as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Command failed with error: {e.stderr}"
+        }), 500
+    except JSONRPCException as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Error importing address: {str(e)}"
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Unexpected error: {str(e)}"
+        }), 500

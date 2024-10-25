@@ -6,6 +6,6 @@ git reset --hard origin/main
 
 git add .
 
-git commit -m "Your commit message here"
+git commit -m "ux upgrade wallets go to add wallet if none exist"
 
 git push origin main

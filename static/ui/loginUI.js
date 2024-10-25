@@ -55,7 +55,6 @@ export function loginUI() {
                     }
                 })
                 .catch(() => {
-                    alert('Login failed. Please try again.');
                 });
         } else {
             alert('Please enter both username and password.');
