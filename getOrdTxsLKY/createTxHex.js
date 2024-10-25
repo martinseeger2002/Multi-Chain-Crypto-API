@@ -52,8 +52,8 @@ function validateInputs(params) {
       typeof utxo.txId !== 'string' ||
       isNaN(parseInt(utxo.vout, 10)) ||
       isNaN(parseInt(utxo.amount, 10)) ||
-      !utxo.scriptHash ||
-      typeof utxo.scriptHash !== 'string'
+      !utxo.scriptPubKey ||
+      typeof utxo.scriptPubKey !== 'string'
     ) {
       throw new Error(`Invalid UTXO at index ${index}.`);
     }
@@ -88,7 +88,7 @@ function validateInputs(params) {
  *
  * @param {string} sendingAddress - The address sending the funds.
  * @param {string} wifPrivateKey - The WIF-formatted private key.
- * @param {Array} utxos - List of UTXOs, each with txId, vout, amount, and scriptHash.
+ * @param {Array} utxos - List of UTXOs, each with txId, vout, amount, and scriptPubKey.
  * @param {Array} recipients - List of recipients, each with address and amount.
  * @param {number} fee - Transaction fee in satoshis.
  * @param {string} changeAddress - Address to receive the change.
@@ -104,7 +104,7 @@ async function sendBitcoinTransaction(sendingAddress, wifPrivateKey, utxos, reci
       txId: utxo.txId,
       outputIndex: parseInt(utxo.vout, 10),
       address: sendingAddress,
-      script: utxo.scriptHash, // Ensure scriptHash is in the correct format
+      script: utxo.scriptPubKey,
       satoshis: parseInt(utxo.amount, 10)
     }));
     console.log('Formatted UTXOs:', formattedUtxos);
@@ -113,7 +113,9 @@ async function sendBitcoinTransaction(sendingAddress, wifPrivateKey, utxos, reci
     let privateKey;
     try {
       privateKey = PrivateKey.fromWIF(wifPrivateKey);
+      console.log('Private key initialized successfully.');
     } catch (err) {
+      console.error('Failed to parse WIF private key:', err.message);
       throw new Error('Failed to parse WIF private key.');
     }
 
@@ -127,6 +129,7 @@ async function sendBitcoinTransaction(sendingAddress, wifPrivateKey, utxos, reci
         satoshis: utxo.satoshis
       });
     });
+    console.log('Transaction after adding UTXOs:', transaction);
 
     // Add recipients
     recipients.forEach(recipient => {
@@ -136,9 +139,11 @@ async function sendBitcoinTransaction(sendingAddress, wifPrivateKey, utxos, reci
 
     // Set fee
     transaction = transaction.fee(parseInt(fee, 10));
+    console.log('Transaction after setting fee:', transaction);
 
     // Set change address
     transaction = transaction.change(changeAddress);
+    console.log('Transaction after setting change address:', transaction);
 
     // Sign the transaction
     transaction = transaction.sign(privateKey);

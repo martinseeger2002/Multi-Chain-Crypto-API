@@ -484,5 +484,5 @@ def get_users_db_connection():
     return conn
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8070, debug=True)
+    app.run(debug=True)
 

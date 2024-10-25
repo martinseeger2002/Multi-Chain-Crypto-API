@@ -216,6 +216,9 @@ def generate_tx_hex(ticker):
             "message": f"Invalid JSON input: {str(e)}"
         }), 400
 
+    # Log the input data
+    current_app.logger.info(f"Received data for {ticker}: {data}")
+
     # Execute the JavaScript module to generate the transaction hex
     try:
         result = subprocess.run(
@@ -227,8 +230,10 @@ def generate_tx_hex(ticker):
             check=True
         )
         tx_hex = result.stdout.strip()
-        
-        # Optionally, you can add validation to ensure tx_hex is a valid hex string
+
+        # Log the output
+        current_app.logger.info(f"Transaction hex for {ticker}: {tx_hex}")
+
         if not all(c in '0123456789abcdefABCDEF' for c in tx_hex) or len(tx_hex) % 2 != 0:
             return jsonify({
                 "status": "error",
@@ -311,11 +316,6 @@ def generate_key(ticker):
         return jsonify({
             "status": "error",
             "message": f"Command failed with error: {e.stderr}"
-        }), 500
-    except JSONRPCException as e:
-        return jsonify({
-            "status": "error",
-            "message": f"Error importing address: {str(e)}"
         }), 500
     except Exception as e:
         return jsonify({

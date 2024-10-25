@@ -6,6 +6,6 @@ git reset --hard origin/main
 
 git add .
 
-git commit -m "ux upgrade wallets go to add wallet if none exist"
+git commit -m "removed api key from minter_index.html"
 
 git push origin main
