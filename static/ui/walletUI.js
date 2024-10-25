@@ -153,7 +153,6 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
                 }
             } catch (error) {
                 console.error(`Error fetching UTXOs for wallet "${wallet.label}":`, error);
-                alert(`An error occurred while fetching UTXOs for wallet "${wallet.label}".`);
             }
         }
 

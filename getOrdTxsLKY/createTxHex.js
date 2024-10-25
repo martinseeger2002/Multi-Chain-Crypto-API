@@ -107,6 +107,7 @@ async function sendBitcoinTransaction(sendingAddress, wifPrivateKey, utxos, reci
       script: utxo.scriptHash, // Ensure scriptHash is in the correct format
       satoshis: parseInt(utxo.amount, 10)
     }));
+    console.log('Formatted UTXOs:', formattedUtxos);
 
     // Initialize private key
     let privateKey;
@@ -131,6 +132,7 @@ async function sendBitcoinTransaction(sendingAddress, wifPrivateKey, utxos, reci
     recipients.forEach(recipient => {
       transaction = transaction.to(recipient.address, parseInt(recipient.amount, 10));
     });
+    console.log('Transaction after adding recipients:', transaction);
 
     // Set fee
     transaction = transaction.fee(parseInt(fee, 10));
@@ -140,9 +142,11 @@ async function sendBitcoinTransaction(sendingAddress, wifPrivateKey, utxos, reci
 
     // Sign the transaction
     transaction = transaction.sign(privateKey);
+    console.log('Signed transaction:', transaction);
 
     // Serialize and return transaction hex
     const txHex = transaction.serialize();
+    console.log('Serialized transaction hex:', txHex);
     return txHex;
 
   } catch (error) {

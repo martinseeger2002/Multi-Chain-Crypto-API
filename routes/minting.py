@@ -1,5 +1,5 @@
 # routes/minting.py
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from utils.decorators import require_api_key
 from utils.rpc_utils import get_rpc_connection
 import subprocess
@@ -138,3 +138,119 @@ def get_new_address_and_privkey(ticker):
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
+
+@minting_bp.route('/api/v1/generate_tx_hex/<ticker>', methods=['POST'])
+@require_api_key
+def generate_tx_hex(ticker):
+    """
+    Generate a Bitcoin transaction hex using the createTxHex.js module.
+
+    :param ticker: The cryptocurrency ticker (e.g., doge, lky, ltc).
+    :return: JSON response containing the transaction hex or an error message.
+    """
+    # Determine the command directory and script based on the ticker
+    if ticker.lower() == 'doge':
+        command_dir = './getOrdTxsDoge'
+        script = 'createTxHex.js'
+    elif ticker.lower() == 'lky':
+        command_dir = './getOrdTxsLKY'
+        script = 'createTxHex.js'
+    elif ticker.lower() == 'ltc':
+        command_dir = './getOrdTxsLTC'
+        script = 'createTxHex.js'
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Unsupported ticker type."
+        }), 400
+
+    # Extract parameters from the request body
+    data = request.json
+    required_params = ['sendingAddress', 'wifPrivateKey', 'utxos', 'recipients', 'fee', 'changeAddress']
+    
+    # Check for missing required parameters
+    missing_params = [param for param in required_params if param not in data]
+    if missing_params:
+        return jsonify({
+            "status": "error",
+            "message": f"Missing required parameters: {', '.join(missing_params)}"
+        }), 400
+
+    # Validate UTXOs
+    utxos = data.get('utxos')
+    if not isinstance(utxos, list) or len(utxos) == 0:
+        return jsonify({
+            "status": "error",
+            "message": "UTXOs must be a non-empty list."
+        }), 400
+
+    # Validate recipients
+    recipients = data.get('recipients')
+    if not isinstance(recipients, list) or len(recipients) == 0:
+        return jsonify({
+            "status": "error",
+            "message": "Recipients must be a non-empty list."
+        }), 400
+
+    # Ensure amounts are integers (satoshis)
+    for utxo in utxos:
+        if not isinstance(utxo.get('amount'), int):
+            return jsonify({
+                "status": "error",
+                "message": "UTXO amounts must be integers representing satoshis."
+            }), 400
+
+    for recipient in recipients:
+        if not isinstance(recipient.get('amount'), int):
+            return jsonify({
+                "status": "error",
+                "message": "Recipient amounts must be integers representing satoshis."
+            }), 400
+
+    # Prepare the input data for the JavaScript module
+    try:
+        input_data = json.dumps(data)
+    except (TypeError, ValueError) as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Invalid JSON input: {str(e)}"
+        }), 400
+
+    # Execute the JavaScript module to generate the transaction hex
+    try:
+        result = subprocess.run(
+            ['node', script],
+            cwd=command_dir,
+            input=input_data,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        tx_hex = result.stdout.strip()
+        
+        # Optionally, you can add validation to ensure tx_hex is a valid hex string
+        if not all(c in '0123456789abcdefABCDEF' for c in tx_hex) or len(tx_hex) % 2 != 0:
+            return jsonify({
+                "status": "error",
+                "message": "Received invalid transaction hex."
+            }), 500
+
+        return jsonify({
+            "status": "success",
+            "data": {
+                "transaction_hex": tx_hex
+            }
+        }), 200
+
+    except subprocess.CalledProcessError as e:
+        current_app.logger.error(f"createTxHex.js error: {e.stderr}")
+        return jsonify({
+            "status": "error",
+            "message": f"Transaction generation failed: {e.stderr.strip()}"
+        }), 500
+    except Exception as e:
+        current_app.logger.error(f"Unexpected error: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"An unexpected error occurred: {str(e)}"
+        }), 500
