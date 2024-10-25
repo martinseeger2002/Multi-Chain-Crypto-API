@@ -27,7 +27,7 @@ export function textHexerUI() {
     const iframe = document.createElement('iframe');
     iframe.className = 'scrollable-iframe';
     iframe.style.width = '300px';
-    iframe.style.height = '550px';
+    iframe.style.height = '425px';
     iframe.style.border = '1px solid #000';
     iframe.style.overflow = 'auto';
     landingPage.appendChild(iframe);
