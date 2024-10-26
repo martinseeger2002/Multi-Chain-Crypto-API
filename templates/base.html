@@ -158,7 +158,7 @@
                 method: 'GET',
                 success: function(data) {
                     let progressText = data.map(coinData => 
-                        `${coinData.coin}: ${coinData.percent_done} (Wallets: ${coinData.wallet_count})`
+                        `${coinData.coin}: ${coinData.percent_done}` // Removed wallet count
                     ).join(' | ');
                     
                     $('#scanProgress').text(progressText);

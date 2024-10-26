@@ -12,7 +12,7 @@ if (process.env.TESTNET == 'true') {
 if (process.env.FEE_PER_KB) {
    Transaction.FEE_PER_KB = parseInt(process.env.FEE_PER_KB);
 } else {
-   Transaction.FEE_PER_KB = 30000000;
+   Transaction.FEE_PER_KB = 33000000;
 }
 
 async function main() {

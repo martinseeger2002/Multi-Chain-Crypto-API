@@ -1,11 +1,8 @@
-# app.py
 from flask import Flask, request, jsonify, session, render_template, redirect, url_for
 from functools import wraps
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
-from utils.scanStats import get_db_connection, get_last_scanned_block, get_wallet_count, get_rpc_connection, retry_rpc_call
 import bcrypt
-
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Replace with a secure secret key
@@ -20,6 +17,11 @@ def get_api_keys_db_connection():
 
 def get_admins_db_connection():
     conn = sqlite3.connect(ADMINS_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def get_users_db_connection():
+    conn = sqlite3.connect('./db/minteruser.db')
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -341,40 +343,6 @@ def delete_admin(admin_id):
     conn.close()
     return jsonify({'message': 'Admin deleted successfully'}), 200
 
-@app.route('/api/scan_progress', methods=['GET'])
-@login_required
-def get_scan_progress():
-    coins = ['DOGE', 'LKY', 'LTC']  # List of coins to check
-    progress_data = []
-
-    for coin in coins:
-        try:
-            conn = get_db_connection(coin)
-            rpc_connection = get_rpc_connection(coin)
-
-            last_scanned_block = get_last_scanned_block(conn, coin)
-            latest_block = retry_rpc_call(rpc_connection.getblockcount)
-            wallet_count = get_wallet_count(conn)
-
-            percent_done = (last_scanned_block / latest_block) * 100 if latest_block > 0 else 0
-            progress_data.append({
-                'coin': coin,
-                'percent_done': f"{percent_done:.2f}%",
-                'last_scanned_block': last_scanned_block,
-                'latest_block': latest_block,
-                'wallet_count': wallet_count
-            })
-
-            conn.close()
-        except Exception as e:
-            # Handle any errors and include them in the response
-            progress_data.append({
-                'coin': coin,
-                'error': str(e)
-            })
-
-    return jsonify(progress_data), 200
-
 # CRUD operations for Users
 @app.route('/api/users', methods=['GET'])
 @login_required
@@ -387,7 +355,6 @@ def get_users():
 
     users = [dict(row) for row in rows]
     return jsonify(users), 200
-
 
 @app.route('/api/users/<user>', methods=['GET'])
 @login_required
@@ -440,8 +407,6 @@ def update_user(user):
     conn.close()
     return jsonify({'message': 'User updated successfully'}), 200
 
-
-
 @app.route('/api/users', methods=['POST'])
 @login_required
 def create_user():
@@ -478,11 +443,5 @@ def create_user():
 def users_page():
     return render_template('users.html')
 
-def get_users_db_connection():
-    conn = sqlite3.connect('./db/minteruser.db')
-    conn.row_factory = sqlite3.Row
-    return conn
-
 if __name__ == '__main__':
     app.run(debug=True)
-
