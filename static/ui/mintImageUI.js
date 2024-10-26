@@ -64,15 +64,15 @@ export function mintImageUI(selectedWalletLabel = localStorage.getItem('selected
         if (selectedWallet && selectedWallet.utxos && selectedWallet.utxos.length > 0) {
             utxoDropdown.innerHTML = ''; // Clear existing options
             selectedWallet.utxos
-                .filter(utxo => parseFloat(utxo.value) > 0.01) // Filter out UTXOs with value of 0.01 or less
+                .filter(utxo => parseFloat(utxo.value) > 0.01 && utxo.confirmations >= 1) // Filter UTXOs with value > 0.01 and confirmations >= 1
                 .forEach(utxo => {
                     const option = document.createElement('option');
                     option.value = `${utxo.txid}:${utxo.vout}`; // Combine txid and vout for uniqueness
                     option.textContent = utxo.value; // Display only the UTXO amount
                     utxoDropdown.appendChild(option);
                 });
-            if (selectedWallet.utxos.filter(utxo => parseFloat(utxo.value) > 0.01).length === 0) {
-                utxoDropdown.innerHTML = '<option disabled>No UTXOs available above 0.01</option>';
+            if (selectedWallet.utxos.filter(utxo => parseFloat(utxo.value) > 0.01 && utxo.confirmations >= 1).length === 0) {
+                utxoDropdown.innerHTML = '<option disabled>No UTXOs available above 0.01 with sufficient confirmations</option>';
             }
         } else {
             utxoDropdown.innerHTML = '<option disabled>No UTXOs available</option>'; // Handle case where no UTXOs are available
