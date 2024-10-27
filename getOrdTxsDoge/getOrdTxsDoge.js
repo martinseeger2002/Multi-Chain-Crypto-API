@@ -24,6 +24,8 @@ async function main() {
 
    if (cmd === 'mint') {
        await mint();
+   } else if (cmd === 'send') {
+       await send(); // Added 'send' command handling
    } else {
        throw new Error(`unknown command: ${cmd}`);
    }
@@ -299,6 +301,97 @@ function chunkToNumber(chunk) {
    if (chunk.opcodenum === 2) return chunk.buf[1] * 255 + chunk.buf[0];
    if (chunk.opcodenum > 80 && chunk.opcodenum <= 96) return chunk.opcodenum - 80;
    return undefined;
+}
+
+async function send() {
+  // Expected command format:
+  // send <recipientAddress> <amountToSend> <privKey> <feeUtxo_txid> <feeUtxo_vout> <feeUtxo_script> <feeUtxo_satoshis> [<utxo1_txid> <utxo1_vout> <utxo1_script> <utxo1_satoshis> ...]
+
+  if (process.argv.length < 10 || ((process.argv.length - 6) % 4 !== 0)) {
+    throw new Error(`Invalid number of arguments for 'send' command.
+Expected format:
+send <recipientAddress> <amountToSend> <privKey> <feeUtxo_txid> <feeUtxo_vout> <feeUtxo_script> <feeUtxo_satoshis> [<utxo1_txid> <utxo1_vout> <utxo1_script> <utxo1_satoshis> ...]
+
+Example:
+send LKDVJJRLA9fYBoU2mKFHzdTRMfpM3gQzfP 100000000 SuZdphgzHbs4wJtPBnv4HH7bWa4PChE7ZKbnRBuVsUL16oR8wpSj \
+fee_txid fee_vout fee_script fee_satoshis \
+b64ebb6e1eb9fb7ec8205fac5033fc970a37d52d9de402d57f6d5f9e0225b7f8 0 76a914ffe97dd8bb7d8fb9e3c74fe463f339d7f50a819c88ac 110000000`);
+  }
+
+  const recipientAddress = process.argv[3];
+  const amountToSend = parseInt(process.argv[4]);
+  const privKey = process.argv[5];
+
+  // Fee UTXO
+  const feeUtxo = {
+    txid: process.argv[6],
+    outputIndex: parseInt(process.argv[7]),
+    script: process.argv[8],
+    satoshis: parseInt(process.argv[9]),
+  };
+
+  // Remaining UTXOs
+  const utxoArgs = process.argv.slice(10);
+  const utxoCount = utxoArgs.length / 4;
+  const utxos = [];
+
+  for (let i = 0; i < utxoCount; i++) {
+    const txid = utxoArgs[i * 4];
+    const vout = parseInt(utxoArgs[i * 4 + 1]);
+    const script = utxoArgs[i * 4 + 2];
+    const satoshis = parseInt(utxoArgs[i * 4 + 3]);
+
+    utxos.push({
+      txid: txid,
+      outputIndex: vout,
+      script: script,
+      satoshis: satoshis,
+    });
+  }
+
+  const wallet = {
+    privkey: privKey,
+    address: new PrivateKey(privKey).toAddress().toString(),
+    utxos: utxos,
+  };
+
+  const txHex = createTransaction(wallet, recipientAddress, amountToSend, feeUtxo);
+  console.log(txHex);
+}
+
+function createTransaction(wallet, recipientAddress, amountToSend, feeUtxo) {
+  const privateKey = new PrivateKey(wallet.privkey);
+  const senderAddress = privateKey.toAddress();
+
+  let tx = new Transaction();
+
+  // Include fee UTXO
+  tx.from(feeUtxo);
+
+  // Add other UTXOs
+  tx.from(wallet.utxos);
+
+  tx.to(recipientAddress, amountToSend);
+  tx.change(senderAddress);
+
+  // Optionally set a custom fee per kb
+  if (process.env.FEE_PER_KB) {
+    tx.feePerKb(parseInt(process.env.FEE_PER_KB));
+  } else {
+    tx.feePerKb(Transaction.FEE_PER_KB);
+  }
+
+  tx.sign(privateKey);
+
+  // Verify that the total input amount covers the outputs and fee
+  const totalInput = tx.inputs.reduce((sum, input) => sum + input.output.satoshis, 0);
+  const totalOutput = tx.outputs.reduce((sum, output) => sum + output.satoshis, 0) + tx.getFee();
+
+  if (totalInput < totalOutput) {
+    throw new Error('Not enough funds to cover the amount and transaction fee.');
+  }
+
+  return tx.serialize();
 }
 
 main().catch(e => {

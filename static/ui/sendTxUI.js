@@ -22,6 +22,17 @@ export function sendTxUI(selectedLabel) {
         return;
     }
 
+    // Filter UTXOs: value > 0.01 and confirmations >= 1
+    const filteredUtxos = selectedWallet.utxos.filter(utxo => utxo.value > 0.01 && utxo.confirmations >= 1);
+
+    if (filteredUtxos.length === 0) {
+        const noUtxosMessage = document.createElement('div');
+        noUtxosMessage.textContent = 'No UTXOs available with sufficient value and confirmations.';
+        noUtxosMessage.className = 'no-utxos-message'; // Use a class for styling
+        landingPage.appendChild(noUtxosMessage);
+        return;
+    }
+
     // Display wallet details
     const sendingAddressDisplay = document.createElement('div');
     sendingAddressDisplay.textContent = `Sending Address: ${selectedWallet.address}`;
@@ -35,37 +46,31 @@ export function sendTxUI(selectedLabel) {
     changeAddressDisplay.textContent = `Change Address: ${selectedWallet.address}`;
     changeAddressDisplay.className = 'styled-text'; // Use a class for styling
 
-    // Create dropdown for UTXO selection
-    const utxoDropdown = document.createElement('select');
-    utxoDropdown.className = 'styled-select'; // Use a class for styling
-    selectedWallet.utxos.forEach((utxo, index) => {
+    // Create checkboxes for UTXO selection
+    const utxoContainer = document.createElement('div');
+    filteredUtxos.forEach((utxo, index) => {
+        const utxoCheckbox = document.createElement('input');
+        utxoCheckbox.type = 'checkbox';
+        utxoCheckbox.value = index;
+        utxoCheckbox.className = 'utxo-checkbox';
+
+        const utxoLabel = document.createElement('label');
+        utxoLabel.textContent = `TXID: ${utxo.txid}, Value: ${utxo.value}`;
+
+        utxoContainer.appendChild(utxoCheckbox);
+        utxoContainer.appendChild(utxoLabel);
+        utxoContainer.appendChild(document.createElement('br'));
+    });
+
+    // Create dropdown for fee UTXO selection
+    const feeUtxoDropdown = document.createElement('select');
+    feeUtxoDropdown.className = 'styled-select'; // Use a class for styling
+    filteredUtxos.forEach((utxo, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `TXID: ${utxo.txid}, Value: ${utxo.value}`;
-        utxoDropdown.appendChild(option);
+        feeUtxoDropdown.appendChild(option);
     });
-
-    // Create text displays for UTXO details
-    const txidDisplay = document.createElement('div');
-    txidDisplay.className = 'styled-text'; // Use a class for styling
-
-    const voutDisplay = document.createElement('div');
-    voutDisplay.className = 'styled-text'; // Use a class for styling
-
-    const scriptPubKeyDisplay = document.createElement('div');
-    scriptPubKeyDisplay.className = 'styled-text'; // Use a class for styling
-
-    // Update UTXO details when a new UTXO is selected
-    function updateUtxoDetails() {
-        const selectedUtxo = selectedWallet.utxos[utxoDropdown.value];
-        txidDisplay.textContent = `TXID: ${selectedUtxo.txid}`;
-        voutDisplay.textContent = `Vout: ${selectedUtxo.vout}`;
-        scriptPubKeyDisplay.textContent = `ScriptPubKey: ${selectedUtxo.script_hex}`;
-    }
-
-    // Initialize UTXO details
-    updateUtxoDetails();
-    utxoDropdown.addEventListener('change', updateUtxoDetails);
 
     // Create input fields for transaction details
     const recipientAddressInput = document.createElement('input');
@@ -89,26 +94,30 @@ export function sendTxUI(selectedLabel) {
     sendButton.textContent = 'Send';
     sendButton.className = 'styled-button'; // Use a class for styling
     sendButton.addEventListener('click', () => {
-        const selectedUtxo = selectedWallet.utxos[utxoDropdown.value];
+        const selectedUtxos = Array.from(document.querySelectorAll('.utxo-checkbox:checked')).map(checkbox => {
+            const utxo = filteredUtxos[checkbox.value];
+            return {
+                txid: utxo.txid,
+                vout: utxo.vout,
+                script: utxo.script_hex,
+                satoshis: Math.round(utxo.value * 100000000) // Convert to satoshis
+            };
+        });
+
+        const feeUtxo = filteredUtxos[feeUtxoDropdown.value];
+
         const data = {
-            sendingAddress: selectedWallet.address,
-            wifPrivateKey: selectedWallet.privkey,
-            utxos: [{
-                txId: selectedUtxo.txid,
-                vout: selectedUtxo.vout,
-                amount: parseInt(amountInput.value, 10),
-                scriptPubKey: selectedUtxo.script_hex
-            }],
-            recipients: [{
-                address: recipientAddressInput.value.trim(),
-                amount: parseInt(amountInput.value, 10)
-            }],
-            fee: parseInt(feeInput.value, 10),
-            changeAddress: selectedWallet.address
+            recipient_address: recipientAddressInput.value.trim(),
+            amount_to_send: parseInt(amountInput.value, 10),
+            privkey: selectedWallet.privkey,
+            fee_utxo_txid: feeUtxo.txid,
+            fee_utxo_vout: feeUtxo.vout,
+            fee_utxo_script: feeUtxo.script_hex,
+            fee_utxo_satoshis: Math.round(feeUtxo.value * 100000000), // Convert to satoshis
+            utxos: selectedUtxos
         };
 
-
-        fetch(`/api/v1/generate_tx_hex/${selectedWallet.ticker}`, {
+        fetch(`/api/v1/send/${selectedWallet.ticker}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -119,14 +128,14 @@ export function sendTxUI(selectedLabel) {
         .then(response => response.json())
         .then(result => {
             if (result.status === 'success') {
-                alert(`Transaction Hex: ${result.data.transaction_hex}`);
+                alert(`Transaction Hex: ${result.transactionHex}`);
             } else {
                 alert(result.message);
             }
         })
         .catch(error => {
-            console.error('Error generating transaction hex:', error);
-            alert('An error occurred while generating the transaction hex.');
+            console.error('Error sending transaction:', error);
+            alert('An error occurred while sending the transaction.');
         });
     });
 
@@ -134,10 +143,8 @@ export function sendTxUI(selectedLabel) {
     landingPage.appendChild(sendingAddressDisplay);
     landingPage.appendChild(wifPrivateKeyDisplay);
     landingPage.appendChild(changeAddressDisplay);
-    landingPage.appendChild(utxoDropdown);
-    landingPage.appendChild(txidDisplay);
-    landingPage.appendChild(voutDisplay);
-    landingPage.appendChild(scriptPubKeyDisplay);
+    landingPage.appendChild(utxoContainer);
+    landingPage.appendChild(feeUtxoDropdown);
     landingPage.appendChild(recipientAddressInput);
     landingPage.appendChild(amountInput);
     landingPage.appendChild(feeInput);

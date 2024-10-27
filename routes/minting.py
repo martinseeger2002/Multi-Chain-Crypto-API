@@ -139,127 +139,6 @@ def get_new_address_and_privkey(ticker):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@minting_bp.route('/api/v1/generate_tx_hex/<ticker>', methods=['POST'])
-@require_api_key
-def generate_tx_hex(ticker):
-    """
-    Generate a Bitcoin transaction hex using the createTxHex.js module.
-
-    :param ticker: The cryptocurrency ticker (e.g., doge, lky, ltc).
-    :return: JSON response containing the transaction hex or an error message.
-    """
-    # Determine the command directory and script based on the ticker
-    if ticker.lower() == 'doge':
-        command_dir = './getOrdTxsDoge'
-        script = 'createTxHex.js'
-    elif ticker.lower() == 'lky':
-        command_dir = './getOrdTxsLKY'
-        script = 'createTxHex.js'
-    elif ticker.lower() == 'ltc':
-        command_dir = './getOrdTxsLTC'
-        script = 'createTxHex.js'
-    else:
-        return jsonify({
-            "status": "error",
-            "message": "Unsupported ticker type."
-        }), 400
-
-    # Extract parameters from the request body
-    data = request.json
-    required_params = ['sendingAddress', 'wifPrivateKey', 'utxos', 'recipients', 'fee', 'changeAddress']
-    
-    # Check for missing required parameters
-    missing_params = [param for param in required_params if param not in data]
-    if missing_params:
-        return jsonify({
-            "status": "error",
-            "message": f"Missing required parameters: {', '.join(missing_params)}"
-        }), 400
-
-    # Validate UTXOs
-    utxos = data.get('utxos')
-    if not isinstance(utxos, list) or len(utxos) == 0:
-        return jsonify({
-            "status": "error",
-            "message": "UTXOs must be a non-empty list."
-        }), 400
-
-    # Validate recipients
-    recipients = data.get('recipients')
-    if not isinstance(recipients, list) or len(recipients) == 0:
-        return jsonify({
-            "status": "error",
-            "message": "Recipients must be a non-empty list."
-        }), 400
-
-    # Ensure amounts are integers (satoshis)
-    for utxo in utxos:
-        if not isinstance(utxo.get('amount'), int):
-            return jsonify({
-                "status": "error",
-                "message": "UTXO amounts must be integers representing satoshis."
-            }), 400
-
-    for recipient in recipients:
-        if not isinstance(recipient.get('amount'), int):
-            return jsonify({
-                "status": "error",
-                "message": "Recipient amounts must be integers representing satoshis."
-            }), 400
-
-    # Prepare the input data for the JavaScript module
-    try:
-        input_data = json.dumps(data)
-    except (TypeError, ValueError) as e:
-        return jsonify({
-            "status": "error",
-            "message": f"Invalid JSON input: {str(e)}"
-        }), 400
-
-    # Log the input data
-    current_app.logger.info(f"Received data for {ticker}: {data}")
-
-    # Execute the JavaScript module to generate the transaction hex
-    try:
-        result = subprocess.run(
-            ['node', script],
-            cwd=command_dir,
-            input=input_data,
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        tx_hex = result.stdout.strip()
-
-        # Log the output
-        current_app.logger.info(f"Transaction hex for {ticker}: {tx_hex}")
-
-        if not all(c in '0123456789abcdefABCDEF' for c in tx_hex) or len(tx_hex) % 2 != 0:
-            return jsonify({
-                "status": "error",
-                "message": "Received invalid transaction hex."
-            }), 500
-
-        return jsonify({
-            "status": "success",
-            "data": {
-                "transaction_hex": tx_hex
-            }
-        }), 200
-
-    except subprocess.CalledProcessError as e:
-        current_app.logger.error(f"createTxHex.js error: {e.stderr}")
-        return jsonify({
-            "status": "error",
-            "message": f"Transaction generation failed: {e.stderr.strip()}"
-        }), 500
-    except Exception as e:
-        current_app.logger.error(f"Unexpected error: {str(e)}")
-        return jsonify({
-            "status": "error",
-            "message": f"An unexpected error occurred: {str(e)}"
-        }), 500
-
 @minting_bp.route('/api/v1/generate_key/<ticker>', methods=['GET'])
 @require_api_key
 def generate_key(ticker):
@@ -312,6 +191,101 @@ def generate_key(ticker):
                 "privkey": privkey
             }
         })
+    except subprocess.CalledProcessError as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Command failed with error: {e.stderr}"
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Unexpected error: {str(e)}"
+        }), 500
+
+@minting_bp.route('/api/v1/send/<ticker>', methods=['POST'])
+@require_api_key
+def send(ticker):
+    data = request.json
+
+    # Extract parameters
+    recipient_address = data.get('recipient_address')
+    amount_to_send = data.get('amount_to_send')
+    privkey = data.get('privkey')
+    fee_utxo_txid = data.get('fee_utxo_txid')
+    fee_utxo_vout = data.get('fee_utxo_vout')
+    fee_utxo_script = data.get('fee_utxo_script')
+    fee_utxo_satoshis = data.get('fee_utxo_satoshis')
+    utxos = data.get('utxos', [])  # List of additional UTXOs
+
+    # Log the extracted parameters for debugging
+    print(f"Received send request with parameters: {data}")
+
+    # Convert 'amount_to_send' and 'fee_utxo_satoshis' to integers
+    try:
+        amount_to_send_int = int(amount_to_send)
+        fee_utxo_satoshis_int = int(fee_utxo_satoshis)
+    except ValueError as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Invalid amount: {amount_to_send} or {fee_utxo_satoshis}. Error: {str(e)}"
+        }), 400
+
+    # Determine the command directory and script based on the ticker
+    if ticker.lower() == 'doge':
+        command_dir = './getOrdTxsDoge'
+        script = 'getOrdTxsDoge.js'
+    elif ticker.lower() == 'lky':
+        command_dir = './getOrdTxsLKY'
+        script = 'getOrdTxsLKY.js'
+    elif ticker.lower() == 'ltc':
+        command_dir = './getOrdTxsLTC'
+        script = 'getOrdTxsLTC.js'
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Unsupported ticker type."
+        }), 400
+
+    # Define the command to run
+    command = [
+        'node', script, 'send',
+        recipient_address, str(amount_to_send_int), privkey,
+        fee_utxo_txid, str(fee_utxo_vout), fee_utxo_script, str(fee_utxo_satoshis_int)
+    ]
+
+    # Add additional UTXOs to the command
+    for utxo in utxos:
+        command.extend([
+            utxo['txid'], str(utxo['vout']), utxo['script'], str(utxo['satoshis'])
+        ])
+
+    try:
+        # Run the command and capture the output
+        result = subprocess.run(
+            command,
+            cwd=command_dir,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        output = result.stdout.strip()
+        error_output = result.stderr.strip()
+
+        # Print both stdout and stderr
+        print("Command output:", output)
+        print("Command error output:", error_output)
+
+        # Assume output is the transaction hex
+        tx_hex = output.strip()
+
+        # Structure the response as desired
+        response = {
+            "status": "success",
+            "transactionHex": tx_hex
+        }
+
+        return jsonify(response)
+
     except subprocess.CalledProcessError as e:
         return jsonify({
             "status": "error",
