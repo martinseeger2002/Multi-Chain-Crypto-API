@@ -2,6 +2,7 @@ import { walletUI } from './walletUI.js';
 import { mintSelectionUI } from './mintSelectionUI.js';
 import { userUI } from './userUI.js'; // Import the userUI function
 import { addWalletUI } from './addWalletUI.js'; // Import the addWalletUI function
+import { terminalUI } from './terminalUI.js'; // Import the terminalUI function
 
 export function landingPageUI() {
     const landingPage = document.getElementById('landing-page');
@@ -42,7 +43,8 @@ export function landingPageUI() {
         { text: 'Mint', onClick: mintSelectionUI },
         { text: 'Vault (Coming Soon)', onClick: () => { /* Add functionality here */ } },
         { text: 'User', onClick: userUI },
-        { text: 'Buy Mint Credits (Coming Soon)', onClick: () => { /* Add functionality here */ } } // New button
+        { text: 'Buy Mint Credits (Coming Soon)', onClick: () => { /* Add functionality here */ } }, // New button
+        { text: 'Terminal', onClick: terminalUI } // Add Terminal button
     ];
 
     buttons.forEach(({ text, onClick }) => {
