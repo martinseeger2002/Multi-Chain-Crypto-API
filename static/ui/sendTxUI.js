@@ -180,6 +180,15 @@ export function sendTxUI(selectedLabel) {
         });
     });
 
+    // Create a Back button
+    const backButton = document.createElement('button');
+    backButton.type = 'button';
+    backButton.textContent = 'Back';
+    backButton.className = 'styled-button'; // Use a class for styling
+    backButton.addEventListener('click', () => {
+        walletUI(); // Navigate back to the wallet UI
+    });
+
     // Append elements to landing page
     landingPage.appendChild(sendingAddressDisplay);
     landingPage.appendChild(utxoContainer);
@@ -189,4 +198,5 @@ export function sendTxUI(selectedLabel) {
     landingPage.appendChild(feeInput);
     landingPage.appendChild(feeDisplay);
     landingPage.appendChild(sendButton);
+    landingPage.appendChild(backButton); // Append the Back button after the Send button
 }
