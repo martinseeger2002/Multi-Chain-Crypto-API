@@ -6,6 +6,6 @@ git reset --hard origin/main
 
 git add .
 
-git commit -m "send ord now get tx hex"
+git commit -m "Send doge and send lky"
 
 git push origin main

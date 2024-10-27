@@ -233,13 +233,13 @@ def send(ticker):
     # Determine the command directory and script based on the ticker
     if ticker.lower() == 'doge':
         command_dir = './getOrdTxsDoge'
-        script = 'getOrdTxsDoge.js'
+        script = 'getTxsDoge.js'
     elif ticker.lower() == 'lky':
         command_dir = './getOrdTxsLKY'
-        script = 'getOrdTxsLKY.js'
+        script = 'getTxsLKY.js'
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
-        script = 'getOrdTxsLTC.js'
+        script = 'getTxsLTC.js'
     else:
         return jsonify({
             "status": "error",

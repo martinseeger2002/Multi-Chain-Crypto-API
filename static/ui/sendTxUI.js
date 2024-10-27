@@ -38,14 +38,6 @@ export function sendTxUI(selectedLabel) {
     sendingAddressDisplay.textContent = `Sending Address: ${selectedWallet.address}`;
     sendingAddressDisplay.className = 'styled-text'; // Use a class for styling
 
-    const wifPrivateKeyDisplay = document.createElement('div');
-    wifPrivateKeyDisplay.textContent = `WIF Private Key: ${selectedWallet.privkey}`;
-    wifPrivateKeyDisplay.className = 'styled-text'; // Use a class for styling
-
-    const changeAddressDisplay = document.createElement('div');
-    changeAddressDisplay.textContent = `Change Address: ${selectedWallet.address}`;
-    changeAddressDisplay.className = 'styled-text'; // Use a class for styling
-
     // Create checkboxes for UTXO selection
     const utxoContainer = document.createElement('div');
     filteredUtxos.forEach((utxo, index) => {
@@ -55,7 +47,8 @@ export function sendTxUI(selectedLabel) {
         utxoCheckbox.className = 'utxo-checkbox';
 
         const utxoLabel = document.createElement('label');
-        utxoLabel.textContent = `TXID: ${utxo.txid}, Value: ${utxo.value}`;
+        // Display the amount of the UTXO instead of the TXID
+        utxoLabel.textContent = `Value: ${utxo.value}`;
 
         utxoContainer.appendChild(utxoCheckbox);
         utxoContainer.appendChild(utxoLabel);
@@ -68,7 +61,8 @@ export function sendTxUI(selectedLabel) {
     filteredUtxos.forEach((utxo, index) => {
         const option = document.createElement('option');
         option.value = index;
-        option.textContent = `TXID: ${utxo.txid}, Value: ${utxo.value}`;
+        // Display the amount of the UTXO instead of the TXID
+        option.textContent = `Value: ${utxo.value}`;
         feeUtxoDropdown.appendChild(option);
     });
 
@@ -80,13 +74,27 @@ export function sendTxUI(selectedLabel) {
 
     const amountInput = document.createElement('input');
     amountInput.type = 'number';
-    amountInput.placeholder = 'Amount (sats)';
+    amountInput.step = '0.00000001'; // Allow for 8 decimal places
+    amountInput.placeholder = `Amount of ${selectedWallet.ticker} to send (BTC)`;
     amountInput.className = 'styled-input'; // Use a class for styling
 
+    // Create a slider for fee input
     const feeInput = document.createElement('input');
-    feeInput.type = 'number';
-    feeInput.placeholder = 'Fee (sats)';
-    feeInput.className = 'styled-input'; // Use a class for styling
+    feeInput.type = 'range';
+    feeInput.min = '1000000';
+    feeInput.max = '100000000';
+    feeInput.value = '2500000'; // Default selection
+    feeInput.className = 'styled-slider'; // Use a class for styling
+
+    // Display the selected fee value
+    const feeDisplay = document.createElement('div');
+    feeDisplay.textContent = `Fee: ${feeInput.value} sats`;
+    feeDisplay.className = 'fee-display'; // Use a class for styling
+
+    // Update fee display on slider change
+    feeInput.addEventListener('input', () => {
+        feeDisplay.textContent = `Fee: ${feeInput.value} sats`;
+    });
 
     // Send Button
     const sendButton = document.createElement('button');
@@ -122,12 +130,13 @@ export function sendTxUI(selectedLabel) {
 
         const data = {
             recipient_address: recipientAddressInput.value.trim(),
-            amount_to_send: parseInt(amountInput.value, 10),
+            // Convert the amount from BTC to sats
+            amount_to_send: Math.round(parseFloat(amountInput.value) * 100000000),
             privkey: selectedWallet.privkey,
             fee_utxo_txid: feeUtxo.txid,
             fee_utxo_vout: feeUtxo.vout,
             fee_utxo_script: feeUtxo.script_hex,
-            fee_utxo_satoshis: Math.round(feeUtxo.value * 100000000), // Convert to satoshis
+            fee_utxo_satoshis: parseInt(feeInput.value, 10), // Use slider value for fee
             utxos: uniqueSelectedUtxos
         };
 
@@ -160,6 +169,7 @@ export function sendTxUI(selectedLabel) {
         .then(sendResult => {
             if (sendResult.status === 'success') {
                 alert(`Transaction ID: ${sendResult.txid}`);
+                console.log(`Transaction ID: ${sendResult.txid}`); // Output the transaction ID
             } else {
                 alert(sendResult.message);
             }
@@ -172,12 +182,11 @@ export function sendTxUI(selectedLabel) {
 
     // Append elements to landing page
     landingPage.appendChild(sendingAddressDisplay);
-    landingPage.appendChild(wifPrivateKeyDisplay);
-    landingPage.appendChild(changeAddressDisplay);
     landingPage.appendChild(utxoContainer);
     landingPage.appendChild(feeUtxoDropdown);
     landingPage.appendChild(recipientAddressInput);
     landingPage.appendChild(amountInput);
     landingPage.appendChild(feeInput);
+    landingPage.appendChild(feeDisplay);
     landingPage.appendChild(sendButton);
 }

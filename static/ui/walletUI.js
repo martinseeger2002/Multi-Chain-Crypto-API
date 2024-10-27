@@ -49,10 +49,19 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
     viewUtxosButton.addEventListener('click', () => viewUtxoUI(walletDropdown.value));
 
     const sendButton = document.createElement('button');
-    sendButton.textContent = 'Send (Coming Soon)';
+    sendButton.textContent = 'Send';
     sendButton.className = 'styled-button'; // Use a class for styling
     sendButton.disabled = true; // Disable by default
     sendButton.addEventListener('click', () => sendTxUI(walletDropdown.value));
+
+    const sendOrdButton = document.createElement('button');
+    sendOrdButton.textContent = 'Send Ord (under construction)';
+    sendOrdButton.className = 'styled-button'; // Use a class for styling
+    sendOrdButton.disabled = true; // Disable by default
+    sendOrdButton.addEventListener('click', () => {
+        // Implement the functionality for sending ordinals here
+        console.log('Send Ord button clicked for wallet:', walletDropdown.value);
+    });
 
     const manageWalletsButton = document.createElement('button');
     manageWalletsButton.textContent = 'Manage Wallets';
@@ -66,11 +75,13 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
             addressDisplay.textContent = selectedWallet.address; // Display only the address
             qrCodeDisplay.src = `https://api.qrserver.com/v1/create-qr-code/?data=${selectedWallet.address}&size=150x150`;
             sendButton.disabled = false; // Enable send button
+            sendOrdButton.disabled = false; // Enable send ord button
 
             // Save the selected wallet label to local storage
             localStorage.setItem('selectedWalletLabel', selectedWallet.label);
         } else {
             sendButton.disabled = true; // Disable send button if no wallet is selected
+            sendOrdButton.disabled = true; // Disable send ord button if no wallet is selected
             localStorage.removeItem('selectedWalletLabel');
         }
     });
@@ -108,6 +119,7 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
     landingPage.appendChild(copyButton);
     landingPage.appendChild(viewUtxosButton);
     landingPage.appendChild(sendButton);
+    landingPage.appendChild(sendOrdButton); // Append the new Send Ord button
     landingPage.appendChild(manageWalletsButton);
     landingPage.appendChild(backButton);
 
