@@ -104,7 +104,21 @@ export function sendTxUI(selectedLabel) {
             };
         });
 
-        const feeUtxo = filteredUtxos[feeUtxoDropdown.value];
+        const feeUtxoIndex = feeUtxoDropdown.value;
+        const feeUtxo = filteredUtxos[feeUtxoIndex];
+
+        // Ensure the fee UTXO is not included in the selected UTXOs
+        const uniqueSelectedUtxos = selectedUtxos.filter(utxo => utxo.txid !== feeUtxo.txid || utxo.vout !== feeUtxo.vout);
+
+        // Log selected UTXOs to check for duplicates
+        console.log('Selected UTXOs:', uniqueSelectedUtxos);
+
+        // Check for duplicate UTXOs
+        const uniqueUtxos = new Set(uniqueSelectedUtxos.map(utxo => `${utxo.txid}:${utxo.vout}`));
+        if (uniqueUtxos.size !== uniqueSelectedUtxos.length) {
+            alert('Duplicate UTXOs detected. Please select different UTXOs.');
+            return;
+        }
 
         const data = {
             recipient_address: recipientAddressInput.value.trim(),
@@ -114,7 +128,7 @@ export function sendTxUI(selectedLabel) {
             fee_utxo_vout: feeUtxo.vout,
             fee_utxo_script: feeUtxo.script_hex,
             fee_utxo_satoshis: Math.round(feeUtxo.value * 100000000), // Convert to satoshis
-            utxos: selectedUtxos
+            utxos: uniqueSelectedUtxos
         };
 
         fetch(`/api/v1/send/${selectedWallet.ticker}`, {
@@ -128,9 +142,26 @@ export function sendTxUI(selectedLabel) {
         .then(response => response.json())
         .then(result => {
             if (result.status === 'success') {
-                alert(`Transaction Hex: ${result.transactionHex}`);
+                const transactionHex = result.transactionHex;
+                // Call send_raw_tx API with the transaction hex
+                return fetch(`/api/v1/send_raw_tx/${selectedWallet.ticker}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify({ tx_hex: transactionHex })
+                });
             } else {
-                alert(result.message);
+                throw new Error(result.message);
+            }
+        })
+        .then(response => response.json())
+        .then(sendResult => {
+            if (sendResult.status === 'success') {
+                alert(`Transaction ID: ${sendResult.txid}`);
+            } else {
+                alert(sendResult.message);
             }
         })
         .catch(error => {

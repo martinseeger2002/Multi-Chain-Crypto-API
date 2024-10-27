@@ -1,7 +1,7 @@
 import { manageWalletsUI } from './manageWalletsUI.js';
 import { landingPageUI } from './landingPageUI.js';
 import { viewUtxoUI } from './viewUtxoUI.js';
-import { sendTxUI } from './sendTxUI.js';
+import { sendTxUI } from './sendTxUI.js';  
 
 export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWalletLabel') || null) {
     const landingPage = document.getElementById('landing-page');
