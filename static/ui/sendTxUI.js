@@ -170,6 +170,15 @@ export function sendTxUI(selectedLabel) {
         });
     });
 
+    // Back Button
+    const backButton = document.createElement('button');
+    backButton.type = 'button';
+    backButton.textContent = 'Back';
+    backButton.className = 'styled-button'; // Use a class for styling
+    backButton.addEventListener('click', () => {
+        walletUI(); // Call the walletUI function to navigate back
+    });
+
     // Append elements to landing page
     landingPage.appendChild(sendingAddressDisplay);
     landingPage.appendChild(wifPrivateKeyDisplay);
@@ -180,4 +189,5 @@ export function sendTxUI(selectedLabel) {
     landingPage.appendChild(amountInput);
     landingPage.appendChild(feeInput);
     landingPage.appendChild(sendButton);
+    landingPage.appendChild(backButton); // Append the back button
 }
