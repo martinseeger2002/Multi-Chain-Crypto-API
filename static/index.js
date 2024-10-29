@@ -1,17 +1,4 @@
 import { mainSplashUI } from './ui/mainSplashUI.js';
-import { landingPageUI } from './ui/landingPageUI.js';
-import { mintSelectionUI } from './ui/mintSelectionUI.js';
-import { walletUI } from './ui/walletUI.js';
-import { addWalletUI } from './ui/addWalletUI.js';
-import { viewUtxoUI } from './ui/viewUtxoUI.js';
-import { manageWalletsUI } from './ui/manageWalletsUI.js';
-import { sendTxUI } from './ui/sendTxUI.js';
-import { confirmSendTxUI } from './ui/confirmSendTxUI.js';
-import { mintFileUI } from './ui/mintFileUI.js';
-import { loginUser } from './api/loginUser.js';
-//import { inscribeUI } from './ui/inscribeUI.js'; // Import the inscribeUI function
-import { userUI } from './ui/userUI.js'; // Import the userUI function
-
 
 document.addEventListener('DOMContentLoaded', () => {
     mainSplashUI();

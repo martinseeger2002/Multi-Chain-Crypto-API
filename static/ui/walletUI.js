@@ -1,7 +1,8 @@
 import { manageWalletsUI } from './manageWalletsUI.js';
 import { landingPageUI } from './landingPageUI.js';
 import { viewUtxoUI } from './viewUtxoUI.js';
-import { sendTxUI } from './sendTxUI.js';  
+import { sendTxUI } from './sendTxUI.js';
+import { sendOrdUI } from './sendOrdUI.js'; // Import sendOrdUI
 
 export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWalletLabel') || null) {
     const landingPage = document.getElementById('landing-page');
@@ -55,13 +56,10 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
     sendButton.addEventListener('click', () => sendTxUI(walletDropdown.value));
 
     const sendOrdButton = document.createElement('button');
-    sendOrdButton.textContent = 'Send Ord (under construction)';
+    sendOrdButton.textContent = 'Send Ord';
     sendOrdButton.className = 'styled-button'; // Use a class for styling
     sendOrdButton.disabled = true; // Disable by default
-    sendOrdButton.addEventListener('click', () => {
-        // Implement the functionality for sending ordinals here
-        console.log('Send Ord button clicked for wallet:', walletDropdown.value);
-    });
+    sendOrdButton.addEventListener('click', () => sendOrdUI(walletDropdown.value)); // Navigate to sendOrdUI
 
     const manageWalletsButton = document.createElement('button');
     manageWalletsButton.textContent = 'Manage Wallets';
@@ -156,9 +154,14 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
                     }));
                     console.log(`UTXOs updated for ${wallet.label}:`, wallet.utxos); // Log the updated UTXOs
 
-                    // Calculate the balance by summing up the values of UTXOs greater than 0.01
+                    // Calculate the confirmed balance by summing up the values of UTXOs with 1 or more confirmations and greater than 0.01
                     wallet.balance = wallet.utxos
-                        .filter(utxo => parseFloat(utxo.value) > 0.01)
+                        .filter(utxo => utxo.confirmations >= 1 && parseFloat(utxo.value) > 0.01)
+                        .reduce((acc, utxo) => acc + parseFloat(utxo.value), 0);
+
+                    // Calculate the incoming balance by summing up the values of UTXOs with 0 confirmations
+                    wallet.incoming = wallet.utxos
+                        .filter(utxo => utxo.confirmations === 0)
                         .reduce((acc, utxo) => acc + parseFloat(utxo.value), 0);
                 } else {
                     alert(`Error syncing wallet "${wallet.label}": ${data.message}`);
@@ -175,7 +178,7 @@ export function walletUI(selectedWalletLabel = localStorage.getItem('selectedWal
         if (selectedWalletLabel) {
             const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
             if (selectedWallet) {
-                balanceDisplay.textContent = `Balance: ${selectedWallet.balance || 'N/A'}`;
+                balanceDisplay.textContent = `Balance: ${selectedWallet.balance || 'N/A'} | Incoming: ${selectedWallet.incoming || 'N/A'}`;
                 // Optionally, update other UI elements if needed
             }
         }

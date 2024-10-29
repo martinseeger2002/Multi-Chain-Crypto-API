@@ -12,6 +12,7 @@ from routes.blockchain import blockchain_bp
 from routes.network import network_bp
 from routes.minting import minting_bp
 from routes.user import user_bp
+from routes.doginals import doginals_bp
 from tasks.scheduled_tasks import scheduler, load_ltc_wallet
 
 app = Flask(__name__)
@@ -28,6 +29,7 @@ app.register_blueprint(blockchain_bp)
 app.register_blueprint(network_bp)
 app.register_blueprint(minting_bp)
 app.register_blueprint(user_bp)
+app.register_blueprint(doginals_bp)
 
 # Initialize scheduler
 scheduler.start()

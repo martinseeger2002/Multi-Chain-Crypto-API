@@ -93,3 +93,7 @@ def display_content(txid, processed_txids=None):
         # Log the exception for debugging
         app.logger.error(f"An unexpected error occurred: {str(e)}")
         return jsonify({"status": "complete", "message": f"Data extracted from the blockchain. Refresh the page to view the content."}), 500
+
+@main_bp.route('/terminal')
+def terminal():
+    return render_template('terminal.html')

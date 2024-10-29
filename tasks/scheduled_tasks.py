@@ -5,6 +5,7 @@ import sqlite3
 import time
 from config.config import rpc_configs
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+import os
 
 def trigger_blockchain_rescan():
     for ticker, cfg in rpc_configs.items():
@@ -58,6 +59,12 @@ def reset_daily_request_counts():
     conn.commit()
     conn.close()
 
+def run_credit_bot():
+    os.chdir('addCreditBot')
+    subprocess.run(['python3', 'walletWatcher.py'], check=True)
+    subprocess.run(['python3', 'creditBot.py'], check=True)
+    os.chdir('..')
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(
     func=trigger_blockchain_rescan,
@@ -71,5 +78,11 @@ scheduler.add_job(
     trigger='cron',
     hour=0,
     minute=0,
+    timezone='America/Chicago'
+)
+scheduler.add_job(
+    func=run_credit_bot,
+    trigger='cron',
+    minute='*',
     timezone='America/Chicago'
 )
