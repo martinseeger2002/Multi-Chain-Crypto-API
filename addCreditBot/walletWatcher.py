@@ -1,108 +1,150 @@
-# walletWatcher.py
-
-import os
-import sqlite3
-import configparser
+import json
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+import configparser
+from decimal import Decimal
+import binascii
+import hashlib
+from Crypto.Hash import RIPEMD160
+import base58
 
-# Configuration
-CONFIG_PATH = '../config/RPC2.conf'
-DB_PATH = '../db/boughtcreditsdb.sqlite'
-DOGE_ADDRESS = 'DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA' # privkey QSaXgPsc9yTC41QbPnjVn4gbwDWXpUcEjdHgdSvxNtzdmaU7JMHS
-LUCKY_ADDRESS = 'L6fDpwqUHYLEjrSEr98rGBz9w9dYHwxjaF' # privkey SwsEhuJhcrSTGNrGdKs2iB9FC4Qs43Mi7n8MpaN6zDtmYxpNkdiS
-
-def read_rpc_credentials(config_path):
+# Load RPC credentials from RPC2.conf
+def load_rpc_credentials(ticker):
     config = configparser.ConfigParser()
-    config.read(config_path)
-    return {
-        'dogecoin': {
-            'user': config['DOGE']['rpcuser'],
-            'password': config['DOGE']['rpcpassword'],
-            'host': config['DOGE']['rpchost'],
-            'port': config['DOGE']['rpcport']
-        },
-        'luckycoin': {
-            'user': config['LKY']['rpcuser'],
-            'password': config['LKY']['rpcpassword'],
-            'host': config['LKY']['rpchost'],
-            'port': config['LKY']['rpcport']
-        }
+    config.read('../config/RPC2.conf')
+    creds = {
+        'rpc_user': config[ticker]['rpcuser'],
+        'rpc_password': config[ticker]['rpcpassword'],
+        'rpc_host': config[ticker]['rpchost'],
+        'rpc_port': config[ticker]['rpcport']
     }
+    return creds
 
-def get_rpc_connection(rpc_creds, coin_type):
-    return AuthServiceProxy(f"http://{rpc_creds[coin_type]['user']}:{rpc_creds[coin_type]['password']}@{rpc_creds[coin_type]['host']}:{rpc_creds[coin_type]['port']}")
+# Connect to the RPC server
+def connect_rpc(ticker):
+    creds = load_rpc_credentials(ticker)
+    rpc_url = f"http://{creds['rpc_user']}:{creds['rpc_password']}@{creds['rpc_host']}:{creds['rpc_port']}"
+    print(f"Connecting to {ticker} RPC at {rpc_url}")  # Debugging line
+    return AuthServiceProxy(rpc_url)
 
-def create_db_if_not_exists(db_path):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS utxos (
-            txid TEXT PRIMARY KEY,
-            receiving_address TEXT,
-            sending_address TEXT,
-            amount REAL,
-            timestamp INTEGER,
-            credits_added INTEGER DEFAULT 0
-        )
-    ''')
-    conn.commit()
-    conn.close()
+# Decode the script hex to get the public key
+def decode_script_hex(script_hex):
+    script_bytes = binascii.unhexlify(script_hex)
+    pubkey = script_bytes[-33:] if len(script_bytes) > 33 else script_bytes[-65:]
+    return pubkey
 
-def fetch_utxos(rpc_connection, address):
-    try:
-        return rpc_connection.listunspent(0, 9999999, [address])
-    except JSONRPCException as e:
-        print(f"Error fetching UTXOs: {e}")
-        return []
+# Convert the public key to an address
+def pubkey_to_address(pubkey, network='mainnet', coin='bitcoin'):
+    # Perform SHA-256 hashing on the public key
+    sha256 = hashlib.sha256(pubkey).digest()
+    # Perform RIPEMD-160 hashing using pycryptodome
+    ripemd160 = RIPEMD160.new(sha256).digest()
+    
+    # Determine the network byte based on the coin type
+    if coin == 'doge':
+        network_byte = b'\x1e' if network == 'mainnet' else b'\x71'
+    elif coin == 'ltc' or coin == 'lky':
+        network_byte = b'\x30' if network == 'mainnet' else b'\x6f'
+    else:
+        raise ValueError("Unsupported coin type")
+    
+    hashed_pubkey = network_byte + ripemd160
+    # Perform double SHA-256 hashing on the extended RIPEMD-160 result
+    checksum = hashlib.sha256(hashlib.sha256(hashed_pubkey).digest()).digest()[:4]
+    # Append the checksum to the extended RIPEMD-160 hash
+    binary_address = hashed_pubkey + checksum
+    # Convert the binary address to Base58
+    address = base58.b58encode(binary_address).decode('utf-8')
+    return address
 
-def get_sender_address(rpc_connection, txid):
+# Get the sending address from a transaction
+def get_sending_address(rpc_connection, txid, coin):
     try:
         raw_tx = rpc_connection.getrawtransaction(txid)
         decoded_tx = rpc_connection.decoderawtransaction(raw_tx)
-        if decoded_tx['vin']:
-            vin_txid = decoded_tx['vin'][0]['txid']
-            vin_vout = decoded_tx['vin'][0]['vout']
-            vin_raw_tx = rpc_connection.getrawtransaction(vin_txid)
-            vin_decoded_tx = rpc_connection.decoderawtransaction(vin_raw_tx)
-            return vin_decoded_tx['vout'][vin_vout]['scriptPubKey']['addresses'][0]
-    except (JSONRPCException, KeyError, IndexError) as e:
-        print(f"Error determining sender address for txid {txid}: {e}")
-    return "Unknown"
+        if 'vin' in decoded_tx and len(decoded_tx['vin']) > 0:
+            vin = decoded_tx['vin'][0]
+            if 'scriptSig' in vin and 'hex' in vin['scriptSig']:
+                script_hex = vin['scriptSig']['hex']
+                pubkey = decode_script_hex(script_hex)
+                return pubkey_to_address(pubkey, coin=coin)
+        return 'unknown'
+    except JSONRPCException as e:
+        print(f"Error fetching transaction details for {txid}: {e}")
+        return 'unknown'
 
-def update_db_with_utxos(db_path, rpc_connection, utxos, address):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    
-    for utxo in utxos:
-        sender_address = get_sender_address(rpc_connection, utxo['txid'])
-        if not sender_address:
-            sender_address = "Unknown"
-        cursor.execute('''
-            INSERT OR IGNORE INTO utxos (txid, receiving_address, sending_address, amount, timestamp, credits_added)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (utxo['txid'], address, str(sender_address), utxo['amount'], utxo['confirmations'], 0))
-    
-    conn.commit()
-    conn.close()
+# Load existing wallet data from JSON
+def load_existing_wallet_data(file_path):
+    try:
+        with open(file_path, 'r') as json_file:
+            return json.load(json_file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
 
-def main():
-    # Read RPC credentials
-    rpc_creds = read_rpc_credentials(CONFIG_PATH)
-    
-    # Create database if it doesn't exist
-    create_db_if_not_exists(DB_PATH)
-    
-    # Connect to Dogecoin and Luckycoin nodes
-    doge_rpc = get_rpc_connection(rpc_creds, 'dogecoin')
-    lky_rpc = get_rpc_connection(rpc_creds, 'luckycoin')
-    
-    # Fetch and update UTXOs for Dogecoin
-    doge_utxos = fetch_utxos(doge_rpc, DOGE_ADDRESS)
-    update_db_with_utxos(DB_PATH, doge_rpc, doge_utxos, DOGE_ADDRESS)
-    
-    # Fetch and update UTXOs for Luckycoin
-    lky_utxos = fetch_utxos(lky_rpc, LUCKY_ADDRESS)
-    update_db_with_utxos(DB_PATH, lky_rpc, lky_utxos, LUCKY_ADDRESS)
+# Get UTXOs for a specific wallet address
+def get_utxos_for_address(rpc_connection, wallet_address, coin, existing_utxos):
+    try:
+        all_utxos = rpc_connection.listunspent()
+        utxos_with_sending_address = []
+        total_balance = Decimal(0)
+        existing_txids = {utxo['txid'] for utxo in existing_utxos}
 
-if __name__ == "__main__":
-    main()
+        for utxo in all_utxos:
+            if utxo['address'] == wallet_address and utxo['txid'] not in existing_txids:
+                sending_address = get_sending_address(rpc_connection, utxo['txid'], coin)
+                filtered_utxo = {
+                    'txid': utxo['txid'],
+                    'address': utxo['address'],
+                    'amount': utxo['amount'],
+                    'sending_address': sending_address,
+                    'credits_paid': None
+                }
+                utxos_with_sending_address.append(filtered_utxo)
+                total_balance += Decimal(utxo['amount'])
+
+        # Add existing UTXOs to the list
+        utxos_with_sending_address.extend(existing_utxos)
+        total_balance += sum(Decimal(utxo['amount']) for utxo in existing_utxos)
+
+        return utxos_with_sending_address, total_balance
+    except JSONRPCException as e:
+        print(f"Error fetching UTXOs: {e}")
+        return existing_utxos, Decimal(0)
+
+# Convert Decimal to float for JSON serialization
+def convert_decimal_to_float(data):
+    if isinstance(data, list):
+        return [convert_decimal_to_float(item) for item in data]
+    elif isinstance(data, dict):
+        return {key: convert_decimal_to_float(value) for key, value in data.items()}
+    elif isinstance(data, Decimal):
+        return float(data)
+    else:
+        return data
+
+# Main function to check UTXOs and save to JSON
+def check_utxos_and_save():
+    file_path = '../db/creditsWallet.json'
+    existing_wallet_data = load_existing_wallet_data(file_path)
+
+    tickers = {
+        'LKY': 'L6fDpwqUHYLEjrSEr98rGBz9w9dYHwxjaF',
+        'DOGE': 'DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA',
+    }
+    wallet_data = {}
+
+    for ticker, wallet_address in tickers.items():
+        rpc_connection = connect_rpc(ticker)
+        existing_utxos = existing_wallet_data.get(ticker, {}).get('utxos', [])
+        utxos, balance = get_utxos_for_address(rpc_connection, wallet_address, coin=ticker.lower(), existing_utxos=existing_utxos)
+        wallet_data[ticker] = {
+            'wallet_address': wallet_address,
+            'balance': float(balance),
+            'utxos': convert_decimal_to_float(utxos)
+        }
+
+    # Save the data to a JSON file
+    with open(file_path, 'w') as json_file:
+        json.dump(wallet_data, json_file, indent=4)
+
+if __name__ == '__main__':
+    check_utxos_and_save()

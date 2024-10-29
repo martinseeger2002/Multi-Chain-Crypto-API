@@ -22,17 +22,13 @@ def check_and_update_credits(file_path):
                 amount = Decimal(utxo['amount']).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
                 credits_amount = int(amount) * 50
 
-                # Debugging output
-                print(f"Sending address: {sending_address}")
-                print(f"Credits amount: {credits_amount}")
-
-                # Prepare the command with "add"
-                command = ['python3', 'creditsRUD.py', sending_address, 'add', str(credits_amount)]
+                # Prepare the command
+                command = ['python3', 'creditsRUD.py', sending_address, str(credits_amount)]
 
                 # Print the command for debugging
                 print(f"Executing command: {' '.join(command)}")
 
-                # Call creditsRUD.py with the sending address, "add", and calculated credits amount
+                # Call creditsRUD.py with the sending address and calculated credits amount
                 try:
                     subprocess.run(command, check=True)
                     # Update the JSON to mark this UTXO as processed
@@ -45,4 +41,4 @@ def check_and_update_credits(file_path):
         json.dump(wallet_data, json_file, indent=4)
 
 if __name__ == '__main__':
-    check_and_update_credits('../db/creditsWallet.json')
+    check_and_update_credits('../db/creditsWallet.json') 
