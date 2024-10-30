@@ -12,6 +12,7 @@
 /getOrdTxsLKY/node_modules/
 /getOrdTxsLTC/node_modules/
 /getOrdSmsDoge/node_modules/
+/doginals/node_modules/
 /_pycache_/
 .gitignore
 API.py

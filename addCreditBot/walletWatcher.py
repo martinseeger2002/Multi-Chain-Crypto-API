@@ -23,7 +23,6 @@ def load_rpc_credentials(ticker):
 def connect_rpc(ticker):
     creds = load_rpc_credentials(ticker)
     rpc_url = f"http://{creds['rpc_user']}:{creds['rpc_password']}@{creds['rpc_host']}:{creds['rpc_port']}"
-    print(f"Connecting to {ticker} RPC at {rpc_url}")  # Debugging line
     return AuthServiceProxy(rpc_url)
 
 # Decode the script hex to get the public key

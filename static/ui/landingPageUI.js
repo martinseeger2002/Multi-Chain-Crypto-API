@@ -1,8 +1,9 @@
 import { walletUI } from './walletUI.js';
 import { mintSelectionUI } from './mintSelectionUI.js';
-import { userUI } from './userUI.js'; // Import the userUI function
-import { addWalletUI } from './addWalletUI.js'; // Import the addWalletUI function
-import { terminalUI } from './terminalUI.js'; // Import the terminalUI function
+import { userUI } from './userUI.js';
+import { addWalletUI } from './addWalletUI.js';
+import { terminalUI } from './terminalUI.js';
+import { buyCreditsUI } from './buyCreditsUI.js'; // Import the buyCreditsUI function
 
 export function landingPageUI() {
     const landingPage = document.getElementById('landing-page');
@@ -27,6 +28,9 @@ export function landingPageUI() {
         localStorage.setItem('titleColor', title.style.color);
     });
 
+    // Retrieve selected wallet label from local storage
+    const selectedWalletLabel = localStorage.getItem('selectedWalletLabel');
+
     // Create buttons
     const buttons = [
         { 
@@ -43,8 +47,8 @@ export function landingPageUI() {
         { text: 'Mint', onClick: mintSelectionUI },
         { text: 'Vault (Coming Soon)', onClick: () => { /* Add functionality here */ } },
         { text: 'User', onClick: userUI },
-        { text: 'Buy Mint Credits (Coming Soon)', onClick: () => { /* Add functionality here */ } }, // New button
-        { text: 'Terminal', onClick: terminalUI } // Add Terminal button
+        { text: 'Buy Mint Credits', onClick: buyCreditsUI }, // Updated button to navigate to buyCreditsUI
+        { text: 'Terminal', onClick: terminalUI }
     ];
 
     buttons.forEach(({ text, onClick }) => {
@@ -54,9 +58,13 @@ export function landingPageUI() {
         button.addEventListener('click', onClick);
         landingPage.appendChild(button);
     });
-    
 
-    syncAllWallets(selectedWalletLabel);
+    // Ensure selectedWalletLabel is defined before using it
+    if (selectedWalletLabel) {
+        syncAllWallets(selectedWalletLabel);
+    } else {
+        console.warn('No selected wallet label found.');
+    }
 }
 
 async function syncAllWallets(selectedWalletLabel) {

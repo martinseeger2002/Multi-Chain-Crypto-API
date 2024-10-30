@@ -12,6 +12,10 @@ export function sendTxUI(selectedLabel) {
 
     // Retrieve the selected wallet's UTXOs
     const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+    
+    // Debugging log to check the contents of wallets
+    console.log('Retrieved wallets from localStorage:', wallets);
+
     const selectedWallet = wallets.find(wallet => wallet.label === selectedLabel);
 
     if (!selectedWallet || !selectedWallet.utxos) {
