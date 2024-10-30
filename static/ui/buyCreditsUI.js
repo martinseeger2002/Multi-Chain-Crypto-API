@@ -42,8 +42,8 @@ export function buyCreditsUI(selectedWalletLabel = localStorage.getItem('selecte
     const buy100Button = document.createElement('button');
     buy100Button.className = 'styled-button';
 
-    const buy400Button = document.createElement('button');
-    buy400Button.className = 'styled-button';
+    const buy420Button = document.createElement('button');
+    buy420Button.className = 'styled-button';
 
     // Update Button Text based on Selected Ticker
     function updateButtonText() {
@@ -51,11 +51,11 @@ export function buyCreditsUI(selectedWalletLabel = localStorage.getItem('selecte
         if (selectedTicker === 'doge') {
             buy20Button.innerHTML = '20 Credits<br>1 DOGE';
             buy100Button.innerHTML = '100 Credits<br>5 DOGE';
-            buy400Button.innerHTML = '400 Credits<br>10 DOGE';
+            buy420Button.innerHTML = '420 Credits<br>10 DOGE';
         } else if (selectedTicker === 'lky') {
             buy20Button.innerHTML = '20 Credits<br>0.01 LKY';
             buy100Button.innerHTML = '100 Credits<br>0.05 LKY';
-            buy400Button.innerHTML = '400 Credits<br>0.1 LKY';
+            buy420Button.innerHTML = '420 Credits<br>0.1 LKY';
         }
     }
 
@@ -207,12 +207,12 @@ export function buyCreditsUI(selectedWalletLabel = localStorage.getItem('selecte
     // Buy Credits Button Event Listeners
     buy20Button.addEventListener('click', () => handleTransaction(20, tickerSelector.value === 'doge' ? 1 : 0.01));
     buy100Button.addEventListener('click', () => handleTransaction(100, tickerSelector.value === 'doge' ? 5 : 0.05));
-    buy400Button.addEventListener('click', () => handleTransaction(400, tickerSelector.value === 'doge' ? 10 : 0.1));
+    buy420Button.addEventListener('click', () => handleTransaction(420, tickerSelector.value === 'doge' ? 10 : 0.1));
 
     // Append Buy Credits Buttons
     landingPage.appendChild(buy20Button);
     landingPage.appendChild(buy100Button);
-    landingPage.appendChild(buy400Button);
+    landingPage.appendChild(buy420Button);
 
     // Back Button
     const backButton = document.createElement('button');
