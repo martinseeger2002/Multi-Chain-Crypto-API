@@ -137,6 +137,15 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
         amountInput.style.display = (op === 'mint' || op === 'transfer') ? 'block' : 'none';
         maxInput.style.display = (op === 'deploy') ? 'block' : 'none';
         limitInput.style.display = (op === 'deploy') ? 'block' : 'none';
+
+        // Prepopulate fields for mint operation
+        if (op === 'mint') {
+            tickInput.value = 'plgz'; // Prepopulate ticker
+            amountInput.value = '420'; // Prepopulate amount
+        } else {
+            tickInput.value = ''; // Clear ticker for other operations
+            amountInput.value = ''; // Clear amount for other operations
+        }
     });
     operationDropdown.dispatchEvent(new Event('change'));
 
