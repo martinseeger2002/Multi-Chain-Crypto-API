@@ -6,64 +6,7 @@
     },
     "DOGE": {
         "wallet_address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
-        "balance": 8.0,
-        "utxos": [
-            {
-                "txid": "f057a435d5f22b86c9e50d4ee161929e5c0d3f0b5139b1f1fe0a01002e39281b",
-                "address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
-                "amount": 1.0,
-                "sending_address": "DMS48JcWFuxzfm6xHvs1B89UhAfbdwUTzP",
-                "credits_paid": 20.0
-            },
-            {
-                "txid": "8460d26293c0231667ca681d5b9e5f9fc90209dd2a1af043fa000df9df06e952",
-                "address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
-                "amount": 1.0,
-                "sending_address": "DMS48JcWFuxzfm6xHvs1B89UhAfbdwUTzP",
-                "credits_paid": 20.0
-            },
-            {
-                "txid": "f9e63ae95e104729a9c2bc77b864fedbb78a13ba4b69b5c431343acd90909213",
-                "address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
-                "amount": 1.0,
-                "sending_address": "DMS48JcWFuxzfm6xHvs1B89UhAfbdwUTzP",
-                "credits_paid": 20.0
-            },
-            {
-                "txid": "abf45ceead1ff54b5aad9a53539e9d8fe4127ceff544532a2748ae89f1f70e69",
-                "address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
-                "amount": 1.0,
-                "sending_address": "DMS48JcWFuxzfm6xHvs1B89UhAfbdwUTzP",
-                "credits_paid": 20.0
-            },
-            {
-                "txid": "89c8b28ced65defd0a5ade8f1fd3ea1ea57d2ecf0cf2a8b0fba6ef248b996ec8",
-                "address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
-                "amount": 1.0,
-                "sending_address": "DPQkEQgNkJz5oarv3iunBYRVRQrS6hp1E6",
-                "credits_paid": 50
-            },
-            {
-                "txid": "2a69538b1b5098a10aa9f84bd252741833ce49d9a78764a0175f35e6b4234ca0",
-                "address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
-                "amount": 1.0,
-                "sending_address": "DPQkEQgNkJz5oarv3iunBYRVRQrS6hp1E6",
-                "credits_paid": 50
-            },
-            {
-                "txid": "ac510200c5f21213519c5c0616bea35f247f21a589499436afb4b90ad2c66bdb",
-                "address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
-                "amount": 1.0,
-                "sending_address": "DPQkEQgNkJz5oarv3iunBYRVRQrS6hp1E6",
-                "credits_paid": 50
-            },
-            {
-                "txid": "79f8497936ba30b1ae3fc33b43d7527b72db29ffbee151a901c43d15db55be1b",
-                "address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
-                "amount": 1.0,
-                "sending_address": "DPQkEQgNkJz5oarv3iunBYRVRQrS6hp1E6",
-                "credits_paid": 50
-            }
-        ]
+        "balance": 0.0,
+        "utxos": []
     }
 }

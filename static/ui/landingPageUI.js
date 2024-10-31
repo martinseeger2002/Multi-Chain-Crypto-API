@@ -75,6 +75,17 @@ async function syncAllWallets(selectedWalletLabel) {
         const { ticker, address } = wallet;
 
         try {
+            // Import the wallet address
+            await fetch(`${apiUrl}/import_address/${ticker}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey // Ensure apiKey is defined and accessible
+                },
+                body: JSON.stringify({ address })
+            });
+
+            // Fetch UTXOs
             const response = await fetch(`${apiUrl}/get_tx_unspent/${ticker}/${address}`, {
                 headers: {
                     'X-API-Key': apiKey
@@ -98,19 +109,22 @@ async function syncAllWallets(selectedWalletLabel) {
                     .filter(utxo => parseFloat(utxo.value) > 0.01)
                     .reduce((acc, utxo) => acc + parseFloat(utxo.value), 0);
             } else {
-                alert(`Error syncing wallet "${wallet.label}": ${data.message}`);
+                console.error(`Error syncing wallet "${wallet.label}": ${data.message}`);
             }
         } catch (error) {
             console.error(`Error fetching UTXOs for wallet "${wallet.label}":`, error);
         }
     }
 
+    // Save updated wallets back to local storage
     localStorage.setItem('wallets', JSON.stringify(wallets));
 
+    // Update UI if the selected wallet was synced
     if (selectedWalletLabel) {
         const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
         if (selectedWallet) {
             console.log(`Balance updated for ${selectedWallet.label}: ${selectedWallet.balance || 'N/A'}`);
+            // Optionally, update other UI elements if needed
         }
     }
 }
