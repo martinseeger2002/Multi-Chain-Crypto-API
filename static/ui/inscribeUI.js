@@ -1,4 +1,4 @@
-import { mintFileUI } from './mintFileUI.js'; // Adjust the path as necessary
+import { mintSelectionUI } from './mintSelectionUI.js'; // Adjust the path as necessary
 
 export function inscribeUI() {
     const landingPage = document.getElementById('landing-page');
@@ -65,7 +65,7 @@ export function inscribeUI() {
     backButton.textContent = 'Back';
     backButton.className = 'splash-enter-button'; // Updated to match mainSplashUI styling
     backButton.addEventListener('click', () => {
-        mintFileUI(); // Navigate back to mint file UI
+        mintSelectionUI(); // Navigate back to mint file UI
     });
     buttonContainer.appendChild(backButton);
 
