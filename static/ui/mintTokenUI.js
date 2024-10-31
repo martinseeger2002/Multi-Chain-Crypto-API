@@ -104,6 +104,7 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     tickInput.type = 'text';
     tickInput.placeholder = 'Enter token ticker';
     tickInput.className = 'styled-input';
+    tickInput.autocapitalize = 'off'; // Disable auto-capitalization
     landingPage.appendChild(tickInput);
 
     // Amount input (conditionally displayed)
@@ -111,6 +112,7 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     amountInput.type = 'text';
     amountInput.placeholder = 'Enter amount';
     amountInput.className = 'styled-input';
+    amountInput.autocapitalize = 'off'; // Disable auto-capitalization
     landingPage.appendChild(amountInput);
 
     // Max input (conditionally displayed)
@@ -118,6 +120,7 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     maxInput.type = 'text';
     maxInput.placeholder = 'Enter max supply';
     maxInput.className = 'styled-input';
+    maxInput.autocapitalize = 'off'; // Disable auto-capitalization
     landingPage.appendChild(maxInput);
 
     // Limit input (conditionally displayed)
@@ -125,6 +128,7 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     limitInput.type = 'text';
     limitInput.placeholder = 'Enter limit';
     limitInput.className = 'styled-input';
+    limitInput.autocapitalize = 'off'; // Disable auto-capitalization
     landingPage.appendChild(limitInput);
 
     // Show/hide inputs based on operation
