@@ -131,6 +131,13 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     limitInput.autocapitalize = 'off'; // Disable auto-capitalization
     landingPage.appendChild(limitInput);
 
+    // Receiving address input
+    const addressInput = document.createElement('input');
+    addressInput.type = 'text';
+    addressInput.placeholder = 'Enter receiving address (optional)';
+    addressInput.className = 'styled-input'; // Use a class for styling
+    landingPage.appendChild(addressInput);
+
     // Show/hide inputs based on operation
     operationDropdown.addEventListener('change', () => {
         const op = operationDropdown.value;
@@ -182,6 +189,22 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
 
         console.log('Selected UTXO for Transaction:', selectedUtxo);
 
+        // Determine receiving address
+        const receivingAddressInput = addressInput.value.trim();
+        let receivingAddress;
+
+        if (!receivingAddressInput) {
+            if (selectedWallet && selectedWallet.address) {
+                receivingAddress = selectedWallet.address; // Default to the selected wallet's address
+                console.log('No receiving address entered. Using selected wallet\'s address:', receivingAddress);
+            } else {
+                alert('Please enter a receiving address.');
+                return;
+            }
+        } else {
+            receivingAddress = receivingAddressInput;
+        }
+
         // Construct token data
         const tokenData = {
             p: tokenStandardDropdown.value,
@@ -212,7 +235,7 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
         console.log('Hex Data:', hexData);
 
         const requestBody = {
-            receiving_address: selectedWallet.address,
+            receiving_address: receivingAddress,
             meme_type: 'text/plain',
             hex_data: hexData,
             sending_address: selectedWallet.address,
