@@ -27,12 +27,14 @@ export function inscribeUI() {
             if (data.status === 'success') {
                 creditsDisplay.textContent = `Mint Credits: ${data.credits}`;
             } else {
-                creditsDisplay.textContent = 'Error fetching mint credits';
+                creditsDisplay.textContent = 'Mint credits error log out and log back in';
+                inscribeAllButton.disabled = true; // Disable the inscribe button
             }
         })
         .catch(error => {
             console.error('Error fetching mint credits:', error);
-            creditsDisplay.textContent = 'Error fetching mint credits';
+            creditsDisplay.textContent = 'Mint credits error log out and log back in';
+            inscribeAllButton.disabled = true; // Disable the inscribe button
         });
 
     // Initialize Pending Transactions Counter
@@ -171,6 +173,12 @@ export function inscribeUI() {
 
     // Function to inscribe all transactions
     function inscribeAllTransactions() {
+        const mintCredits = parseInt(creditsDisplay.textContent.split(': ')[1], 10);
+        if (mintCredits < 0) {
+            alert('Insufficient mint credits to start inscribing transactions.');
+            return;
+        }
+
         mintResponse.pendingTransactions = pendingTransactions;
         localStorage.setItem('mintResponse', JSON.stringify(mintResponse));
 
