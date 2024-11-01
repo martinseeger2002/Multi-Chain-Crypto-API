@@ -77,7 +77,7 @@ export function inscribeUI() {
     // Function to inscribe a single transaction
     function inscribeTransaction(showAlert = true) {
         const mintCredits = parseInt(creditsDisplay.textContent.split(': ')[1], 10);
-        if (mintCredits <= 0) {
+        if (mintCredits < 1) {
             alert('Insufficient mint credits.');
             return Promise.reject('Insufficient mint credits.');
         }
