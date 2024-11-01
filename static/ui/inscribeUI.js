@@ -177,6 +177,7 @@ export function inscribeUI() {
         function processNextTransaction() {
             if (pendingTransactions.length === 0) {
                 alert('All transactions processed.');
+                syncAllWallets(); // Sync wallets after all transactions are processed
                 return;
             }
 
@@ -194,5 +195,75 @@ export function inscribeUI() {
         }
 
         processNextTransaction();
+    }
+
+    // Borrowed from walletUI.js
+    async function syncAllWallets() {
+        const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+        const apiUrl = 'https://blockchainplugz.com/api/v1';
+
+        for (const wallet of wallets) {
+            const { ticker, address } = wallet;
+
+            try {
+                // Import the wallet address
+                await fetch(`${apiUrl}/import_address/${ticker}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey // Ensure apiKey is defined and accessible
+                    },
+                    body: JSON.stringify({ address })
+                });
+
+                // Fetch UTXOs
+                const response = await fetch(`${apiUrl}/get_tx_unspent/${ticker}/${address}`, {
+                    headers: {
+                        'X-API-Key': apiKey // Ensure apiKey is defined and accessible
+                    }
+                });
+
+                const data = await response.json();
+                console.log(`UTXO Response for ${wallet.label}:`, data); // Log the UTXO response
+
+                if (data.status === 'success') {
+                    wallet.utxos = data.data.txs.map(tx => ({
+                        txid: tx.txid,
+                        value: tx.value,
+                        confirmations: tx.confirmations,
+                        vout: tx.vout,
+                        script_hex: tx.script_hex
+                    }));
+                    console.log(`UTXOs updated for ${wallet.label}:`, wallet.utxos); // Log the updated UTXOs
+
+                    // Calculate the confirmed balance by summing up the values of UTXOs with 1 or more confirmations and greater than 0.01
+                    wallet.balance = wallet.utxos
+                        .filter(utxo => utxo.confirmations >= 1 && parseFloat(utxo.value) > 0.01)
+                        .reduce((acc, utxo) => acc + parseFloat(utxo.value), 0);
+
+                    // Calculate the incoming balance by summing up the values of UTXOs with 0 confirmations
+                    wallet.incoming = wallet.utxos
+                        .filter(utxo => utxo.confirmations === 0)
+                        .reduce((acc, utxo) => acc + parseFloat(utxo.value), 0);
+                } else {
+                    console.error(`Error syncing wallet "${wallet.label}": ${data.message}`);
+                }
+            } catch (error) {
+                console.error(`Error fetching UTXOs for wallet "${wallet.label}":`, error);
+            }
+        }
+
+        // Save updated wallets back to local storage
+        localStorage.setItem('wallets', JSON.stringify(wallets));
+
+        // Update UI if the selected wallet was synced
+        const selectedWalletLabel = localStorage.getItem('selectedWalletLabel');
+        if (selectedWalletLabel) {
+            const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
+            if (selectedWallet) {
+                balanceDisplay.textContent = `Balance: ${selectedWallet.balance || 'N/A'} | Incoming: ${selectedWallet.incoming || 'N/A'}`;
+                // Optionally, update other UI elements if needed
+            }
+        }
     }
 }
