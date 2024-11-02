@@ -45,9 +45,9 @@ export function landingPageUI() {
             }
         },
         { text: 'Mint', onClick: mintSelectionUI },
-        { text: 'Vault (Coming Soon)', onClick: () => { /* Add functionality here */ } },
+        //{ text: 'Vault (Coming Soon)', onClick: () => { /* Add functionality here */ } },
         { text: 'User', onClick: userUI },
-        { text: 'Buy Mint Credits', onClick: buyCreditsUI }, // Updated button to navigate to buyCreditsUI
+        //{ text: 'Buy Mint Credits', onClick: buyCreditsUI }, // Updated button to navigate to buyCreditsUI
         { text: 'Terminal', onClick: terminalUI }
     ];
 

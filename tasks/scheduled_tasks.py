@@ -62,6 +62,7 @@ def reset_daily_request_counts():
 def run_credit_bot():
     os.chdir('addCreditBot')
     subprocess.run(['python3', 'walletWatcher.py'], check=True)
+    time.sleep(10)
     subprocess.run(['python3', 'creditBot.py'], check=True)
     os.chdir('..')
 
@@ -80,9 +81,10 @@ scheduler.add_job(
     minute=0,
     timezone='America/Chicago'
 )
-scheduler.add_job(
-    func=run_credit_bot,
-    trigger='cron',
-    minute='*',
-    timezone='America/Chicago'
-)
+
+#scheduler.add_job(
+#    func=run_credit_bot,
+#    trigger='cron',
+#    minute='*',
+#    timezone='America/Chicago'
+#)
