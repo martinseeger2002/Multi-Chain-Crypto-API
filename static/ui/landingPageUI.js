@@ -1,5 +1,6 @@
 import { walletUI } from './walletUI.js';
 import { mintSelectionUI } from './mintSelectionUI.js';
+import { vaultSelectionUI } from './vaultSelectionUI.js';
 import { userUI } from './userUI.js';
 import { addWalletUI } from './addWalletUI.js';
 import { terminalUI } from './terminalUI.js';
@@ -45,7 +46,7 @@ export function landingPageUI() {
             }
         },
         { text: 'Mint', onClick: mintSelectionUI },
-        { text: 'Vault (Coming Soon)', onClick: () => { /* Add functionality here */ } },
+        { text: 'Vault', onClick: vaultSelectionUI },
         { text: 'User', onClick: userUI },
         { text: 'Buy Mint Credits', onClick: buyCreditsUI }, // Updated button to navigate to buyCreditsUI
         { text: 'Terminal', onClick: terminalUI }

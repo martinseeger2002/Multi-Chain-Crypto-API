@@ -112,3 +112,72 @@ def import_address(ticker):
             "status": "error",
             "message": str(e)
         }), 500
+
+@blockchain_bp.route('/api/v1/transactions/<ticker>/<address>/<int:page>', methods=['GET']) ## use this to get transactions for an address
+@require_api_key
+def get_address_transactions(ticker, address, page):
+    rpc_connection = get_rpc_connection(ticker)
+    try:
+        # Start from the latest block
+        best_block_hash = rpc_connection.getbestblockhash()
+        transactions_found = []
+        blocks_checked = 0
+        transactions_per_page = 10
+        start_index = (page - 1) * transactions_per_page
+        max_blocks_to_check = 1000  # Set the maximum depth of blocks to search
+
+        while len(transactions_found) < (page * transactions_per_page):
+            if blocks_checked >= max_blocks_to_check:
+                break  # Stop if max depth is reached without finding new transactions
+
+            block = rpc_connection.getblock(best_block_hash)
+            blocks_checked += 1
+
+            for txid in block['tx']:
+                raw_tx = rpc_connection.getrawtransaction(txid, True)
+                
+                # Determine "from" addresses
+                from_addresses = []
+                for vin in raw_tx['vin']:
+                    if 'txid' in vin:
+                        prev_tx = rpc_connection.getrawtransaction(vin['txid'], True)
+                        prev_vout = prev_tx['vout'][vin['vout']]
+                        if 'addresses' in prev_vout['scriptPubKey']:
+                            from_addresses.extend(prev_vout['scriptPubKey']['addresses'])
+
+                # Determine "to" addresses and check if the transaction involves the specified address
+                for vout in raw_tx['vout']:
+                    if 'addresses' in vout['scriptPubKey']:
+                        to_addresses = vout['scriptPubKey']['addresses']
+                        if address in to_addresses or address in from_addresses:
+                            tx_details = {
+                                "hash": raw_tx['txid'],
+                                "value": vout['value'],
+                                "time": raw_tx['time'],
+                                "block": block['height'],
+                                "confirmations": block['confirmations'],
+                                "from": from_addresses,
+                                "to": to_addresses,
+                                "type": "receive" if address in to_addresses else "send"
+                            }
+                            transactions_found.append(tx_details)
+                            blocks_checked = 0  # Reset the block depth counter
+                            break  # No need to check other outputs if address is found
+
+            # Move to the previous block
+            if 'previousblockhash' in block:
+                best_block_hash = block['previousblockhash']
+            else:
+                break  # No more blocks to check
+
+        # Paginate the results
+        paginated_transactions = transactions_found[start_index:start_index + transactions_per_page]
+
+        return jsonify({
+            "status": "success",
+            "data": {
+                "transactions": paginated_transactions
+            }
+        })
+    except JSONRPCException as e:
+        return jsonify({"status": "error", "message": str(e)}), 400

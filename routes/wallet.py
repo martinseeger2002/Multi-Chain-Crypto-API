@@ -104,6 +104,30 @@ def get_wallet_address(ticker):
 
     return jsonify({"status": "error", "message": "User not logged in"}), 401
 
+@wallet_bp.route('/api/v1/wallets/<ticker>/<user>', methods=['GET'])
+def get_wallet_address_for_user(ticker, user):
+    conn = get_db_connection()
+    
+    # Map the ticker to the corresponding column name in the database
+    column_map = {
+        'doge': 'doge',
+        'ltc': 'ltc',
+        'lky': 'lky'
+    }
+    column_name = column_map.get(ticker.lower())
+
+    if not column_name:
+        return jsonify({"status": "error", "message": "Invalid ticker"}), 400
+
+    # Fetch the wallet address for the specified user by ticker
+    user_data = conn.execute(f'SELECT {column_name} FROM users WHERE user = ?', (user,)).fetchone()
+    conn.close()
+
+    if user_data and user_data[column_name]:
+        return jsonify({"status": "success", "address": user_data[column_name]}), 200
+    else:
+        return jsonify({"status": "error", "message": "Address not found"}), 404
+
 @wallet_bp.route('/api/v1/wallet/<ticker>', methods=['POST'])
 def update_wallet_address(ticker):
     if 'user' in session:
