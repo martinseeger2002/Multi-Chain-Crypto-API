@@ -38,20 +38,37 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     utxoDropdown.className = 'styled-select';
     landingPage.appendChild(utxoDropdown);
 
+    // Number of UTXOs to use dropdown
+    const numUtxosDropdown = document.createElement('select');
+    numUtxosDropdown.className = 'styled-select';
+    landingPage.appendChild(numUtxosDropdown);
+
     // Update UTXO dropdown and token standard based on selected wallet
     walletDropdown.addEventListener('change', () => {
         const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
         if (selectedWallet && selectedWallet.utxos && selectedWallet.utxos.length > 0) {
             utxoDropdown.innerHTML = ''; // Clear existing options
-            selectedWallet.utxos
-                .filter(utxo => parseFloat(utxo.value) >= 1.2 && utxo.confirmations >= 1)
-                .forEach(utxo => {
-                    const option = document.createElement('option');
-                    option.value = `${utxo.txid}:${utxo.vout}`;
-                    option.textContent = utxo.value;
-                    utxoDropdown.appendChild(option);
-                });
-            if (selectedWallet.utxos.filter(utxo => parseFloat(utxo.value) >= 1.2 && utxo.confirmations >= 1).length === 0) {
+            numUtxosDropdown.innerHTML = ''; // Clear existing options for number of UTXOs
+
+            const filteredUtxos = selectedWallet.utxos
+                .filter(utxo => parseFloat(utxo.value) >= 1.2 && utxo.confirmations >= 1);
+
+            filteredUtxos.forEach(utxo => {
+                const option = document.createElement('option');
+                option.value = `${utxo.txid}:${utxo.vout}`;
+                option.textContent = utxo.value;
+                utxoDropdown.appendChild(option);
+            });
+
+            // Populate number of UTXOs dropdown
+            for (let i = 1; i <= filteredUtxos.length; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                numUtxosDropdown.appendChild(option);
+            }
+
+            if (filteredUtxos.length === 0) {
                 utxoDropdown.innerHTML = '<option disabled>No UTXOs available above 1.2 with sufficient confirmations</option>';
             }
         } else {
@@ -180,12 +197,19 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     generateTxButton.textContent = 'Inscribe';
     generateTxButton.className = 'styled-button';
     generateTxButton.addEventListener('click', () => {
+        // Disable the button to prevent multiple clicks
+        generateTxButton.disabled = true;
+
         // Save the current ticker, amount, and receiving address to local storage
         localStorage.setItem('lastMintedTicker', tickInput.value);
         localStorage.setItem('lastMintedAmount', amountInput.value);
         localStorage.setItem('lastReceivingAddress', addressInput.value);
 
-        generateTransactions();
+        const numUtxosToUse = parseInt(numUtxosDropdown.value, 10);
+        generateTransactions(numUtxosToUse).finally(() => {
+            // Re-enable the button after transactions are processed
+            generateTxButton.disabled = false;
+        });
     });
     landingPage.appendChild(generateTxButton);
 
@@ -198,40 +222,68 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     });
     landingPage.appendChild(backButton);
 
-    function generateTransactions() {
+    async function generateTransactions(numUtxosToUse) {
         const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
         if (!selectedWallet) {
             alert('Please select a wallet.');
             return;
         }
 
-        if (!utxoDropdown.value) {
+        const selectedUtxos = Array.from(utxoDropdown.options)
+            .slice(0, numUtxosToUse)
+            .map(option => {
+                const [txid, vout] = option.value.split(':');
+                return selectedWallet.utxos.find(utxo => utxo.txid === txid && utxo.vout == vout);
+            });
+
+        if (selectedUtxos.length === 0) {
             alert('Please select a UTXO.');
             return;
         }
 
-        const [txid, vout] = utxoDropdown.value.split(':');
-        const selectedUtxo = selectedWallet.utxos.find(utxo => utxo.txid === txid && utxo.vout == vout);
+        const pendingTransactions = [];
+        const errorMessages = [];
 
-        console.log('Selected UTXO for Transaction:', selectedUtxo);
-
-        // Determine receiving address
-        const receivingAddressInput = addressInput.value.trim();
-        let receivingAddress;
-
-        if (!receivingAddressInput) {
-            if (selectedWallet && selectedWallet.address) {
-                receivingAddress = selectedWallet.address; // Default to the selected wallet's address
-                console.log('No receiving address entered. Using selected wallet\'s address:', receivingAddress);
-            } else {
-                alert('Please enter a receiving address.');
-                return;
+        for (const selectedUtxo of selectedUtxos) {
+            try {
+                const data = await mintTransaction(selectedWallet, selectedUtxo);
+                if (data.pendingTransactions && Array.isArray(data.pendingTransactions) && data.pendingTransactions.length > 0) {
+                    pendingTransactions.push(...data.pendingTransactions);
+                } else {
+                    errorMessages.push(data.message || 'An error occurred.');
+                }
+            } catch (error) {
+                errorMessages.push('An error occurred while generating the transaction.');
             }
-        } else {
-            receivingAddress = receivingAddressInput;
         }
 
-        // Construct token data
+        if (pendingTransactions.length > 0) {
+            try {
+                const existingMintResponse = JSON.parse(localStorage.getItem('mintResponse')) || { pendingTransactions: [] };
+                existingMintResponse.pendingTransactions.push(...pendingTransactions.map(tx => ({
+                    ...tx,
+                    ticker: selectedWallet.ticker
+                })));
+                localStorage.setItem('mintResponse', JSON.stringify(existingMintResponse));
+                console.log('Mint response saved successfully.');
+            } catch (error) {
+                errorMessages.push('An error occurred while saving the mint response.');
+            }
+        }
+
+        if (errorMessages.length > 0) {
+            alert('Some errors occurred:\n' + errorMessages.join('\n'));
+        }
+
+        if (pendingTransactions.length > 0) {
+            inscribeUI();
+        }
+    }
+
+    async function mintTransaction(wallet, utxo) {
+        const receivingAddressInput = addressInput.value.trim();
+        let receivingAddress = receivingAddressInput || wallet.address;
+
         const tokenData = {
             p: tokenStandardDropdown.value,
             op: operationDropdown.value,
@@ -251,99 +303,69 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
         }
 
         const tokenDataString = JSON.stringify(tokenData);
-        console.log('Token Data String:', tokenDataString);
-
-        // Convert token data string to hex
-        function stringToHex(str) {
-            return str.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-        }
         const hexData = stringToHex(tokenDataString);
-        console.log('Hex Data:', hexData);
 
         const requestBody = {
             receiving_address: receivingAddress,
             meme_type: 'text/plain',
             hex_data: hexData,
-            sending_address: selectedWallet.address,
-            privkey: selectedWallet.privkey,
-            utxo: selectedUtxo.txid,
-            vout: selectedUtxo.vout,
-            script_hex: selectedUtxo.script_hex,
-            utxo_amount: selectedUtxo.value
+            sending_address: wallet.address,
+            privkey: wallet.privkey,
+            utxo: utxo.txid,
+            vout: utxo.vout,
+            script_hex: utxo.script_hex,
+            utxo_amount: utxo.value
         };
 
-        console.log('Request Body:', requestBody);
-
-        fetch(`/api/v1/mint/${selectedWallet.ticker}`, {
+        const response = await fetch(`/api/v1/mint/${wallet.ticker}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-API-Key': apiKey
             },
             body: JSON.stringify(requestBody)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Response Data:', JSON.stringify(data, null, 2));
-
-            if (data.pendingTransactions && Array.isArray(data.pendingTransactions) && data.pendingTransactions.length > 0) {
-                console.log('Pending Transactions:', data.pendingTransactions);
-
-                try {
-                    let existingHexes = JSON.parse(localStorage.getItem('transactionHexes')) || [];
-                    const newHexes = data.pendingTransactions.map(tx => tx.hex);
-                    existingHexes.push(...newHexes);
-                    localStorage.setItem('transactionHexes', JSON.stringify(existingHexes));
-                    console.log('Transaction hexes saved successfully:', newHexes);
-                } catch (error) {
-                    console.error('Error saving transaction hexes to local storage:', error);
-                    alert('An error occurred while saving the transaction hexes.');
-                }
-
-                try {
-                    const pendingTransactions = data.pendingTransactions.map(tx => ({
-                        ...tx,
-                        ticker: selectedWallet.ticker
-                    }));
-
-                    localStorage.setItem('mintResponse', JSON.stringify({ pendingTransactions }));
-                    console.log('Mint response saved successfully.');
-                    
-                    inscribeUI();
-                } catch (error) {
-                    console.error('Error saving mintResponse to local storage:', error);
-                    alert('An error occurred while saving the mint response.');
-                }
-
-                try {
-                    let pendingUTXOs = JSON.parse(localStorage.getItem('pendingUTXOs')) || [];
-                    const usedUtxo = {
-                        txid: selectedUtxo.txid,
-                        vout: selectedUtxo.vout
-                    };
-
-                    const isAlreadyPending = pendingUTXOs.some(utxo => utxo.txid === usedUtxo.txid && utxo.vout === usedUtxo.vout);
-                    if (!isAlreadyPending) {
-                        pendingUTXOs.push(usedUtxo);
-                        localStorage.setItem('pendingUTXOs', JSON.stringify(pendingUTXOs));
-                        console.log('Pending UTXO saved:', usedUtxo);
-                    } else {
-                        console.log('UTXO is already marked as pending:', usedUtxo);
-                    }
-                } catch (error) {
-                    console.error('Error saving pending UTXOs to local storage:', error);
-                    alert('An error occurred while saving the pending UTXO.');
-                }
-
-                localStorage.removeItem('pendingHexData');
-            } else {
-                console.error('Mint API did not return pendingTransactions or it is empty:', data);
-                alert(data.message || 'An error occurred.');
-            }
-        })
-        .catch(error => {
-            console.error('Error generating transaction:', error);
-            alert('An error occurred while generating the transaction.');
         });
+
+        const data = await response.json();
+        console.log('Response Data:', JSON.stringify(data, null, 2));
+
+        if (data.pendingTransactions) {
+            try {
+                let existingHexes = JSON.parse(localStorage.getItem('transactionHexes')) || [];
+                const newHexes = data.pendingTransactions.map(tx => tx.hex);
+                existingHexes.push(...newHexes);
+                localStorage.setItem('transactionHexes', JSON.stringify(existingHexes));
+                console.log('Transaction hexes saved successfully:', newHexes);
+            } catch (error) {
+                console.error('Error saving transaction hexes to local storage:', error);
+                throw new Error('Error saving transaction hexes to local storage.');
+            }
+
+            try {
+                let pendingUTXOs = JSON.parse(localStorage.getItem('pendingUTXOs')) || [];
+                const usedUtxo = {
+                    txid: utxo.txid,
+                    vout: utxo.vout
+                };
+
+                const isAlreadyPending = pendingUTXOs.some(pendingUtxo => pendingUtxo.txid === usedUtxo.txid && pendingUtxo.vout === usedUtxo.vout);
+                if (!isAlreadyPending) {
+                    pendingUTXOs.push(usedUtxo);
+                    localStorage.setItem('pendingUTXOs', JSON.stringify(pendingUTXOs));
+                    console.log('Pending UTXO saved:', usedUtxo);
+                } else {
+                    console.log('UTXO is already marked as pending:', usedUtxo);
+                }
+            } catch (error) {
+                console.error('Error saving pending UTXOs to local storage:', error);
+                throw new Error('Error saving pending UTXOs to local storage.');
+            }
+        }
+
+        return data;
+    }
+
+    function stringToHex(str) {
+        return str.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
     }
 }
