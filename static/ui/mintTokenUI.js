@@ -44,15 +44,15 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
         if (selectedWallet && selectedWallet.utxos && selectedWallet.utxos.length > 0) {
             utxoDropdown.innerHTML = ''; // Clear existing options
             selectedWallet.utxos
-                .filter(utxo => parseFloat(utxo.value) > 0.01 && utxo.confirmations >= 1)
+                .filter(utxo => parseFloat(utxo.value) >= 1.2 && utxo.confirmations >= 1)
                 .forEach(utxo => {
                     const option = document.createElement('option');
                     option.value = `${utxo.txid}:${utxo.vout}`;
                     option.textContent = utxo.value;
                     utxoDropdown.appendChild(option);
                 });
-            if (selectedWallet.utxos.filter(utxo => parseFloat(utxo.value) > 0.01 && utxo.confirmations >= 1).length === 0) {
-                utxoDropdown.innerHTML = '<option disabled>No UTXOs available above 0.01 with sufficient confirmations</option>';
+            if (selectedWallet.utxos.filter(utxo => parseFloat(utxo.value) >= 1.2 && utxo.confirmations >= 1).length === 0) {
+                utxoDropdown.innerHTML = '<option disabled>No UTXOs available above 1.2 with sufficient confirmations</option>';
             }
         } else {
             utxoDropdown.innerHTML = '<option disabled>No UTXOs available</option>';
@@ -102,7 +102,7 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     // Tick input
     const tickInput = document.createElement('input');
     tickInput.type = 'text';
-    tickInput.placeholder = 'Enter token ticker';
+    tickInput.placeholder = 'plgz'; // Set default placeholder
     tickInput.className = 'styled-input';
     tickInput.autocapitalize = 'off'; // Disable auto-capitalization
     landingPage.appendChild(tickInput);
@@ -110,7 +110,7 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     // Amount input (conditionally displayed)
     const amountInput = document.createElement('input');
     amountInput.type = 'text';
-    amountInput.placeholder = 'Enter amount';
+    amountInput.placeholder = '420'; // Set default placeholder
     amountInput.className = 'styled-input';
     amountInput.autocapitalize = 'off'; // Disable auto-capitalization
     landingPage.appendChild(amountInput);
@@ -134,9 +134,29 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     // Receiving address input
     const addressInput = document.createElement('input');
     addressInput.type = 'text';
-    addressInput.placeholder = 'Enter receiving address (optional)';
     addressInput.className = 'styled-input'; // Use a class for styling
     landingPage.appendChild(addressInput);
+
+    // Prepopulate ticker, amount, and receiving address from local storage
+    const lastMintedTicker = localStorage.getItem('lastMintedTicker');
+    const lastMintedAmount = localStorage.getItem('lastMintedAmount');
+    const lastReceivingAddress = localStorage.getItem('lastReceivingAddress');
+
+    if (lastMintedTicker) {
+        tickInput.value = lastMintedTicker;
+    }
+    if (lastMintedAmount) {
+        amountInput.value = lastMintedAmount;
+    }
+    if (lastReceivingAddress) {
+        addressInput.value = lastReceivingAddress;
+    }
+
+    // Set placeholder for receiving address based on selected wallet
+    const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
+    if (selectedWallet && selectedWallet.address) {
+        addressInput.placeholder = selectedWallet.address;
+    }
 
     // Show/hide inputs based on operation
     operationDropdown.addEventListener('change', () => {
@@ -145,13 +165,12 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
         maxInput.style.display = (op === 'deploy') ? 'block' : 'none';
         limitInput.style.display = (op === 'deploy') ? 'block' : 'none';
 
-        // Prepopulate fields for mint operation
-        if (op === 'mint') {
+        // Only set default values if no stored values exist
+        if (op === 'mint' && !lastMintedTicker) {
             tickInput.value = 'plgz'; // Prepopulate ticker
+        }
+        if (op === 'mint' && !lastMintedAmount) {
             amountInput.value = '420'; // Prepopulate amount
-        } else {
-            tickInput.value = ''; // Clear ticker for other operations
-            amountInput.value = ''; // Clear amount for other operations
         }
     });
     operationDropdown.dispatchEvent(new Event('change'));
@@ -160,7 +179,14 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     const generateTxButton = document.createElement('button');
     generateTxButton.textContent = 'Inscribe';
     generateTxButton.className = 'styled-button';
-    generateTxButton.addEventListener('click', generateTransactions);
+    generateTxButton.addEventListener('click', () => {
+        // Save the current ticker, amount, and receiving address to local storage
+        localStorage.setItem('lastMintedTicker', tickInput.value);
+        localStorage.setItem('lastMintedAmount', amountInput.value);
+        localStorage.setItem('lastReceivingAddress', addressInput.value);
+
+        generateTransactions();
+    });
     landingPage.appendChild(generateTxButton);
 
     // Back button
