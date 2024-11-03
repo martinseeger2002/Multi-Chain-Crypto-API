@@ -82,9 +82,9 @@ scheduler.add_job(
     timezone='America/Chicago'
 )
 
-#scheduler.add_job(
-#    func=run_credit_bot,
-#    trigger='cron',
-#    minute='*',
-#    timezone='America/Chicago'
-#)
+scheduler.add_job(
+    func=run_credit_bot,
+    trigger='cron',
+    minute='*',
+    timezone='America/Chicago'
+)
