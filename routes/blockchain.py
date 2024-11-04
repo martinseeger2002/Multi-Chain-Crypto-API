@@ -181,3 +181,37 @@ def get_address_transactions(ticker, address, page):
         })
     except JSONRPCException as e:
         return jsonify({"status": "error", "message": str(e)}), 400
+    
+@blockchain_bp.route('/api/v1/get_public_key/<ticker>/<address>', methods=['GET'])
+@require_api_key
+def get_public_key(ticker, address):
+    rpc_connection = get_rpc_connection(ticker)
+    try:
+        # Get the list of transactions for the address
+        transactions = rpc_connection.listtransactions("*", 1000, 0, True)  # Adjust count and skip as needed
+
+        for tx in transactions:
+            if 'address' in tx and tx['address'] == address and tx['category'] == 'send':
+                # Get the raw transaction
+                raw_tx = rpc_connection.getrawtransaction(tx['txid'], True)
+
+                # Find the input that matches the address
+                for vin in raw_tx['vin']:
+                    prev_tx = rpc_connection.getrawtransaction(vin['txid'], True)
+                    prev_vout = prev_tx['vout'][vin['vout']]
+
+                    # Check if the address is in the previous output
+                    if 'addresses' in prev_vout['scriptPubKey'] and address in prev_vout['scriptPubKey']['addresses']:
+                        # Extract the public key from the scriptSig
+                        script_sig = vin['scriptSig']['asm']
+                        pubkey = script_sig.split()[-1]  # Assuming the last part is the public key
+                        return jsonify({
+                            "status": "success",
+                            "public_key": pubkey
+                        }), 200
+
+        return jsonify({"status": "error", "message": "Public key not found for the given address."}), 404
+
+    except JSONRPCException as e:
+        logging.error(f"Error retrieving public key: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500

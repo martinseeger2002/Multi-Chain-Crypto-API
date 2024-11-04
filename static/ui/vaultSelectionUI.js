@@ -41,11 +41,11 @@ export function vaultSelectionUI() {
 
     // Send Text Vault button
     const sendTextVaultButton = document.createElement('button');
-    sendTextVaultButton.textContent = 'Send Text Vault';
+    sendTextVaultButton.textContent = 'Send Text Vault (Coming Soon)';
     sendTextVaultButton.className = 'styled-button'; // Use a class for styling
-    sendTextVaultButton.addEventListener('click', () => {
-        vaultTextUI(); // Navigate to vault text UI
-    });
+    //sendTextVaultButton.addEventListener('click', () => {
+    //    vaultTextUI(); // Navigate to vault text UI
+    //});
     landingPage.appendChild(sendTextVaultButton);
 
     // Back button

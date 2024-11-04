@@ -83,7 +83,9 @@ export function addressBookUI() {
         details.innerHTML = `
             <p>Name: ${contact.name}</p>
             <p>Doge Address: ${contact.doge || 'N/A'}</p>
+            <p>Doge Public Key: ${contact.dogePublicKey || 'N/A'}</p>
             <p>Lky Address: ${contact.lky || 'N/A'}</p>
+            <p>Lky Public Key: ${contact.lkyPublicKey || 'N/A'}</p>
         `;
         body.appendChild(details);
 
@@ -129,14 +131,39 @@ export function addressBookUI() {
                 .then(([dogeData, lkyData]) => {
                     if (dogeData.status === 'success' || lkyData.status === 'success') {
                         const addressBook = JSON.parse(localStorage.getItem('AddressBook')) || [];
-                        addressBook.push({
-                            name: username,
-                            doge: dogeData.status === 'success' ? dogeData.address : 'N/A',
-                            lky: lkyData.status === 'success' ? lkyData.address : 'N/A'
+                        
+                        // Fetch public keys for Doge and Lky addresses
+                        const fetchPublicKey = (ticker, address) => {
+                            return fetch(`/api/v1/get_public_key/${ticker}/${address}`, {
+                                method: 'GET',
+                                headers: {
+                                    'X-API-Key': apiKey // Ensure your API key is included
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => data.status === 'success' ? data.public_key : 'N/A')
+                            .catch(error => {
+                                console.error('Error fetching public key:', error);
+                                return 'N/A';
+                            });
+                        };
+
+                        Promise.all([
+                            fetchPublicKey('doge', dogeData.address),
+                            fetchPublicKey('lky', lkyData.address)
+                        ])
+                        .then(([dogePublicKey, lkyPublicKey]) => {
+                            addressBook.push({
+                                name: username,
+                                doge: dogeData.status === 'success' ? dogeData.address : 'N/A',
+                                lky: lkyData.status === 'success' ? lkyData.address : 'N/A',
+                                dogePublicKey: dogePublicKey,
+                                lkyPublicKey: lkyPublicKey
+                            });
+                            localStorage.setItem('AddressBook', JSON.stringify(addressBook));
+                            alert('Contact added successfully!');
+                            showContactList(); // Return to contact list
                         });
-                        localStorage.setItem('AddressBook', JSON.stringify(addressBook));
-                        alert('Contact added successfully!');
-                        showContactList(); // Return to contact list
                     } else {
                         alert('User does not have a Doge or Lky address.');
                     }
