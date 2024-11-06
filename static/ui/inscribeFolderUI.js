@@ -19,6 +19,11 @@ export function inscribeFolderUI() {
     creditsDisplay.className = 'credits-display'; // Use a class for styling
     landingPage.appendChild(creditsDisplay);
 
+    // Timer Display
+    const timerDisplay = document.createElement('p');
+    timerDisplay.className = 'timer-display'; // Use a class for styling
+    landingPage.appendChild(timerDisplay);
+
     // JSON Display Iframe
     const jsonIframe = document.createElement('iframe');
     jsonIframe.style.width = '100%';
@@ -183,29 +188,52 @@ export function inscribeFolderUI() {
 
     // Function to sync wallet and update UTXOs
     async function syncWallet(selectedWallet) {
+        const apiUrl = 'https://blockchainplugz.com/api/v1'; // Ensure the correct base URL is used
+
         try {
-            const response = await fetch(`/api/v1/sync_wallet/${selectedWallet.ticker}`, {
-                method: 'GET',
+            // Import the wallet address
+            await fetch(`${apiUrl}/import_address/${selectedWallet.ticker}`, {
+                method: 'POST',
                 headers: {
-                    'X-API-Key': apiKey
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey // Ensure apiKey is defined and accessible
+                },
+                body: JSON.stringify({ address: selectedWallet.address })
+            });
+
+            // Fetch UTXOs
+            const response = await fetch(`${apiUrl}/get_tx_unspent/${selectedWallet.ticker}/${selectedWallet.address}`, {
+                headers: {
+                    'X-API-Key': apiKey // Ensure apiKey is defined and accessible
                 }
             });
+
             const data = await response.json();
+            console.log(`UTXO Response for ${selectedWallet.label}:`, data); // Log the UTXO response
 
             if (data.status === 'success') {
+                selectedWallet.utxos = data.data.txs.map(tx => ({
+                    txid: tx.txid,
+                    value: tx.value,
+                    confirmations: tx.confirmations,
+                    vout: tx.vout,
+                    script_hex: tx.script_hex
+                }));
+                console.log(`UTXOs updated for ${selectedWallet.label}:`, selectedWallet.utxos); // Log the updated UTXOs
+
                 // Update the wallet's UTXOs in local storage
                 const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
                 const walletIndex = wallets.findIndex(wallet => wallet.label === selectedWallet.label);
                 if (walletIndex !== -1) {
-                    wallets[walletIndex].utxos = data.utxos;
+                    wallets[walletIndex].utxos = selectedWallet.utxos;
                     localStorage.setItem('wallets', JSON.stringify(wallets));
                     console.log('Wallet UTXOs updated successfully.');
                 }
             } else {
-                console.error('Error syncing wallet:', data.message);
+                console.error(`Error syncing wallet "${selectedWallet.label}": ${data.message}`);
             }
         } catch (error) {
-            console.error('Error syncing wallet:', error);
+            console.error(`Error fetching UTXOs for wallet "${selectedWallet.label}":`, error);
         }
     }
 
@@ -237,63 +265,87 @@ export function inscribeFolderUI() {
 
     // Function to create and send transactions
     async function createAndSendTransactions(entry, selectedWallet) {
-        // Check for UTXOs greater than 6
-        const utxo = selectedWallet.utxos.find(utxo => parseFloat(utxo.value) > 6 && utxo.confirmations >= 1);
-        if (!utxo) {
-            alert('No UTXO greater than 6 available.');
-            return;
-        }
+        let utxoFound = false;
 
-        // Convert file data to base64 and then to hex
-        const fileData = await getFileData(entry.file_path);
-        const base64Data = btoa(fileData);
-        const hexData = base64ToHex(base64Data);
-        entry.hex_data = hexData;
-        updateIframe(entry);
+        while (!utxoFound) {
+            // Sync wallet to refresh UTXOs
+            await syncWallet(selectedWallet);
 
-        // Prepare the request body for minting
-        const requestBody = {
-            receiving_address: selectedWallet.address,
-            meme_type: entry.mime_type,
-            hex_data: hexData,
-            sending_address: selectedWallet.address,
-            privkey: selectedWallet.privkey,
-            utxo: utxo.txid,
-            vout: utxo.vout,
-            script_hex: utxo.script_hex,
-            utxo_amount: utxo.value
-        };
+            // Find a new UTXO for each entry
+            const utxoIndex = selectedWallet.utxos.findIndex(utxo => parseFloat(utxo.value) > 5 && utxo.confirmations >= 1);
+            if (utxoIndex === -1) {
+                
+                // Display retry timer
+                let retryTime = 120; // 2 minutes in seconds
+                const timerInterval = setInterval(() => {
+                    if (retryTime <= 0) {
+                        clearInterval(timerInterval);
+                        timerDisplay.textContent = '';
+                    } else {
+                        timerDisplay.textContent = `Retrying in: ${retryTime} seconds`;
+                        retryTime--;
+                    }
+                }, 1000);
 
-        // Call the mint API
-        try {
-            const response = await fetch(`/api/v1/mint/${selectedWallet.ticker}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-Key': apiKey
-                },
-                body: JSON.stringify(requestBody)
-            });
-            const data = await response.json();
-
-            if (data.pendingTransactions && Array.isArray(data.pendingTransactions) && data.pendingTransactions.length > 0) {
-                // Number the pending transactions and remove hex_data
-                entry.pending_transactions = data.pendingTransactions.map((tx, index) => ({
-                    hex: tx.hex,
-                    number: index + 1
-                }));
-                delete entry.hex_data;
-                updateIframe(entry);
-
-                // Start sending pending transactions
-                await processPendingTransactions(entry, selectedWallet);
-            } else {
-                alert('Error minting file: ' + (data.message || 'Unknown error.'));
-                throw new Error(data.message || 'Unknown error.');
+                await new Promise(resolve => setTimeout(resolve, 120000)); // Wait for 2 minutes
+                continue; // Retry the loop
             }
-        } catch (error) {
-            console.error('Error minting file:', error);
-            throw error;
+
+            // Select and remove the UTXO from the list
+            const utxo = selectedWallet.utxos.splice(utxoIndex, 1)[0];
+            utxoFound = true; // Exit the loop
+
+            // Convert file data to base64 and then to hex
+            const fileData = await getFileData(entry.file_path);
+            const base64Data = btoa(fileData);
+            const hexData = base64ToHex(base64Data);
+            entry.hex_data = hexData;
+            updateIframe(entry);
+
+            // Prepare the request body for minting
+            const requestBody = {
+                receiving_address: selectedWallet.address,
+                meme_type: entry.mime_type,
+                hex_data: hexData,
+                sending_address: selectedWallet.address,
+                privkey: selectedWallet.privkey,
+                utxo: utxo.txid,
+                vout: utxo.vout,
+                script_hex: utxo.script_hex,
+                utxo_amount: utxo.value
+            };
+
+            // Call the mint API
+            try {
+                const response = await fetch(`/api/v1/mint/${selectedWallet.ticker}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                const data = await response.json();
+
+                if (data.pendingTransactions && Array.isArray(data.pendingTransactions) && data.pendingTransactions.length > 0) {
+                    // Number the pending transactions and remove hex_data
+                    entry.pending_transactions = data.pendingTransactions.map((tx, index) => ({
+                        hex: tx.hex,
+                        number: index + 1
+                    }));
+                    delete entry.hex_data;
+                    updateIframe(entry);
+
+                    // Start sending pending transactions
+                    await processPendingTransactions(entry, selectedWallet);
+                } else {
+                    alert('Error minting file: ' + (data.message || 'Unknown error.'));
+                    throw new Error(data.message || 'Unknown error.');
+                }
+            } catch (error) {
+                console.error('Error minting file:', error);
+                throw error;
+            }
         }
     }
 
