@@ -6,8 +6,15 @@
     },
     "DOGE": {
         "wallet_address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
-        "balance": 18.0,
+        "balance": 28.0,
         "utxos": [
+            {
+                "txid": "d0ed23252a650f3762aed827aedf08e91762fe97f6697c9b8cd4ad23b70230f8",
+                "address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",
+                "amount": 10.0,
+                "sending_address": "D8GaGmfoi3Up5VdoDsaTwGFRK1phW4T3QB",
+                "credits_paid": 420.0
+            },
             {
                 "txid": "45b942293a12bbc15fa8820828d8048e00c4788feebc605a336b9fda9972c72e",
                 "address": "DKpHXgYLdi5XiwL9e1D9tXzBSTpTHnBLYA",

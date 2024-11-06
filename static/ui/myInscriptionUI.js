@@ -1,4 +1,5 @@
 import { mintSelectionUI } from './mintSelectionUI.js'; // Adjust the path as necessary
+import { fileJsonUI } from './fileJsonUI.js'; // Adjust the path as necessary
 
 export function myInscriptionUI() {
     const landingPage = document.getElementById('landing-page');
@@ -51,6 +52,15 @@ export function myInscriptionUI() {
         }
     });
     landingPage.appendChild(copyButton);
+
+    // View JSON button
+    const viewJsonButton = document.createElement('button');
+    viewJsonButton.textContent = 'View JSON';
+    viewJsonButton.className = 'styled-button'; // Use a class for styling
+    viewJsonButton.addEventListener('click', () => {
+        fileJsonUI(); // Call the new UI function
+    });
+    landingPage.appendChild(viewJsonButton);
 
     // Function to display the wallet list
     function showWalletList() {

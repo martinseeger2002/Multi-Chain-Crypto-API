@@ -17,3 +17,4 @@
 .gitignore
 API.py
 /workingOnThis/
+/db/creditsWallet.json

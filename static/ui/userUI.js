@@ -38,6 +38,16 @@ export function userUI() {
     });
     landingPage.appendChild(clearPendingButton);
 
+    // **New Code: Clear Folder Cache Button**
+    const clearFolderCacheButton = document.createElement('button');
+    clearFolderCacheButton.textContent = 'Clear Folder Cache';
+    clearFolderCacheButton.className = 'styled-button'; // Use a class for styling
+    clearFolderCacheButton.addEventListener('click', () => {
+        localStorage.removeItem('folderFileData'); // Clear folder file data
+        alert('Folder cache cleared.');
+    });
+    landingPage.appendChild(clearFolderCacheButton);
+
     // Create Change Password button
     const changePasswordButton = document.createElement('button');
     changePasswordButton.textContent = 'Change Password';
