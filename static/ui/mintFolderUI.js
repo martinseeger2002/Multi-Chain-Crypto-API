@@ -65,10 +65,18 @@ export function mintFolderUI(selectedWalletLabel = localStorage.getItem('selecte
     folderLabel.className = 'folder-label styled-button'; // Add styled-button class for styling
     folderLabel.textContent = 'Select Folder';
 
-    // Make the label clickable to trigger folder input
-    folderLabel.addEventListener('click', () => {
-        folderInput.click();
-    });
+    // Check if folderFileData exists in local storage
+    const folderFileData = localStorage.getItem('folderFileData');
+    if (folderFileData) {
+        folderLabel.classList.add('disabled'); // Add a class to indicate it's disabled
+        folderLabel.style.pointerEvents = 'none'; // Disable click events
+        folderLabel.style.opacity = '0.5'; // Visually indicate it's disabled
+    } else {
+        // Make the label clickable to trigger folder input
+        folderLabel.addEventListener('click', () => {
+            folderInput.click();
+        });
+    }
 
     // Handle folder selection
     folderInput.addEventListener('change', handleFolderSelect);

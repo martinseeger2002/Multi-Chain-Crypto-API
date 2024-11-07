@@ -145,6 +145,9 @@ export function inscribeFolderUI() {
                         entry.txid = data.data.txid;
                     }
 
+                    // Add last_txid to the entry
+                    entry.last_txid = data.data.txid;
+
                     // Update mint credits
                     mintCredits -= 1;
                     creditsDisplay.textContent = `Mint Credits: ${mintCredits}`;
@@ -265,6 +268,13 @@ export function inscribeFolderUI() {
 
     // Function to create and send transactions
     async function createAndSendTransactions(entry, selectedWallet) {
+        // Check if there are pending transactions
+        if (entry.pending_transactions && entry.pending_transactions.length > 0) {
+            // If there are pending transactions, process them
+            await processPendingTransactions(entry, selectedWallet);
+            return; // Exit the function after processing pending transactions
+        }
+
         let utxoFound = false;
 
         while (!utxoFound) {
@@ -274,7 +284,6 @@ export function inscribeFolderUI() {
             // Find a new UTXO for each entry
             const utxoIndex = selectedWallet.utxos.findIndex(utxo => parseFloat(utxo.value) > 5 && utxo.confirmations >= 1);
             if (utxoIndex === -1) {
-                
                 // Display retry timer
                 let retryTime = 120; // 2 minutes in seconds
                 const timerInterval = setInterval(() => {
