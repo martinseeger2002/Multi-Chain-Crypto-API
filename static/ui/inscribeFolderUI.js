@@ -124,67 +124,84 @@ export function inscribeFolderUI() {
 
             const currentTransaction = pendingTransactions[0];
             const txHex = currentTransaction.hex;
+            let attempts = 0;
+            let success = false;
 
-            try {
-                const response = await fetch(`/api/v1/send_raw_tx/${selectedWallet.ticker}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    },
-                    body: JSON.stringify({ tx_hex: txHex })
-                });
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    // Remove the sent transaction from the pending list
-                    pendingTransactions.shift();
-
-                    // Update the txid if it's the second transaction
-                    if (currentTransaction.number === 2) {
-                        entry.txid = data.data.txid;
-                    }
-
-                    // Add last_txid to the entry
-                    entry.last_txid = data.data.txid;
-
-                    // Update mint credits
-                    mintCredits -= 1;
-                    creditsDisplay.textContent = `Mint Credits: ${mintCredits}`;
-
-                    // Call the API to remove a mint credit
-                    await fetch('/api/v1/remove_mint_credit', {
+            while (attempts < 3 && !success) {
+                try {
+                    const response = await fetch(`/api/v1/send_raw_tx/${selectedWallet.ticker}`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
-                        }
+                            'Content-Type': 'application/json',
+                            'X-API-Key': apiKey
+                        },
+                        body: JSON.stringify({ tx_hex: txHex })
                     });
 
-                    // Update the entry and iframe
-                    entry.pending_transactions = pendingTransactions;
-                    updateIframe(entry);
+                    if (response.status === 500) {
+                        attempts++;
+                        await new Promise(resolve => setTimeout(resolve, 10)); // Wait 0.01 seconds
+                        continue;
+                    }
 
-                    // If all transactions are sent, append i0 to txid and set inscription_id
-                    if (pendingTransactions.length === 0) {
-                        entry.inscription_id = `${entry.txid}i0`;
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        success = true;
+                        // Remove the sent transaction from the pending list
+                        pendingTransactions.shift();
+
+                        // Update the txid if it's the second transaction
+                        if (currentTransaction.number === 2) {
+                            entry.txid = data.data.txid;
+                        }
+
+                        // Add last_txid to the entry
+                        entry.last_txid = data.data.txid;
+
+                        // Update mint credits
+                        mintCredits -= 1;
+                        creditsDisplay.textContent = `Mint Credits: ${mintCredits}`;
+
+                        // Call the API to remove a mint credit
+                        await fetch('/api/v1/remove_mint_credit', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        // Update the entry and iframe
+                        entry.pending_transactions = pendingTransactions;
                         updateIframe(entry);
 
-                        // Sync wallet to update UTXOs
-                        await syncWallet(selectedWallet);
-                    }
-                } else {
-                    // Handle error 26: mempool too long
-                    if (data.message && data.message.includes('error code 26')) {
-                        console.log('Mempool too long error. Waiting for confirmation.');
-                        await waitForConfirmation(entry.txid, selectedWallet.ticker);
+                        // If all transactions are sent, append i0 to txid and set inscription_id
+                        if (pendingTransactions.length === 0) {
+                            entry.inscription_id = `${entry.txid}i0`;
+                            updateIframe(entry);
+
+                            // Sync wallet to update UTXOs
+                            await syncWallet(selectedWallet);
+                        }
                     } else {
-                        alert(`Error sending transaction: ${data.message}`);
-                        throw new Error(data.message);
+                        // Handle error 26: mempool too long
+                        if (data.message && data.message.includes('error code 26')) {
+                            console.log('Mempool too long error. Waiting for confirmation.');
+                            await waitForConfirmation(entry.txid, selectedWallet.ticker);
+                        } else {
+                            alert(`Error sending transaction: ${data.message}`);
+                            throw new Error(data.message);
+                        }
                     }
+                } catch (error) {
+                    console.error('Error sending transaction:', error);
+                    throw error;
                 }
-            } catch (error) {
-                console.error('Error sending transaction:', error);
-                throw error;
+            }
+
+            if (!success) {
+                alert('Failed to send transaction after 3 attempts.');
+                return;
             }
         }
     }
@@ -324,36 +341,53 @@ export function inscribeFolderUI() {
                 utxo_amount: utxo.value
             };
 
-            // Call the mint API
-            try {
-                const response = await fetch(`/api/v1/mint/${selectedWallet.ticker}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                const data = await response.json();
+            let attempts = 0;
+            let success = false;
 
-                if (data.pendingTransactions && Array.isArray(data.pendingTransactions) && data.pendingTransactions.length > 0) {
-                    // Number the pending transactions and remove hex_data
-                    entry.pending_transactions = data.pendingTransactions.map((tx, index) => ({
-                        hex: tx.hex,
-                        number: index + 1
-                    }));
-                    delete entry.hex_data;
-                    updateIframe(entry);
+            while (attempts < 3 && !success) {
+                try {
+                    const response = await fetch(`/api/v1/mint/${selectedWallet.ticker}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': apiKey
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
 
-                    // Start sending pending transactions
-                    await processPendingTransactions(entry, selectedWallet);
-                } else {
-                    alert('Error minting file: ' + (data.message || 'Unknown error.'));
-                    throw new Error(data.message || 'Unknown error.');
+                    if (response.status === 500) {
+                        attempts++;
+                        await new Promise(resolve => setTimeout(resolve, 10)); // Wait 0.01 seconds
+                        continue;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.pendingTransactions && Array.isArray(data.pendingTransactions) && data.pendingTransactions.length > 0) {
+                        success = true;
+                        // Number the pending transactions and remove hex_data
+                        entry.pending_transactions = data.pendingTransactions.map((tx, index) => ({
+                            hex: tx.hex,
+                            number: index + 1
+                        }));
+                        delete entry.hex_data;
+                        updateIframe(entry);
+
+                        // Start sending pending transactions
+                        await processPendingTransactions(entry, selectedWallet);
+                    } else {
+                        alert('Error minting file: ' + (data.message || 'Unknown error.'));
+                        throw new Error(data.message || 'Unknown error.');
+                    }
+                } catch (error) {
+                    console.error('Error minting file:', error);
+                    throw error;
                 }
-            } catch (error) {
-                console.error('Error minting file:', error);
-                throw error;
+            }
+
+            if (!success) {
+                alert('Failed to mint file after 3 attempts.');
+                return;
             }
         }
     }
