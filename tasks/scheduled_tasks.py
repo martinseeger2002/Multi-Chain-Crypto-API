@@ -7,6 +7,7 @@ from config.config import rpc_configs
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 import os
 from datetime import datetime
+from contextlib import contextmanager
 
 def trigger_blockchain_rescan():
     for ticker, cfg in rpc_configs.items():
@@ -63,28 +64,28 @@ def reset_daily_request_counts():
 def run_credit_bot():
     original_dir = os.getcwd()  # Save the current working directory
     try:
-        os.chdir('../addCreditBot')
+        os.chdir('./addCreditBot')
         subprocess.run(['python3', 'walletWatcher.py'], check=True)
         time.sleep(10)
         subprocess.run(['python3', 'creditBot.py'], check=True)
     finally:
         os.chdir(original_dir)
 
-def run_rc001_indexer():
-    original_dir = os.getcwd()  # Save the current working directory
+@contextmanager
+def change_directory(destination):
+    original_dir = os.getcwd()
     try:
-        os.chdir('./rc001')  # Change to the directory where the script is located
-        subprocess.run(['python3', 'rc001indexer.py'], check=True)
+        os.chdir(destination)
+        yield
     finally:
-        os.chdir(original_dir)  # Change back to the original directory
+        os.chdir(original_dir)
+
+def run_rc001_indexer():
+    with change_directory('./rc001'):
+        subprocess.run(['python3', 'rc001indexer.py'], check=True)
 
 scheduler = BackgroundScheduler()
 
-scheduler.add_job(
-    func=run_rc001_indexer,
-    trigger='date',
-    run_date=datetime.now()
-)
 
 scheduler.add_job(
     func=trigger_blockchain_rescan,

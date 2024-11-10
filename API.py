@@ -40,4 +40,4 @@ scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
 if __name__ == '__main__':
-    app.run(port=5052, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5326, debug=True, use_reloader=False)
