@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mintpad</title>
+    <script>
+        function fetchCollections() {
+            fetch('/api/v1/rc001/collections')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        document.getElementById('collectionsOutput').value = JSON.stringify(data.collections, null, 2);
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching collections:', error);
+                    alert("An error occurred while fetching collections.");
+                });
+        }
+
+        function mintCollection() {
+            const collectionName = prompt("Enter the collection name to mint:");
+            if (collectionName) {
+                fetch(`/api/v1/rc001/mint/${collectionName}`)
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('mintOutput').value = html;
+                    })
+                    .catch(error => {
+                        console.error('Error minting collection:', error);
+                        alert("An error occurred while minting the collection.");
+                    });
+            }
+        }
+
+        function fetchInscriptionsByAddress() {
+            const collectionName = prompt("Enter the collection name:");
+            const address = prompt("Enter the address:");
+            if (collectionName && address) {
+                fetch(`/api/v1/rc001/inscriptions/${collectionName}/${address}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            document.getElementById('inscriptionsOutput').value = JSON.stringify(data.inscriptions, null, 2);
+                        } else {
+                            alert("Error: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching inscriptions:', error);
+                        alert("An error occurred while fetching inscriptions.");
+                    });
+            }
+        }
+
+        function fetchCollectionAsJson() {
+            const collectionName = prompt("Enter the collection name:");
+            if (collectionName) {
+                fetch(`/api/v1/rc001/collection/${collectionName}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            document.getElementById('collectionJsonOutput').value = JSON.stringify(data.collection, null, 2);
+                        } else {
+                            alert("Error: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching collection:', error);
+                        alert("An error occurred while fetching the collection.");
+                    });
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Mintpad</h1>
+    <button onclick="fetchCollections()">Get Collections</button>
+    <button onclick="mintCollection()">Mint Collection</button>
+    <button onclick="fetchInscriptionsByAddress()">Get Inscriptions by Address</button>
+    <button onclick="fetchCollectionAsJson()">Get Collection as JSON</button>
+    <br><br>
+    <textarea id="collectionsOutput" rows="10" cols="50" readonly></textarea>
+    <br><br>
+    <textarea id="mintOutput" rows="10" cols="50" readonly></textarea>
+    <br><br>
+    <textarea id="inscriptionsOutput" rows="10" cols="50" readonly></textarea>
+    <br><br>
+    <textarea id="collectionJsonOutput" rows="10" cols="50" readonly></textarea>
+</body>
+</html>

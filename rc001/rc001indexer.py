@@ -287,12 +287,32 @@ def process_transaction(txid):
                 
                 # Check if inscription_id or sn already exists
                 inscription_id = f"{txid}i0"
-                c.execute('SELECT * FROM items WHERE inscription_id=? OR sn=?', (inscription_id, sn))
-                if not c.fetchone():
+                c.execute('SELECT * FROM items WHERE sn=?', (sn,))
+                existing_entry = c.fetchone()
+
+                if existing_entry and existing_entry[1] is None:
+                    # Update the existing entry with the new inscription_id
+                    c.execute('UPDATE items SET inscription_id=?, inscription_status=?, inscription_address=? WHERE sn=?',
+                              (inscription_id, 'minted', inscription_address, sn))
+                else:
                     # Insert new entry
                     c.execute('INSERT INTO items (inscription_id, sn, inscription_status, inscription_address) VALUES (?, ?, ?, ?)',
                               (inscription_id, sn, 'minted', inscription_address))
-                    conn.commit()
+
+                # Reorder the table to ensure minted items are listed first
+                c.execute('SELECT * FROM items WHERE inscription_status="minted" ORDER BY item_no')
+                minted_items = c.fetchall()
+
+                c.execute('SELECT * FROM items WHERE inscription_status!="minted" ORDER BY item_no')
+                non_minted_items = c.fetchall()
+
+                # Clear the table and reinsert items in the correct order
+                c.execute('DELETE FROM items')
+                for item in minted_items + non_minted_items:
+                    c.execute('INSERT INTO items (inscription_id, sn, inscription_status, inscription_address) VALUES (?, ?, ?, ?)',
+                              (item[1], item[2], item[3], item[4]))
+
+                conn.commit()
                 conn.close()
 
 # Main loop to continuously scan for new blocks

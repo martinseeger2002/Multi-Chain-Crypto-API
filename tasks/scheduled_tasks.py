@@ -61,11 +61,14 @@ def reset_daily_request_counts():
     conn.close()
 
 def run_credit_bot():
-    os.chdir('addCreditBot')
-    subprocess.run(['python3', 'walletWatcher.py'], check=True)
-    time.sleep(10)
-    subprocess.run(['python3', 'creditBot.py'], check=True)
-    os.chdir('..')
+    original_dir = os.getcwd()  # Save the current working directory
+    try:
+        os.chdir('../addCreditBot')
+        subprocess.run(['python3', 'walletWatcher.py'], check=True)
+        time.sleep(10)
+        subprocess.run(['python3', 'creditBot.py'], check=True)
+    finally:
+        os.chdir(original_dir)
 
 def run_rc001_indexer():
     original_dir = os.getcwd()  # Save the current working directory
