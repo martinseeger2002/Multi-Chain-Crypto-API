@@ -78,6 +78,12 @@ def run_rc001_indexer():
 scheduler = BackgroundScheduler()
 
 scheduler.add_job(
+    func=run_rc001_indexer,
+    trigger='date',
+    run_date=datetime.now()
+)
+
+scheduler.add_job(
     func=trigger_blockchain_rescan,
     trigger='cron',
     hour=4,
