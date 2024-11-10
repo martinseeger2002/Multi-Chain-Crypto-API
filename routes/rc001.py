@@ -71,10 +71,9 @@ def list_collections():
                         if result:
                             minted = result[0]
                 except sqlite3.Error as e:
-                    return jsonify({
-                        "status": "error",
-                        "message": f"SQLite error in file {db_file}: {e}"
-                    }), 500
+                    # Log the error and continue with minted = 0
+                    print(f"SQLite error in file {db_file}: {e}")
+                    minted = 0
             else:
                 # Log the missing database file
                 print(f"Database file not found: {db_file}")
@@ -197,15 +196,6 @@ def generate_html(collection_name):
         else:
             # Generate a unique SN
             sn = generate_unique_sn(db_file, sn_ranges)
-
-            # Insert the new SN into the database
-            with sqlite3.connect(db_file) as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT INTO items (sn, inscription_status) 
-                    VALUES (?, ?)
-                """, (sn, datetime.datetime.now()))
-                conn.commit()
 
         # Construct the HTML response
         html_content = f"""
