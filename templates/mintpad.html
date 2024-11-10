@@ -82,7 +82,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === "success") {
-                            alert(`Inscription is valid.\nCollection Name: ${data.collection_name}\nNo.: ${data.number}\nDeploy Address: ${data.deploy_address}\nInscription Address: ${data.inscription_address}`);
+                            alert(`Inscription is valid.\nCollection Name: ${data.collection_name}\nNo.: ${data.number}\nDeploy Address: ${data.deploy_address}\nDeploy TXID: ${data.deploy_txid}\nParent Inscription ID: ${data.parent_inscription_id}\nInscription Address: ${data.inscription_address}`);
                         } else {
                             alert("Error: " + data.message);
                         }

@@ -313,10 +313,12 @@ def validate_inscription(inscription_id):
             if not os.path.exists(db_file):
                 continue
 
-            # Read the configuration file to get the deploy_address
+            # Read the configuration file to get the deploy_address, deploy_txid, and parent_inscription_id
             config = configparser.ConfigParser()
             config.read(os.path.join(conf_dir, conf_file))
             deploy_address = config['DEFAULT'].get('deploy_address')
+            deploy_txid = config['DEFAULT'].get('deploy_txid')
+            parent_inscription_id = config['DEFAULT'].get('parent_inscription_id')
 
             with sqlite3.connect(db_file) as conn:
                 cursor = conn.cursor()
@@ -330,6 +332,8 @@ def validate_inscription(inscription_id):
                             "collection_name": collection_name,
                             "number": index,
                             "deploy_address": deploy_address,
+                            "deploy_txid": deploy_txid,
+                            "parent_inscription_id": parent_inscription_id,
                             "inscription_address": inscription_address
                         })
 
