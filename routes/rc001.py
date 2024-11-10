@@ -177,17 +177,35 @@ def generate_html(collection_name):
                 start, end = map(int, value.split('-'))
                 sn_ranges.append((start, end))
 
-        # Generate a unique SN
-        sn = generate_unique_sn(db_file, sn_ranges)
+        # Check if the database file exists
+        if not os.path.exists(db_file):
+            # Generate a random SN without checking the database
+            sn_parts = [f"{random.randint(start, end):02}" for start, end in sn_ranges]
+            sn = ''.join(sn_parts)
 
-        # Insert the new SN into the database
-        with sqlite3.connect(db_file) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO items (sn, inscription_status) 
-                VALUES (?, ?)
-            """, (sn, datetime.datetime.now()))
-            conn.commit()
+            # Initialize the database
+            with sqlite3.connect(db_file) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS items (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        sn TEXT NOT NULL,
+                        inscription_status TIMESTAMP
+                    )
+                """)
+                conn.commit()
+        else:
+            # Generate a unique SN
+            sn = generate_unique_sn(db_file, sn_ranges)
+
+            # Insert the new SN into the database
+            with sqlite3.connect(db_file) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO items (sn, inscription_status) 
+                    VALUES (?, ?)
+                """, (sn, datetime.datetime.now()))
+                conn.commit()
 
         # Construct the HTML response
         html_content = f"""
