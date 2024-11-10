@@ -91,6 +91,8 @@ def list_collections():
                 ('deploy_address', collection_data.get('deploy_address')),
                 ('mint_price', collection_data.get('mint_price')),
                 ('parent_inscription_id', collection_data.get('parent_inscription_id')),
+                ('emblem_inscription_id', collection_data.get('emblem_inscription_id')),
+                ('website', collection_data.get('website')),
                 ('deploy_txid', collection_data.get('deploy_txid')),
                 ('max_supply', max_supply),
                 ('minted', minted),
@@ -284,6 +286,58 @@ def list_collection_as_json(collection_name):
             "status": "success",
             "collection": collection_data
         })
+    except sqlite3.Error as e:
+        return jsonify({
+            "status": "error",
+            "message": f"SQLite error: {e}"
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@rc001_bp.route('/api/v1/rc001/validate/<inscription_id>', methods=['GET'])
+def validate_inscription(inscription_id):
+    """
+    Validate an inscription_id across all collections and return its index, deploy_address, inscription_address, and collection name.
+    """
+    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001'))
+    conf_files = [f for f in os.listdir(conf_dir) if f.endswith('.conf')]
+
+    try:
+        for conf_file in conf_files:
+            collection_name = conf_file.replace('.conf', '')
+            db_file = os.path.join(conf_dir, f"{collection_name}.db")
+
+            if not os.path.exists(db_file):
+                continue
+
+            # Read the configuration file to get the deploy_address
+            config = configparser.ConfigParser()
+            config.read(os.path.join(conf_dir, conf_file))
+            deploy_address = config['DEFAULT'].get('deploy_address')
+
+            with sqlite3.connect(db_file) as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT inscription_id, inscription_address FROM items ORDER BY rowid')
+                results = cursor.fetchall()
+
+                for index, (db_inscription_id, inscription_address) in enumerate(results, start=1):
+                    if db_inscription_id == inscription_id:
+                        return jsonify({
+                            "status": "success",
+                            "collection_name": collection_name,
+                            "number": index,
+                            "deploy_address": deploy_address,
+                            "inscription_address": inscription_address
+                        })
+
+        return jsonify({
+            "status": "error",
+            "message": f"Inscription ID '{inscription_id}' not found in any collection."
+        }), 404
+
     except sqlite3.Error as e:
         return jsonify({
             "status": "error",

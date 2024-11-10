@@ -74,6 +74,25 @@
                     });
             }
         }
+
+        function validateInscription() {
+            const inscriptionId = prompt("Enter the inscription ID:");
+            if (inscriptionId) {
+                fetch(`/api/v1/rc001/validate/${inscriptionId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            alert(`Inscription is valid.\nCollection Name: ${data.collection_name}\nNo.: ${data.number}\nDeploy Address: ${data.deploy_address}\nInscription Address: ${data.inscription_address}`);
+                        } else {
+                            alert("Error: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error validating inscription:', error);
+                        alert("An error occurred while validating the inscription.");
+                    });
+            }
+        }
     </script>
 </head>
 <body>
@@ -82,6 +101,7 @@
     <button onclick="mintCollection()">Mint Collection</button>
     <button onclick="fetchInscriptionsByAddress()">Get Inscriptions by Address</button>
     <button onclick="fetchCollectionAsJson()">Get Collection as JSON</button>
+    <button onclick="validateInscription()">Validate Inscription</button>
     <br><br>
     <textarea id="collectionsOutput" rows="10" cols="50" readonly></textarea>
     <br><br>
