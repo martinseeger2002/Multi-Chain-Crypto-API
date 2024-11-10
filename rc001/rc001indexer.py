@@ -219,6 +219,8 @@ def process_transaction(txid):
                                 config_file.write(f'mint_address: {mint_address}\n')
                                 config_file.write(f'mint_price: {mint_price}\n')
                                 config_file.write(f'parent_inscription_id: {parent_inscription_id}\n')
+                                config_file.write(f'emblem_inscription_id: {json_data.get("emblem_inscription_id", "Unknown")}\n')
+                                config_file.write(f'website: {json_data.get("website", "Unknown")}\n')
                                 config_file.write(f'deploy_txid: {txid}\n')
                                 config_file.write(f'deploy_address: {inscription_address}\n')
                                 for i, sn in enumerate(sn_ranges):
