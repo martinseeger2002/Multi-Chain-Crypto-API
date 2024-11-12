@@ -1,4 +1,5 @@
 import sqlite3
+import json
 
 def read_database(db_name):
     # Connect to the SQLite database
@@ -16,9 +17,12 @@ def read_database(db_name):
     column_names = [description[0] for description in cursor.description]
     print(f"Columns: {column_names}")
 
-    # Print each row
-    for row in rows:
-        print(row)
+    # Create a list of dictionaries for JSON output
+    data = [dict(zip(column_names, row)) for row in rows]
+
+    # Write the data to a JSON file
+    with open(f'{db_name}_data.json', 'w') as json_file:
+        json.dump({db_name: data}, json_file, indent=4)
 
     # Close the database connection
     conn.close()

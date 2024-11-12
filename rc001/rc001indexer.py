@@ -283,21 +283,20 @@ def process_transaction(txid):
                 c.execute('''CREATE TABLE IF NOT EXISTS items (
                                 item_no INTEGER PRIMARY KEY AUTOINCREMENT,
                                 inscription_id TEXT UNIQUE,
-                                sn TEXT,
+                                sn TEXT UNIQUE,
                                 inscription_status TEXT,
                                 inscription_address TEXT)''')
                 
-                # Check if inscription_id or sn already exists
-                inscription_id = f"{txid}i0"
+                # Check if sn already exists
                 c.execute('SELECT * FROM items WHERE sn=?', (sn,))
                 existing_entry = c.fetchone()
 
-                if existing_entry and existing_entry[1] is None:
-                    # Update the existing entry with the new inscription_id
-                    c.execute('UPDATE items SET inscription_id=?, inscription_status=?, inscription_address=? WHERE sn=?',
-                              (inscription_id, 'minted', inscription_address, sn))
+                if existing_entry:
+                    print(f"Serial number {sn} already exists. Skipping transaction.")
+                    return
                 else:
                     # Insert new entry
+                    inscription_id = f"{txid}i0"
                     c.execute('INSERT INTO items (inscription_id, sn, inscription_status, inscription_address) VALUES (?, ?, ?, ?)',
                               (inscription_id, sn, 'minted', inscription_address))
 
