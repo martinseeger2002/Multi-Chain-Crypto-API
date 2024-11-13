@@ -24,7 +24,7 @@ def mint_rc001(ticker):
     script_hex = data.get('script_hex')
     utxo_amount = data.get('utxo_amount')  # Ensure this is a string
     mint_address = data.get('mint_address')  # Optional parameter
-    mint_price = data.get('mint_price')  # Optional parameter
+    mint_price_satoshis = data.get('mint_price')  # Already in satoshis
 
     # Log the extracted parameters for debugging
     print(f"Received mint request with parameters: {data}")
@@ -37,15 +37,12 @@ def mint_rc001(ticker):
         utxo_amount_float = float(utxo_amount)
         utxo_amount_satoshis = int(utxo_amount_float * 100000000)
         
-        # Convert mint_price to a float, then to satoshis if provided
-        mint_price_satoshis = None
-        if mint_price is not None:
-            mint_price_float = float(mint_price)
-            mint_price_satoshis = int(mint_price_float * 100000000)
+        # Log mint price in satoshis
+        print(f"Mint Address: {mint_address}, Mint Price (satoshis): {mint_price_satoshis}")
     except ValueError as e:
         return jsonify({
             "status": "error",
-            "message": f"Invalid amount: {utxo_amount} or {mint_price}. Error: {str(e)}"
+            "message": f"Invalid amount: {utxo_amount}. Error: {str(e)}"
         }), 400
 
     # Determine the command directory and script based on the ticker

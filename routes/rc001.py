@@ -376,13 +376,12 @@ def generate_hex(collection_name):
                 start, end = map(int, value.split('-'))
                 sn_ranges.append((start, end))
 
-        # Check if the database file exists
-        if not os.path.exists(db_file):
-            # Generate a random SN without checking the database
-            sn_parts = [f"{random.randint(start, end):02}" for start, end in sn_ranges]
-            sn = ''.join(sn_parts)
+        # Generate a random SN without checking the database
+        sn_parts = [f"{random.randint(start, end):02}" for start, end in sn_ranges]
+        sn = ''.join(sn_parts)
 
-            # Initialize the database
+        # Initialize the database if it doesn't exist
+        if not os.path.exists(db_file):
             with sqlite3.connect(db_file) as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
@@ -393,9 +392,6 @@ def generate_hex(collection_name):
                     )
                 """)
                 conn.commit()
-        else:
-            # Generate a unique SN
-            sn = generate_unique_sn(db_file, sn_ranges)
 
         # Construct the HTML content
         html_content = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="p" content="rc001"><meta name="op" content="mint"><meta name="sn" content="{sn}"><title>{collection_name}</title></head><body><script src="/content/{collection_data.get('parent_inscription_id')}"></script></body></html>"""
