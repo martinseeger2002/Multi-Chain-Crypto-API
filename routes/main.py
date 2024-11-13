@@ -98,6 +98,3 @@ def display_content(txid, processed_txids=None):
 def terminal():
     return render_template('terminal.html')
 
-@main_bp.route('/mintpad')
-def mintpad():
-    return render_template('mintpad.html')
