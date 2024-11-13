@@ -3,6 +3,7 @@ import configparser
 import sqlite3
 import random
 import datetime
+import base64
 from flask import Blueprint, jsonify, make_response, request
 from collections import OrderedDict
 
@@ -340,6 +341,78 @@ def validate_inscription(inscription_id):
             "status": "error",
             "message": f"SQLite error: {e}"
         }), 500
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@rc001_bp.route('/api/v1/rc001/mint_hex/<collection_name>', methods=['GET'])
+def generate_hex(collection_name):
+    """
+    Generate a hex representation of an HTML page with a unique SN for a specific collection.
+    """
+    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001'))
+    conf_file = f"{collection_name}.conf"
+    db_file = os.path.join(conf_dir, conf_file.replace('.conf', '.db'))
+
+    try:
+        # Read the configuration file
+        file_path = os.path.join(conf_dir, conf_file)
+        if not os.path.exists(file_path):
+            return jsonify({
+                "status": "error",
+                "message": f"Configuration file not found: {conf_file}"
+            }), 404
+
+        config = configparser.ConfigParser()
+        config.read(file_path)
+        collection_data = {key: value for key, value in config['DEFAULT'].items()}
+
+        # Parse SN ranges from the configuration file
+        sn_ranges = []
+        for key, value in collection_data.items():
+            if key.startswith('sn_index_'):
+                start, end = map(int, value.split('-'))
+                sn_ranges.append((start, end))
+
+        # Check if the database file exists
+        if not os.path.exists(db_file):
+            # Generate a random SN without checking the database
+            sn_parts = [f"{random.randint(start, end):02}" for start, end in sn_ranges]
+            sn = ''.join(sn_parts)
+
+            # Initialize the database
+            with sqlite3.connect(db_file) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS items (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        sn TEXT NOT NULL,
+                        inscription_status TIMESTAMP
+                    )
+                """)
+                conn.commit()
+        else:
+            # Generate a unique SN
+            sn = generate_unique_sn(db_file, sn_ranges)
+
+        # Construct the HTML content
+        html_content = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="p" content="rc001"><meta name="op" content="mint"><meta name="sn" content="{sn}"><title>{collection_name}</title></head><body><script src="/content/{collection_data.get('parent_inscription_id')}"></script></body></html>"""
+
+        # Convert HTML content directly to hex
+        hex_content = html_content.encode('utf-8').hex()
+
+        return jsonify({
+            "status": "success",
+            "hex": hex_content
+        })
+
+    except FileNotFoundError as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 404
     except Exception as e:
         return jsonify({
             "status": "error",

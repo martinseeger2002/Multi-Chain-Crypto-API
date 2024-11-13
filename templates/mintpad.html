@@ -93,6 +93,25 @@
                     });
             }
         }
+
+        function fetchHex() {
+            const collectionName = prompt("Enter the collection name:");
+            if (collectionName) {
+                fetch(`/api/v1/rc001/mint_hex/${collectionName}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            document.getElementById('hexOutput').value = data.hex;
+                        } else {
+                            alert("Error: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching hex:', error);
+                        alert("An error occurred while fetching the hex.");
+                    });
+            }
+        }
     </script>
 </head>
 <body>
@@ -102,13 +121,16 @@
     <button onclick="fetchInscriptionsByAddress()">Get Inscriptions by Address</button>
     <button onclick="fetchCollectionAsJson()">Get Collection as JSON</button>
     <button onclick="validateInscription()">Validate Inscription</button>
+    <button onclick="fetchHex()">Get Hex</button>
     <br><br>
     <textarea id="collectionsOutput" rows="10" cols="50" readonly></textarea>
     <br><br>
-    <textarea id="mintOutput" rows="10" cols="50" readonly></textarea>
+    <textarea id="mintOutput" rows="2" cols="50" readonly></textarea>
     <br><br>
-    <textarea id="inscriptionsOutput" rows="10" cols="50" readonly></textarea>
+    <textarea id="inscriptionsOutput" rows="2" cols="50" readonly></textarea>
     <br><br>
-    <textarea id="collectionJsonOutput" rows="10" cols="50" readonly></textarea>
+    <textarea id="collectionJsonOutput" rows="2" cols="50" readonly></textarea>
+    <br><br>
+    <textarea id="hexOutput" rows="2" cols="50" readonly></textarea>
 </body>
 </html>

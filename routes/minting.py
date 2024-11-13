@@ -23,13 +23,13 @@ def mint_rc001(ticker):
     vout = data.get('vout')
     script_hex = data.get('script_hex')
     utxo_amount = data.get('utxo_amount')  # Ensure this is a string
-    mint_address = data.get('mint_address')  # New parameter
-    mint_price = data.get('mint_price')  # New parameter
+    mint_address = data.get('mint_address')  # Optional parameter
+    mint_price = data.get('mint_price')  # Optional parameter
 
     # Log the extracted parameters for debugging
     print(f"Received mint request with parameters: {data}")
 
-    # Convert 'vout', 'utxo_amount', and 'mint_price' to strings for the command
+    # Convert 'vout' and 'utxo_amount' to strings for the command
     vout_str = str(vout)
     
     try:
@@ -37,9 +37,11 @@ def mint_rc001(ticker):
         utxo_amount_float = float(utxo_amount)
         utxo_amount_satoshis = int(utxo_amount_float * 100000000)
         
-        # Convert mint_price to a float, then to satoshis
-        mint_price_float = float(mint_price)
-        mint_price_satoshis = int(mint_price_float * 100000000)
+        # Convert mint_price to a float, then to satoshis if provided
+        mint_price_satoshis = None
+        if mint_price is not None:
+            mint_price_float = float(mint_price)
+            mint_price_satoshis = int(mint_price_float * 100000000)
     except ValueError as e:
         return jsonify({
             "status": "error",
@@ -49,7 +51,7 @@ def mint_rc001(ticker):
     # Determine the command directory and script based on the ticker
     if ticker.lower() == 'doge':
         command_dir = './getOrdTxsDoge'
-        script = 'getRc001TxsDoge.js'
+        script = 'getRc001TxDoge.js'
     elif ticker.lower() == 'lky':
         command_dir = './getOrdTxsLKY'
         script = 'getOrdTxsLKY.js'
@@ -67,9 +69,70 @@ def mint_rc001(ticker):
         'node', script, 'mint',
         receiving_address, meme_type, hex_data,
         sending_address, privkey, utxo, vout_str,
-        script_hex, str(utxo_amount_satoshis),
-        mint_address, str(mint_price_satoshis)
+        script_hex, str(utxo_amount_satoshis)
     ]
+
+    # Add mint_address and mint_price to the command if they are provided
+    if mint_address and mint_price_satoshis is not None:
+        command.extend([mint_address, str(mint_price_satoshis)])
+
+    try:
+        # Run the command and capture the output
+        result = subprocess.run(
+            command,
+            cwd=command_dir,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        output = result.stdout.strip()
+        error_output = result.stderr.strip()
+
+        # Print both stdout and stderr
+        print("Command output:", output)
+        print("Command error output:", error_output)
+
+        # Assume output format:
+        # Final transaction: <txid>
+        # {
+        #   "pendingTransactions": [...],
+        #   "instructions": "..."
+        # }
+
+        # Split the output into the final transaction line and the JSON part
+        final_tx_line, json_part = output.split('\n', 1)
+        final_tx_id = final_tx_line.replace("Final transaction: ", "").strip()
+        json_data = json.loads(json_part)
+
+        # Structure the response as desired
+        response = {
+            "finalTransaction": final_tx_id,
+            "pendingTransactions": json_data.get("pendingTransactions", []),
+            "instructions": json_data.get("instructions", "")
+        }
+
+        return jsonify(response)
+
+    except subprocess.CalledProcessError as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Command failed with error: {e.stderr}"
+        }), 500
+    except ValueError:
+        return jsonify({
+            "status": "error",
+            "message": "Failed to parse command output."
+        }), 500
+    except json.JSONDecodeError:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid JSON format in command output."
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Unexpected error: {str(e)}"
+        }), 500
 
 @minting_bp.route('/api/v1/mint/<ticker>', methods=['POST'])
 @require_api_key
