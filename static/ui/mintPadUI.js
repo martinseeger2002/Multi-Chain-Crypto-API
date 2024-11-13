@@ -166,15 +166,46 @@ export function mintPadUI() {
         `;
         body.innerHTML += additionalInfo;
 
-        // Function to display JSON data
-        const displayJsonData = (jsonData) => {
+        const displayJsonData = (jsonData, format) => {
+            const formattedData = jsonData.map(item => {
+                const itemName = `${collectionName} #${item.item_no}`;
+                if (format === 'ow') {
+                    // Split the sn into two-digit segments and create attributes
+                    const snSegments = item.sn.match(/.{1,2}/g) || [];
+                    const attributes = snSegments.map((segment, index) => ({
+                        trait_type: `sn index ${index}`,
+                        value: segment
+                    }));
+
+                    return {
+                        id: `${item.inscription_id}`,
+                        meta: {
+                            name: itemName,
+                            attributes: attributes
+                        }
+                    };
+                } else if (format === 'dm') {
+                    // Split the sn into two-digit segments
+                    const snSegments = item.sn.match(/.{1,2}/g) || [];
+                    const snObject = snSegments.reduce((acc, segment, index) => {
+                        acc[`sn_ndex_${index}`] = segment;
+                        return acc;
+                    }, {});
+
+                    return {
+                        inscriptionId: `${item.inscription_id}`,
+                        name: itemName,
+                        sn: snObject
+                    };
+                }
+            });
+
             const jsonContainer = doc.createElement('pre');
             jsonContainer.style.color = 'white';
-            jsonContainer.textContent = JSON.stringify(jsonData, null, 2);
+            jsonContainer.textContent = JSON.stringify(formattedData, null, 2);
             body.appendChild(jsonContainer);
         };
 
-        // OW JSON button
         const owJsonButton = doc.createElement('button');
         owJsonButton.textContent = 'OW JSON';
         owJsonButton.className = 'styled-button ow-json-button';
@@ -183,7 +214,7 @@ export function mintPadUI() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "success") {
-                        displayJsonData(data.collection); // Display JSON data
+                        displayJsonData(data.collection, 'ow');
                     } else {
                         alert("Error: " + data.message);
                     }
@@ -195,7 +226,6 @@ export function mintPadUI() {
         });
         body.appendChild(owJsonButton);
 
-        // DM JSON button
         const dmJsonButton = doc.createElement('button');
         dmJsonButton.textContent = 'DM JSON';
         dmJsonButton.className = 'styled-button dm-json-button';
@@ -204,7 +234,7 @@ export function mintPadUI() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "success") {
-                        displayJsonData(data.collection); // Display JSON data
+                        displayJsonData(data.collection, 'dm');
                     } else {
                         alert("Error: " + data.message);
                     }
@@ -216,7 +246,6 @@ export function mintPadUI() {
         });
         body.appendChild(dmJsonButton);
 
-        // Back button
         const backButton = doc.createElement('button');
         backButton.textContent = 'Back';
         backButton.className = 'styled-button back-button';
