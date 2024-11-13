@@ -40,7 +40,20 @@ export function mintPadUI() {
                 const body = doc.body;
 
                 if (data.status === "success") {
+                    const notFullyMinted = [];
+                    const fullyMinted = [];
+
+                    // Separate collections into fully minted and not fully minted
                     Object.entries(data.collections).forEach(([collectionName, collectionData]) => {
+                        if (collectionData.percent_minted < 100) {
+                            notFullyMinted.push({ collectionName, collectionData });
+                        } else {
+                            fullyMinted.push({ collectionName, collectionData });
+                        }
+                    });
+
+                    // Function to create collection box
+                    const createCollectionBox = ({ collectionName, collectionData }) => {
                         const collectionBox = doc.createElement('div');
                         collectionBox.className = 'collection-box'; // Use a class for styling
 
@@ -52,41 +65,45 @@ export function mintPadUI() {
                         percentMinted.textContent = `Percent Minted: ${collectionData.percent_minted}%`;
                         collectionBox.appendChild(percentMinted);
 
+                        // Convert mint price from satoshis to whole coins
+                        const mintPriceInCoins = collectionData.mint_price / 100000000;
                         const mintPrice = doc.createElement('p');
-                        mintPrice.textContent = `Mint Price: ${collectionData.mint_price}`;
+                        mintPrice.textContent = `Mint Price: ${mintPriceInCoins} DOGE`;
                         collectionBox.appendChild(mintPrice);
 
-                        // Mint button
-                        const mintButton = doc.createElement('button');
-                        mintButton.textContent = 'Mint';
-                        mintButton.className = 'styled-button mint-button';
-                        mintButton.addEventListener('click', () => {
-                            fetch(`/api/v1/rc001/mint_hex/${collectionName}`)
-                                .then(response => response.json())
-                                .then(mintData => {
-                                    console.log('Mint Data:', mintData); // Log the mint data
+                        // Only add the mint button if the collection is not 100% minted
+                        if (collectionData.percent_minted < 100) {
+                            const mintButton = doc.createElement('button');
+                            mintButton.textContent = 'Mint';
+                            mintButton.className = 'styled-button mint-button';
+                            mintButton.addEventListener('click', () => {
+                                fetch(`/api/v1/rc001/mint_hex/${collectionName}`)
+                                    .then(response => response.json())
+                                    .then(mintData => {
+                                        console.log('Mint Data:', mintData); // Log the mint data
 
-                                    if (mintData.status === "success") {
-                                        const hexString = mintData.hex; // Directly use the hex string
+                                        if (mintData.status === "success") {
+                                            const hexString = mintData.hex; // Directly use the hex string
 
-                                        // Save MIME type and hex data to local storage
-                                        writeToLocalStorage('pendingHexData', { mimeType: 'text/html', hexData: hexString });
+                                            // Save MIME type and hex data to local storage
+                                            writeToLocalStorage('pendingHexData', { mimeType: 'text/html', hexData: hexString });
 
-                                        // Save collection details to local storage
-                                        writeToLocalStorage('pendingCollectionDetails', collectionData);
+                                            // Save collection details to local storage
+                                            writeToLocalStorage('pendingCollectionDetails', collectionData);
 
-                                        // Navigate to mintPadScreen2UI
-                                        mintPadScreen2UI();
-                                    } else {
-                                        alert('Error: ' + mintData.message);
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error fetching mint data:', error);
-                                    alert('An error occurred while minting.');
-                                });
-                        });
-                        collectionBox.appendChild(mintButton);
+                                            // Navigate to mintPadScreen2UI
+                                            mintPadScreen2UI();
+                                        } else {
+                                            alert('Error: ' + mintData.message);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching mint data:', error);
+                                        alert('An error occurred while minting.');
+                                    });
+                            });
+                            collectionBox.appendChild(mintButton);
+                        }
 
                         // Info button
                         const infoButton = doc.createElement('button');
@@ -98,7 +115,13 @@ export function mintPadUI() {
                         collectionBox.appendChild(infoButton);
 
                         body.appendChild(collectionBox);
-                    });
+                    };
+
+                    // Display not fully minted collections first
+                    notFullyMinted.forEach(createCollectionBox);
+
+                    // Display fully minted collections at the bottom
+                    fullyMinted.forEach(createCollectionBox);
                 } else {
                     const errorMsg = doc.createElement('div');
                     errorMsg.textContent = "Error: " + data.message;
