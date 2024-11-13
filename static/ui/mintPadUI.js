@@ -166,6 +166,56 @@ export function mintPadUI() {
         `;
         body.innerHTML += additionalInfo;
 
+        // Function to display JSON data
+        const displayJsonData = (jsonData) => {
+            const jsonContainer = doc.createElement('pre');
+            jsonContainer.style.color = 'white';
+            jsonContainer.textContent = JSON.stringify(jsonData, null, 2);
+            body.appendChild(jsonContainer);
+        };
+
+        // OW JSON button
+        const owJsonButton = doc.createElement('button');
+        owJsonButton.textContent = 'OW JSON';
+        owJsonButton.className = 'styled-button ow-json-button';
+        owJsonButton.addEventListener('click', () => {
+            fetch(`/api/v1/rc001/collection/${collectionName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        displayJsonData(data.collection); // Display JSON data
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching OW JSON data:', error);
+                    alert('An error occurred while fetching OW JSON data.');
+                });
+        });
+        body.appendChild(owJsonButton);
+
+        // DM JSON button
+        const dmJsonButton = doc.createElement('button');
+        dmJsonButton.textContent = 'DM JSON';
+        dmJsonButton.className = 'styled-button dm-json-button';
+        dmJsonButton.addEventListener('click', () => {
+            fetch(`/api/v1/rc001/collection/${collectionName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        displayJsonData(data.collection); // Display JSON data
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching DM JSON data:', error);
+                    alert('An error occurred while fetching DM JSON data.');
+                });
+        });
+        body.appendChild(dmJsonButton);
+
         // Back button
         const backButton = doc.createElement('button');
         backButton.textContent = 'Back';
