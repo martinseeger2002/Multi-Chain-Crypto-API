@@ -282,17 +282,18 @@ def process_transaction(txid):
                     return
                 
                 # Validate the mint payment
-                mint_price = float(config['DEFAULT'].get('mint_price', '0'))
+                mint_price_sats = float(config['DEFAULT'].get('mint_price', '0'))
+                mint_price_btc = mint_price_sats / 100000000  # Convert satoshis to bitcoins
                 mint_address = config['DEFAULT'].get('mint_address', 'Unknown')
-                if mint_price > 0:
+                if mint_price_btc > 0:
                     valid_payment = False
                     for vout in decoded_tx['vout']:
                         if 'value' in vout and 'scriptPubKey' in vout and 'addresses' in vout['scriptPubKey']:
-                            if vout['value'] == mint_price and mint_address in vout['scriptPubKey']['addresses']:
+                            if vout['value'] == mint_price_btc and mint_address in vout['scriptPubKey']['addresses']:
                                 valid_payment = True
                                 break
                     if not valid_payment:
-                        print(f"Transaction does not pay the mint price of {mint_price} to {mint_address}. Skipping transaction.")
+                        print(f"Transaction does not pay the mint price of {mint_price_btc} BTC to {mint_address}. Skipping transaction.")
                         return
 
                 # Create or connect to SQLite database
