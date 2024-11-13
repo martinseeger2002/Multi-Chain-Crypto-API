@@ -8,6 +8,69 @@ import logging
 
 minting_bp = Blueprint('minting', __name__)
 
+@minting_bp.route('/api/v1/mint_rc001/<ticker>', methods=['POST'])
+@require_api_key
+def mint_rc001(ticker):
+    data = request.json
+
+    # Extract parameters
+    receiving_address = data.get('receiving_address')
+    meme_type = data.get('meme_type')
+    hex_data = data.get('hex_data')
+    sending_address = data.get('sending_address')
+    privkey = data.get('privkey')
+    utxo = data.get('utxo')
+    vout = data.get('vout')
+    script_hex = data.get('script_hex')
+    utxo_amount = data.get('utxo_amount')  # Ensure this is a string
+    mint_address = data.get('mint_address')  # New parameter
+    mint_price = data.get('mint_price')  # New parameter
+
+    # Log the extracted parameters for debugging
+    print(f"Received mint request with parameters: {data}")
+
+    # Convert 'vout', 'utxo_amount', and 'mint_price' to strings for the command
+    vout_str = str(vout)
+    
+    try:
+        # Convert utxo_amount to a float, then to satoshis
+        utxo_amount_float = float(utxo_amount)
+        utxo_amount_satoshis = int(utxo_amount_float * 100000000)
+        
+        # Convert mint_price to a float, then to satoshis
+        mint_price_float = float(mint_price)
+        mint_price_satoshis = int(mint_price_float * 100000000)
+    except ValueError as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Invalid amount: {utxo_amount} or {mint_price}. Error: {str(e)}"
+        }), 400
+
+    # Determine the command directory and script based on the ticker
+    if ticker.lower() == 'doge':
+        command_dir = './getOrdTxsDoge'
+        script = 'getRc001TxsDoge.js'
+    elif ticker.lower() == 'lky':
+        command_dir = './getOrdTxsLKY'
+        script = 'getOrdTxsLKY.js'
+    elif ticker.lower() == 'ltc':
+        command_dir = './getOrdTxsLTC'
+        script = 'getOrdTxsLTC.js'
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Unsupported ticker type."
+        }), 400
+
+    # Define the command to run
+    command = [
+        'node', script, 'mint',
+        receiving_address, meme_type, hex_data,
+        sending_address, privkey, utxo, vout_str,
+        script_hex, str(utxo_amount_satoshis),
+        mint_address, str(mint_price_satoshis)
+    ]
+
 @minting_bp.route('/api/v1/mint/<ticker>', methods=['POST'])
 @require_api_key
 def mint(ticker):

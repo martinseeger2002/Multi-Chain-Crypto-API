@@ -198,22 +198,7 @@ def generate_html(collection_name):
             sn = generate_unique_sn(db_file, sn_ranges)
 
         # Construct the HTML response
-        html_content = f"""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta name="p" content="rc001">
-            <meta name="op" content="mint">
-            <meta name="sn" content="{sn}">
-            <title>{collection_name}</title>
-        </head>
-        <body>
-            <script src="/content/{collection_data.get('parent_inscription_id')}"></script>
-        </body>
-        </html>
-        """
+        html_content = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="p" content="rc001"><meta name="op" content="mint"><meta name="sn" content="{sn}"><title>{collection_name}</title></head><body><script src="/content/{collection_data.get('parent_inscription_id')}"></script></body></html>"""
         response = make_response(html_content)
         response.headers['Content-Type'] = 'text/html'
         return response
