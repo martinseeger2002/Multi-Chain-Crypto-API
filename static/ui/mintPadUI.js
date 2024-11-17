@@ -79,7 +79,7 @@ export function mintPadUI() {
                                     collectionBox.appendChild(iframeLabel);
 
                                     const inscriptionIframe = doc.createElement('iframe');
-                                    inscriptionIframe.src = `https://dogecdn.ordinalswallet.com/inscription/content/${randomInscription.inscription_id}`;
+                                    inscriptionIframe.src = `https://cnd.doggy.market/content/${randomInscription.inscription_id}`;
                                     inscriptionIframe.style.width = '200px';
                                     inscriptionIframe.style.height = '200px';
                                     inscriptionIframe.style.border = 'none';
