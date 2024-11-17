@@ -40,16 +40,16 @@ export function mintPadUI() {
                 const body = doc.body;
 
                 if (data.status === "success") {
-                    const notFullyMinted = [];
-                    const fullyMinted = [];
+                    const collections = Object.entries(data.collections).map(([collectionName, collectionData]) => ({
+                        collectionName,
+                        collectionData
+                    }));
 
-                    // Separate collections into fully minted and not fully minted
-                    Object.entries(data.collections).forEach(([collectionName, collectionData]) => {
-                        if (collectionData.percent_minted < 100) {
-                            notFullyMinted.push({ collectionName, collectionData });
-                        } else {
-                            fullyMinted.push({ collectionName, collectionData });
-                        }
+                    // Sort collections by percent_minted, placing 100% minted at the bottom
+                    collections.sort((a, b) => {
+                        if (a.collectionData.percent_minted === 100) return 1;
+                        if (b.collectionData.percent_minted === 100) return -1;
+                        return b.collectionData.percent_minted - a.collectionData.percent_minted;
                     });
 
                     // Function to create collection box
@@ -117,11 +117,8 @@ export function mintPadUI() {
                         body.appendChild(collectionBox);
                     };
 
-                    // Display not fully minted collections first
-                    notFullyMinted.forEach(createCollectionBox);
-
-                    // Display fully minted collections at the bottom
-                    fullyMinted.forEach(createCollectionBox);
+                    // Display sorted collections
+                    collections.forEach(createCollectionBox);
                 } else {
                     const errorMsg = doc.createElement('div');
                     errorMsg.textContent = "Error: " + data.message;

@@ -4,11 +4,17 @@ import sqlite3
 import random
 import datetime
 import base64
+import re
 from flask import Blueprint, jsonify, make_response, request
 from collections import OrderedDict
 
 # Create a new Blueprint for rc001
 rc001_bp = Blueprint('rc001', __name__)
+
+# Function to sanitize the collection name
+def sanitize_filename(name):
+    # Remove any character that is not alphanumeric, underscore, or hyphen
+    return re.sub(r'[^\w\-]', '', name)
 
 @rc001_bp.route('/api/v1/rc001/collections', methods=['GET'])
 def list_collections():
@@ -153,8 +159,11 @@ def generate_html(collection_name):
     """
     Generate an HTML page with a unique SN and update the database for a specific collection.
     """
+    # Sanitize the collection name
+    sanitized_collection_name = sanitize_filename(collection_name)
+    
     conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001'))
-    conf_file = f"{collection_name}.conf"
+    conf_file = f"{sanitized_collection_name}.conf"
     db_file = os.path.join(conf_dir, conf_file.replace('.conf', '.db'))
 
     try:
@@ -220,7 +229,10 @@ def list_inscriptions_by_collection_and_address(collection_name, address):
     """
     List all inscription_ids associated with a given address in a specific collection.
     """
-    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001/{collection_name}.db'))
+    # Sanitize the collection name
+    sanitized_collection_name = sanitize_filename(collection_name)
+    
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001/{sanitized_collection_name}.db'))
 
     if not os.path.exists(db_path):
         return jsonify({
@@ -257,7 +269,10 @@ def list_collection_as_json(collection_name):
     """
     List all entries in the specified collection database as JSON.
     """
-    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001/{collection_name}.db'))
+    # Sanitize the collection name
+    sanitized_collection_name = sanitize_filename(collection_name)
+    
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001/{sanitized_collection_name}.db'))
 
     if not os.path.exists(db_path):
         return jsonify({
@@ -301,7 +316,8 @@ def validate_inscription(inscription_id):
 
     try:
         for conf_file in conf_files:
-            collection_name = conf_file.replace('.conf', '')
+            # Sanitize the collection name
+            collection_name = sanitize_filename(conf_file.replace('.conf', ''))
             db_file = os.path.join(conf_dir, f"{collection_name}.db")
 
             if not os.path.exists(db_file):
@@ -352,8 +368,11 @@ def generate_hex(collection_name):
     """
     Generate a hex representation of an HTML page with a unique SN for a specific collection.
     """
+    # Sanitize the collection name
+    sanitized_collection_name = sanitize_filename(collection_name)
+    
     conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001'))
-    conf_file = f"{collection_name}.conf"
+    conf_file = f"{sanitized_collection_name}.conf"
     db_file = os.path.join(conf_dir, conf_file.replace('.conf', '.db'))
 
     try:

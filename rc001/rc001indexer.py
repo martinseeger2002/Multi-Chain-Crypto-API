@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import time
 import configparser
 import os
+import re
 
 # Connect to Bitcoin RPC
 rpc_user = "1234"
@@ -133,6 +134,11 @@ def is_valid_sn(sn, collection_name):
     
     return True
 
+# Function to sanitize the collection name
+def sanitize_filename(name):
+    # Remove any character that is not alphanumeric, underscore, or hyphen
+    return re.sub(r'[^\w\-]', '', name)
+
 # Function to process transactions
 def process_transaction(txid):
     rpc_connection = connect_to_rpc()
@@ -195,8 +201,11 @@ def process_transaction(txid):
                     title_tag = soup.find('title')
                     title = title_tag.string if title_tag else 'Untitled'
                     
+                    # Sanitize the title to create valid file names
+                    sanitized_title = sanitize_filename(title)
+                    
                     # Check if the configuration file already exists
-                    config_path = f'./{title}.conf'
+                    config_path = f'./{sanitized_title}.conf'
                     if os.path.exists(config_path):
                         print(f"Configuration file {config_path} already exists. Skipping deploy transaction.")
                         return
@@ -234,7 +243,7 @@ def process_transaction(txid):
                             print(f"Configuration file created at {config_path}")
 
                             # Initialize the database for the collection
-                            db_path = f'./{title}.db'
+                            db_path = f'./{sanitized_title}.db'
                             conn = sqlite3.connect(db_path)
                             c = conn.cursor()
                             c.execute('''CREATE TABLE IF NOT EXISTS items (
@@ -264,8 +273,11 @@ def process_transaction(txid):
                 title_tag = soup.find('title')
                 title = title_tag.string if title_tag else 'Untitled'
                 
+                # Sanitize the title to create valid file names
+                sanitized_title = sanitize_filename(title)
+                
                 # Check if the configuration file exists
-                config_path = f'./{title}.conf'
+                config_path = f'./{sanitized_title}.conf'
                 if not os.path.exists(config_path):
                     print(f"Configuration file {config_path} does not exist. Skipping transaction.")
                     return
@@ -275,7 +287,7 @@ def process_transaction(txid):
                 sn = sn_meta['content'] if sn_meta else 'Unknown'
                 
                 # Check if the sn is valid
-                if not is_valid_sn(sn, title):
+                if not is_valid_sn(sn, sanitized_title):
                     print(f"Invalid serial number: {sn}")
                     return
                 
@@ -312,7 +324,7 @@ def process_transaction(txid):
                         return
 
                 # Create or connect to SQLite database
-                db_path = f'./{title}.db'
+                db_path = f'./{sanitized_title}.db'
                 conn = sqlite3.connect(db_path)
                 c = conn.cursor()
                 c.execute('''CREATE TABLE IF NOT EXISTS items (

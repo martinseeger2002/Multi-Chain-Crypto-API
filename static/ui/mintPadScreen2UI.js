@@ -7,7 +7,7 @@ export function mintPadScreen2UI(selectedWalletLabel = localStorage.getItem('sel
 
     // Create and append the page title
     const title = document.createElement('h1');
-    title.textContent = 'Mint Text';
+    title.textContent = 'Mint rc001';
     title.className = 'page-title';
     landingPage.appendChild(title);
 
@@ -41,18 +41,22 @@ export function mintPadScreen2UI(selectedWalletLabel = localStorage.getItem('sel
     // Update UTXO dropdown based on selected wallet
     walletDropdown.addEventListener('change', () => {
         const selectedWallet = wallets.find(wallet => wallet.label === walletDropdown.value);
+        const pendingCollectionDetails = JSON.parse(localStorage.getItem('pendingCollectionDetails'));
+        const mintPriceInCoins = parseFloat(pendingCollectionDetails.mint_price) / 100000000; // Convert satoshis to whole coins
+        const minUtxoValue = mintPriceInCoins + 0.30; // Add 0.30 to the mint price
+
         if (selectedWallet && selectedWallet.utxos && selectedWallet.utxos.length > 0) {
             utxoDropdown.innerHTML = ''; // Clear existing options
             selectedWallet.utxos
-                .filter(utxo => parseFloat(utxo.value) > 0.01 && utxo.confirmations >= 1) // Filter UTXOs with value > 0.01 and confirmations >= 1
+                .filter(utxo => parseFloat(utxo.value) >= minUtxoValue && utxo.confirmations >= 1) // Filter UTXOs with value >= minUtxoValue and confirmations >= 1
                 .forEach(utxo => {
                     const option = document.createElement('option');
                     option.value = `${utxo.txid}:${utxo.vout}`; // Combine txid and vout for uniqueness
                     option.textContent = utxo.value; // Display only the UTXO amount
                     utxoDropdown.appendChild(option);
                 });
-            if (selectedWallet.utxos.filter(utxo => parseFloat(utxo.value) > 0.01 && utxo.confirmations >= 1).length === 0) {
-                utxoDropdown.innerHTML = '<option disabled>No UTXOs available above 0.01 with sufficient confirmations</option>';
+            if (selectedWallet.utxos.filter(utxo => parseFloat(utxo.value) >= minUtxoValue && utxo.confirmations >= 1).length === 0) {
+                utxoDropdown.innerHTML = '<option disabled>No UTXOs available above the required amount with sufficient confirmations</option>';
             }
         } else {
             utxoDropdown.innerHTML = '<option disabled>No UTXOs available</option>'; // Handle case where no UTXOs are available
