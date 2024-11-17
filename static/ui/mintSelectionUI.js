@@ -5,7 +5,6 @@ import { imageCompressorUI } from './imageCompressorUI.js'; // Import the imageC
 import { textHexerUI } from './textHexerUI.js'; // Import the textHexerUI function
 import { mintTokenUI } from './mintTokenUI.js'; // Import the mintTokenUI function
 import { mintFolderUI } from './mintFolderUI.js'; // Import the mintFolderUI function
-import { mintPadUI } from './mintPadUI.js'; // Import the mintPadUI function
 
 
 export function mintSelectionUI() {
@@ -89,15 +88,6 @@ export function mintSelectionUI() {
         myInscriptionUI(); // Navigate to my inscriptions UI
     });
     landingPage.appendChild(myInscriptionsButton);
-
-    // Mint Pad button
-    const mintPadButton = document.createElement('button');
-    mintPadButton.textContent = 'Mint Pad';
-    mintPadButton.className = 'styled-button'; // Use a class for styling
-    mintPadButton.addEventListener('click', () => {
-        mintPadUI(); // Navigate to mint pad UI
-    });
-    landingPage.appendChild(mintPadButton);
 
     // Back button
     const backButton = document.createElement('button');

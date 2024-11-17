@@ -1,4 +1,4 @@
-import { mintSelectionUI } from './mintSelectionUI.js'; // Import the mintSelectionUI function
+import { landingPageUI } from './landingPageUI.js'; // Import the landingPageUI function
 import { mintPadScreen2UI } from './mintPadScreen2UI.js';
 
 export function mintPadUI() {
@@ -15,7 +15,7 @@ export function mintPadUI() {
     backButton.textContent = 'Back';
     backButton.className = 'styled-button back-button'; // Use a class for styling
     backButton.addEventListener('click', () => {
-        mintSelectionUI(); // Navigate back to mint selection UI
+        landingPageUI(); // Navigate back to landing page UI
     });
     landingPage.appendChild(backButton);
 
@@ -79,7 +79,7 @@ export function mintPadUI() {
                                     collectionBox.appendChild(iframeLabel);
 
                                     const inscriptionIframe = doc.createElement('iframe');
-                                    inscriptionIframe.src = `https://cnd.doggy.market/content/${randomInscription.inscription_id}`;
+                                    inscriptionIframe.src = `https://dogecdn.ordinalswallet.com/inscription/content/${randomInscription.inscription_id}`;
                                     inscriptionIframe.style.width = '200px';
                                     inscriptionIframe.style.height = '200px';
                                     inscriptionIframe.style.border = 'none';
