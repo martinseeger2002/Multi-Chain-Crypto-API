@@ -8,4 +8,4 @@ git add .
 
 git commit -m "reverted to previous version of send tx ui"
 
-git push origin main
+git push origin main --force

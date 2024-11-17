@@ -56,10 +56,39 @@ export function mintPadUI() {
                     const createCollectionBox = ({ collectionName, collectionData }) => {
                         const collectionBox = doc.createElement('div');
                         collectionBox.className = 'collection-box'; // Use a class for styling
+                        collectionBox.style.border = '1px solid #ccc'; // Add a border around the collection box
+                        collectionBox.style.padding = '10px'; // Add some padding for better appearance
+                        collectionBox.style.marginBottom = '10px'; // Add margin to separate boxes
 
                         const title = doc.createElement('h2');
                         title.textContent = collectionName;
                         collectionBox.appendChild(title);
+
+                        // Fetch DM JSON and display a random inscription
+                        fetch(`/api/v1/rc001/collection/${collectionName}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === "success" && data.collection.length > 0) {
+                                    const randomIndex = Math.floor(Math.random() * data.collection.length);
+                                    const randomInscription = data.collection[randomIndex];
+
+                                    // Add a label for the iframe
+                                    const iframeLabel = doc.createElement('p');
+                                    iframeLabel.textContent = 'Random Inscription Preview:';
+                                    iframeLabel.style.fontStyle = 'italic';
+                                    collectionBox.appendChild(iframeLabel);
+
+                                    const inscriptionIframe = doc.createElement('iframe');
+                                    inscriptionIframe.src = `https://dogecdn.ordinalswallet.com/inscription/content/${randomInscription.inscription_id}`;
+                                    inscriptionIframe.style.width = '200px';
+                                    inscriptionIframe.style.height = '200px';
+                                    inscriptionIframe.style.border = 'none';
+                                    collectionBox.appendChild(inscriptionIframe);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching DM JSON data:', error);
+                            });
 
                         const percentMinted = doc.createElement('p');
                         percentMinted.textContent = `Percent Minted: ${collectionData.percent_minted}%`;
