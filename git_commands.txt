@@ -6,6 +6,6 @@ git reset --hard origin/main
 
 git add .
 
-git commit -m "reverted to previous version of send tx ui"
+git commit -m "added bulk mint pad"
 
 git push origin main --force

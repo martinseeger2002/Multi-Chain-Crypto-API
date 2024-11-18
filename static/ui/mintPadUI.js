@@ -1,5 +1,6 @@
 import { landingPageUI } from './landingPageUI.js'; // Import the landingPageUI function
 import { mintPadScreen2UI } from './mintPadScreen2UI.js';
+import { mintPadBulkUI } from './mintPadBulkUI.js'; // Import the mintPadBulkUI function
 
 export function mintPadUI() {
     const landingPage = document.getElementById('landing-page');
@@ -118,7 +119,7 @@ export function mintPadUI() {
                                             writeToLocalStorage('pendingHexData', { mimeType: 'text/html', hexData: hexString });
 
                                             // Save collection details to local storage
-                                            writeToLocalStorage('pendingCollectionDetails', collectionData);
+                                            writeToLocalStorage('pendingCollectionDetails', { ...collectionData, collection_name: collectionName });
 
                                             // Navigate to mintPadScreen2UI
                                             mintPadScreen2UI();
@@ -142,6 +143,19 @@ export function mintPadUI() {
                             displayCollectionInfo(collectionName, collectionData);
                         });
                         collectionBox.appendChild(infoButton);
+
+                        // Bulk Mint button
+                        const bulkMintButton = doc.createElement('button');
+                        bulkMintButton.textContent = 'Bulk Mint';
+                        bulkMintButton.className = 'styled-button bulk-mint-button';
+                        bulkMintButton.addEventListener('click', () => {
+                            // Save collection details to local storage, including the collection name
+                            writeToLocalStorage('pendingCollectionDetails', { ...collectionData, collection_name: collectionName });
+
+                            // Navigate to mintPadBulkUI
+                            mintPadBulkUI();
+                        });
+                        collectionBox.appendChild(bulkMintButton);
 
                         body.appendChild(collectionBox);
                     };
