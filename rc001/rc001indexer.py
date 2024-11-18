@@ -109,16 +109,22 @@ def process_subsequent_tx(asm_data):
 
 # Function to check if sn is valid
 def is_valid_sn(sn, collection_name):
-    # Split the sn into two-digit segments
-    segments = [sn[i:i+2] for i in range(0, len(sn), 2)]
-    print(f"Segments: {segments}")  # Debugging output
-    
     # Load the configuration file
     config = configparser.ConfigParser()
     config_path = f'./{collection_name}.conf'
     config.read(config_path)
     
-    # Check each segment against the valid range
+    # First, check if the entire sn is within a single range
+    if 'sn_range' in config['DEFAULT']:
+        valid_range = config['DEFAULT']['sn_range'].split('-')
+        print(f"Checking serial number {sn} against single range {valid_range}")  # Debugging output
+        if valid_range[0] <= sn <= valid_range[1]:
+            return True
+    
+    # If not, fall back to checking segmented ranges
+    segments = [sn[i:i+2] for i in range(0, len(sn), 2)]
+    print(f"Segments: {segments}")  # Debugging output
+    
     for i, segment in enumerate(segments):
         range_key = f'sn_index_{i}'
         if range_key in config['DEFAULT']:

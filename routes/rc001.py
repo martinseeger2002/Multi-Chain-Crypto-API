@@ -129,7 +129,7 @@ def list_collections():
             "message": str(e)
         }), 500
 
-def generate_unique_sn(db_file, sn_ranges):
+def generate_unique_sn(db_file, sn_ranges, single_sn_range=None):
     """Generate a unique SN that is not already minted or older than 24 hours."""
     if not os.path.exists(db_file):
         raise FileNotFoundError(f"Database file not found: {db_file}")
@@ -146,11 +146,16 @@ def generate_unique_sn(db_file, sn_ranges):
 
         # Generate a random SN within the specified ranges
         while True:
-            sn_parts = []
-            for start, end in sn_ranges:
-                sn_part = f"{random.randint(start, end):02}"
-                sn_parts.append(sn_part)
-            sn = ''.join(sn_parts)
+            if single_sn_range:
+                start, end = single_sn_range
+                sn = f"{random.randint(start, end):06}"
+            else:
+                sn_parts = []
+                for start, end in sn_ranges:
+                    sn_part = f"{random.randint(start, end):02}"
+                    sn_parts.append(sn_part)
+                sn = ''.join(sn_parts)
+            
             if sn not in existing_sns:
                 return sn
 
@@ -388,13 +393,6 @@ def generate_hex(collection_name):
         config.read(file_path)
         collection_data = {key: value for key, value in config['DEFAULT'].items()}
 
-        # Parse SN ranges from the configuration file
-        sn_ranges = []
-        for key, value in collection_data.items():
-            if key.startswith('sn_index_'):
-                start, end = map(int, value.split('-'))
-                sn_ranges.append((start, end))
-
         # Initialize the database if it doesn't exist
         if not os.path.exists(db_file):
             with sqlite3.connect(db_file) as conn:
@@ -417,9 +415,22 @@ def generate_hex(collection_name):
                 existing_sns = {row[0] for row in cursor.fetchall()}
 
         sn = None
-        while not sn or sn in existing_sns:
-            sn_parts = [f"{random.randint(start, end):02}" for start, end in sn_ranges]
-            sn = ''.join(sn_parts)
+        if 'sn_range' in collection_data:
+            # Handle single string sn
+            start, end = map(int, collection_data['sn_range'].split('-'))
+            while not sn or sn in existing_sns:
+                sn = f"{random.randint(start, end):06}"
+        else:
+            # Handle split sn
+            sn_ranges = []
+            for key, value in collection_data.items():
+                if key.startswith('sn_index_'):
+                    start, end = map(int, value.split('-'))
+                    sn_ranges.append((start, end))
+            
+            while not sn or sn in existing_sns:
+                sn_parts = [f"{random.randint(start, end):02}" for start, end in sn_ranges]
+                sn = ''.join(sn_parts)
 
         # Construct the HTML content
         html_content = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="p" content="rc001"><meta name="op" content="mint"><meta name="sn" content="{sn}"><title>{collection_name}</title></head><body><script src="/content/{collection_data.get('parent_inscription_id')}"></script></body></html>"""
@@ -431,7 +442,6 @@ def generate_hex(collection_name):
             "status": "success",
             "hex": hex_content
         })
-
     except FileNotFoundError as e:
         return jsonify({
             "status": "error",
