@@ -8,6 +8,7 @@ import time
 import configparser
 import os
 import re
+from decimal import Decimal
 
 # Connect to Bitcoin RPC
 rpc_user = "1234"
@@ -114,14 +115,25 @@ def is_valid_sn(sn, collection_name):
     config_path = f'./{collection_name}.conf'
     config.read(config_path)
     
-    # First, check if the entire sn is within a single range
+    # Check if the entire sn is within a single range
     if 'sn_range' in config['DEFAULT']:
         valid_range = config['DEFAULT']['sn_range'].split('-')
         print(f"Checking serial number {sn} against single range {valid_range}")  # Debugging output
-        if valid_range[0] <= sn <= valid_range[1]:
+        if valid_range[0] <= sn.zfill(len(valid_range[1])) <= valid_range[1]:
             return True
     
-    # If not, fall back to checking segmented ranges
+    # Check if sn_index_0 contains non-2-digit numbers
+    if 'sn_index_0' in config['DEFAULT']:
+        sn_index_0_range = config['DEFAULT']['sn_index_0'].split('-')
+        if any(len(num) != 2 for num in sn_index_0_range):
+            print(f"Checking serial number {sn} against non-segmented range {sn_index_0_range}")  # Debugging output
+            if sn_index_0_range[0] <= sn.zfill(len(sn_index_0_range[1])) <= sn_index_0_range[1]:
+                return True
+            else:
+                print(f"Serial number {sn} is out of range {sn_index_0_range}")  # Debugging output
+                return False
+
+    # Fall back to checking segmented ranges
     segments = [sn[i:i+2] for i in range(0, len(sn), 2)]
     print(f"Segments: {segments}")  # Debugging output
     
@@ -316,11 +328,12 @@ def process_transaction(txid):
                 
                 # Validate the mint payment
                 mint_price_sats = float(config['DEFAULT'].get('mint_price', '0'))
-                mint_price_btc = mint_price_sats / 100000000  # Convert satoshis to bitcoins
+                mint_price_btc = Decimal(mint_price_sats) / Decimal(100000000)  # Convert satoshis to bitcoins
                 mint_address = config['DEFAULT'].get('mint_address', 'Unknown')
                 if mint_price_btc > 0:
                     valid_payment = False
                     for vout in decoded_tx['vout']:
+                        print(f"Checking vout: {vout}")  # Debugging output
                         if 'value' in vout and 'scriptPubKey' in vout and 'addresses' in vout['scriptPubKey']:
                             if vout['value'] == mint_price_btc and mint_address in vout['scriptPubKey']['addresses']:
                                 valid_payment = True
