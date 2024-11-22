@@ -133,6 +133,19 @@ export function mintPadUI() {
                                     });
                             });
                             collectionBox.appendChild(mintButton);
+
+                            // Bulk Mint button
+                            const bulkMintButton = doc.createElement('button');
+                            bulkMintButton.textContent = 'Bulk Mint';
+                            bulkMintButton.className = 'styled-button bulk-mint-button';
+                            bulkMintButton.addEventListener('click', () => {
+                                // Save collection details to local storage, including the collection name
+                                writeToLocalStorage('pendingCollectionDetails', { ...collectionData, collection_name: collectionName });
+
+                                // Navigate to mintPadBulkUI
+                                mintPadBulkUI();
+                            });
+                            collectionBox.appendChild(bulkMintButton);
                         }
 
                         // Info button
@@ -143,19 +156,6 @@ export function mintPadUI() {
                             displayCollectionInfo(collectionName, collectionData);
                         });
                         collectionBox.appendChild(infoButton);
-
-                        // Bulk Mint button
-                        const bulkMintButton = doc.createElement('button');
-                        bulkMintButton.textContent = 'Bulk Mint';
-                        bulkMintButton.className = 'styled-button bulk-mint-button';
-                        bulkMintButton.addEventListener('click', () => {
-                            // Save collection details to local storage, including the collection name
-                            writeToLocalStorage('pendingCollectionDetails', { ...collectionData, collection_name: collectionName });
-
-                            // Navigate to mintPadBulkUI
-                            mintPadBulkUI();
-                        });
-                        collectionBox.appendChild(bulkMintButton);
 
                         body.appendChild(collectionBox);
                     };
@@ -192,105 +192,126 @@ export function mintPadUI() {
         title.textContent = collectionName;
         body.appendChild(title);
 
-        const additionalInfo = `
-            <p>Deploy Address: ${collectionData.deploy_address}</p>
-            <p>Website: ${collectionData.website}</p>
-            <p>Deploy TXID: ${collectionData.deploy_txid}</p>
-            <p>Parent Inscription ID: ${collectionData.parent_inscription_id}</p>
-            <p>Emblem Inscription ID: ${collectionData.emblem_inscription_id}</p>
-            <p>Max Supply: ${collectionData.max_supply}</p>
-            <p>Left to Mint: ${collectionData.left_to_mint}</p>
-            <p>Minted: ${collectionData.minted}</p>
-            <p>Mint Price: ${collectionData.mint_price}</p>
-            <p>Percent Minted: ${collectionData.percent_minted}%</p>
-        `;
-        body.innerHTML += additionalInfo;
+        fetch(`/api/v1/rc001/collection/${collectionName}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    // Count unique inscription addresses
+                    const uniqueAddresses = new Set(data.collection.map(item => item.inscription_address));
+                    const uniqueAddressCount = uniqueAddresses.size;
 
-        const displayJsonData = (jsonData, format) => {
-            const formattedData = jsonData.map(item => {
-                const itemName = `${collectionName} #${item.item_no}`;
-                if (format === 'ow') {
-                    // Split the sn into two-digit segments and create attributes
-                    const snSegments = item.sn.match(/.{1,2}/g) || [];
-                    const attributes = snSegments.map((segment, index) => ({
-                        trait_type: `sn index ${index}`,
-                        value: segment
-                    }));
+                    // Append 'i0' to the deploy TXID
+                    const deployInscriptionId = `${collectionData.deploy_txid}i0`;
 
-                    return {
-                        id: `${item.inscription_id}`,
-                        meta: {
-                            name: itemName,
-                            attributes: attributes
-                        }
+                    // Combine all information into a single HTML string
+                    const additionalInfo = `
+                        <p>Website: ${collectionData.website}</p>
+                        <p>Deploy Address: ${collectionData.deploy_address}</p>
+                        <p>Deploy Inscription ID: ${deployInscriptionId}</p>
+                        <p>Parent Inscription ID: ${collectionData.parent_inscription_id}</p>
+                        <p>Emblem Inscription ID: ${collectionData.emblem_inscription_id}</p>
+                        <p>Max Supply: ${collectionData.max_supply}</p>
+                        <p>Left to Mint: ${collectionData.left_to_mint}</p>
+                        <p>Minted: ${collectionData.minted}</p>
+                        <p>Mint Price: ${collectionData.mint_price}</p>
+                        <p>Percent Minted: ${collectionData.percent_minted}%</p>
+                        <p>Unique Inscription Addresses: ${uniqueAddressCount}</p>
+                    `;
+                    body.innerHTML += additionalInfo;
+
+                    const displayJsonData = (jsonData, format) => {
+                        const formattedData = jsonData.map(item => {
+                            const itemName = `${collectionName} #${item.item_no}`;
+                            if (format === 'ow') {
+                                // Split the sn into two-digit segments and create attributes
+                                const snSegments = item.sn.match(/.{1,2}/g) || [];
+                                const attributes = snSegments.map((segment, index) => ({
+                                    trait_type: `sn index ${index}`,
+                                    value: segment
+                                }));
+
+                                return {
+                                    id: `${item.inscription_id}`,
+                                    meta: {
+                                        name: itemName,
+                                        attributes: attributes
+                                    }
+                                };
+                            } else if (format === 'dm') {
+                                // Split the sn into two-digit segments
+                                const snSegments = item.sn.match(/.{1,2}/g) || [];
+                                const snObject = snSegments.reduce((acc, segment, index) => {
+                                    acc[`sn_ndex_${index}`] = segment;
+                                    return acc;
+                                }, {});
+
+                                return {
+                                    inscriptionId: `${item.inscription_id}`,
+                                    name: itemName,
+                                    sn: snObject
+                                };
+                            }
+                        });
+
+                        const jsonContainer = doc.createElement('pre');
+                        jsonContainer.style.color = 'white';
+                        jsonContainer.textContent = JSON.stringify(formattedData, null, 2);
+                        body.appendChild(jsonContainer);
                     };
-                } else if (format === 'dm') {
-                    // Split the sn into two-digit segments
-                    const snSegments = item.sn.match(/.{1,2}/g) || [];
-                    const snObject = snSegments.reduce((acc, segment, index) => {
-                        acc[`sn_ndex_${index}`] = segment;
-                        return acc;
-                    }, {});
 
-                    return {
-                        inscriptionId: `${item.inscription_id}`,
-                        name: itemName,
-                        sn: snObject
-                    };
+                    const owJsonButton = doc.createElement('button');
+                    owJsonButton.textContent = 'OW JSON';
+                    owJsonButton.className = 'styled-button ow-json-button';
+                    owJsonButton.addEventListener('click', () => {
+                        fetch(`/api/v1/rc001/collection/${collectionName}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === "success") {
+                                    displayJsonData(data.collection, 'ow');
+                                } else {
+                                    alert("Error: " + data.message);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching OW JSON data:', error);
+                                alert('An error occurred while fetching OW JSON data.');
+                            });
+                    });
+                    body.appendChild(owJsonButton);
+
+                    const dmJsonButton = doc.createElement('button');
+                    dmJsonButton.textContent = 'DM JSON';
+                    dmJsonButton.className = 'styled-button dm-json-button';
+                    dmJsonButton.addEventListener('click', () => {
+                        fetch(`/api/v1/rc001/collection/${collectionName}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === "success") {
+                                    displayJsonData(data.collection, 'dm');
+                                } else {
+                                    alert("Error: " + data.message);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching DM JSON data:', error);
+                                alert('An error occurred while fetching DM JSON data.');
+                            });
+                    });
+                    body.appendChild(dmJsonButton);
+
+                    const backButton = doc.createElement('button');
+                    backButton.textContent = 'Back';
+                    backButton.className = 'styled-button back-button';
+                    backButton.addEventListener('click', fetchAndDisplayCollections);
+                    body.appendChild(backButton);
+                } else {
+                    alert("Error: " + data.message);
                 }
+            })
+            .catch(error => {
+                console.error('Error fetching collection data:', error);
+                alert('An error occurred while fetching collection data.');
             });
-
-            const jsonContainer = doc.createElement('pre');
-            jsonContainer.style.color = 'white';
-            jsonContainer.textContent = JSON.stringify(formattedData, null, 2);
-            body.appendChild(jsonContainer);
-        };
-
-        const owJsonButton = doc.createElement('button');
-        owJsonButton.textContent = 'OW JSON';
-        owJsonButton.className = 'styled-button ow-json-button';
-        owJsonButton.addEventListener('click', () => {
-            fetch(`/api/v1/rc001/collection/${collectionName}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        displayJsonData(data.collection, 'ow');
-                    } else {
-                        alert("Error: " + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching OW JSON data:', error);
-                    alert('An error occurred while fetching OW JSON data.');
-                });
-        });
-        body.appendChild(owJsonButton);
-
-        const dmJsonButton = doc.createElement('button');
-        dmJsonButton.textContent = 'DM JSON';
-        dmJsonButton.className = 'styled-button dm-json-button';
-        dmJsonButton.addEventListener('click', () => {
-            fetch(`/api/v1/rc001/collection/${collectionName}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        displayJsonData(data.collection, 'dm');
-                    } else {
-                        alert("Error: " + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching DM JSON data:', error);
-                    alert('An error occurred while fetching DM JSON data.');
-                });
-        });
-        body.appendChild(dmJsonButton);
-
-        const backButton = doc.createElement('button');
-        backButton.textContent = 'Back';
-        backButton.className = 'styled-button back-button';
-        backButton.addEventListener('click', fetchAndDisplayCollections);
-        body.appendChild(backButton);
     }
 
     // Fetch and display collections when the page loads
