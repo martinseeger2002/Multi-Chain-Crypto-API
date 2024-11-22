@@ -3,7 +3,7 @@ import json
 
 def read_database(db_name):
     # Connect to the SQLite database
-    db_path = f'./{db_name}.db'
+    db_path = f'./collections/{db_name}.db'
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
@@ -29,5 +29,5 @@ def read_database(db_name):
 
 if __name__ == "__main__":
     # Replace 'your_db_name' with the actual name of your database (without the .db extension)
-    db_name = "RC001v2"
+    db_name = "PixelBosu"
     read_database(db_name)

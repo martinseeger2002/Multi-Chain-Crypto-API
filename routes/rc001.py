@@ -19,9 +19,9 @@ def sanitize_filename(name):
 @rc001_bp.route('/api/v1/rc001/collections', methods=['GET'])
 def list_collections():
     """
-    List all .conf files in the ../rc001 directory and return their contents as key-value pairs.
+    List all .conf files in the ../rc001/collections directory and return their contents as key-value pairs.
     """
-    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001'))
+    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001/collections'))
     try:
         # Verify the directory exists
         if not os.path.isdir(conf_dir):
@@ -167,7 +167,7 @@ def generate_html(collection_name):
     # Sanitize the collection name
     sanitized_collection_name = sanitize_filename(collection_name)
     
-    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001'))
+    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001/collections'))
     conf_file = f"{sanitized_collection_name}.conf"
     db_file = os.path.join(conf_dir, conf_file.replace('.conf', '.db'))
 
@@ -237,7 +237,7 @@ def list_inscriptions_by_collection_and_address(collection_name, address):
     # Sanitize the collection name
     sanitized_collection_name = sanitize_filename(collection_name)
     
-    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001/{sanitized_collection_name}.db'))
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001/collections/{sanitized_collection_name}.db'))
 
     if not os.path.exists(db_path):
         return jsonify({
@@ -277,7 +277,7 @@ def list_collection_as_json(collection_name):
     # Sanitize the collection name
     sanitized_collection_name = sanitize_filename(collection_name)
     
-    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001/{sanitized_collection_name}.db'))
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001/collections/{sanitized_collection_name}.db'))
 
     if not os.path.exists(db_path):
         return jsonify({
@@ -316,7 +316,7 @@ def validate_inscription(inscription_id):
     """
     Validate an inscription_id across all collections and return its index, deploy_address, inscription_address, and collection name.
     """
-    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001'))
+    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001/collections'))
     conf_files = [f for f in os.listdir(conf_dir) if f.endswith('.conf')]
 
     try:
@@ -376,7 +376,7 @@ def generate_hex(collection_name):
     # Sanitize the collection name
     sanitized_collection_name = sanitize_filename(collection_name)
     
-    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001'))
+    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001/collections'))
     conf_file = f"{sanitized_collection_name}.conf"
     db_file = os.path.join(conf_dir, conf_file.replace('.conf', '.db'))
 
