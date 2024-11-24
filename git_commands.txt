@@ -6,6 +6,6 @@ git reset --hard origin/main
 
 git add .
 
-git commit -m "added bulk mint pad"
+git commit -m "added Pepe support"
 
 git push origin main --force
