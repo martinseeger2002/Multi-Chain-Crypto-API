@@ -6,6 +6,6 @@ git reset --hard origin/main
 
 git add .
 
-git commit -m "added Pepe support"
+git commit -m "added prc-20 support"
 
 git push origin main --force
