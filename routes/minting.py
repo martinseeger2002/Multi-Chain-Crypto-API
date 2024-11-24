@@ -55,6 +55,9 @@ def mint_rc001(ticker):
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'getOrdTxsLTC.js'
+    elif ticker.lower() == 'pepe':
+        command_dir = './getOrdTxsPepe'
+        script = 'getOrdTxsPepe.js'
     else:
         return jsonify({
             "status": "error",
@@ -173,6 +176,9 @@ def mint(ticker):
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'getOrdTxsLTC.js'
+    elif ticker.lower() == 'pepe':
+        command_dir = './getOrdTxsPepe'
+        script = 'getOrdTxsPepe.js'
     else:
         return jsonify({
             "status": "error",
@@ -275,6 +281,9 @@ def generate_key(ticker):
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'generateKey.js'
+    elif ticker.lower() == 'pepe':
+        command_dir = './getOrdTxsPepe'
+        script = 'generateKey.js'
     else:
         return jsonify({
             "status": "error",
@@ -363,6 +372,9 @@ def send(ticker):
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'getTxsLTC.js'
+    elif ticker.lower() == 'pepe':
+        command_dir = './getOrdTxsPepe'
+        script = 'getTxsPepe.js'
     else:
         return jsonify({
             "status": "error",
@@ -462,6 +474,9 @@ def vault(ticker):
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'getVaultTxsLTC.js'
+    elif ticker.lower() == 'pepe':
+        command_dir = './getOrdTxsPepe'
+        script = 'getVaultTxsPepe.js'
     else:
         return jsonify({
             "status": "error",

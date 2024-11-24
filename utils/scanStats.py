@@ -87,7 +87,7 @@ def monitor_coin_progress(coin):
         conn.close()
 
 def main():
-    coins = ['DOGE', 'LKY', 'LTC']  # Add other coins as needed
+    coins = ['DOGE', 'LKY', 'LTC', 'PEPE']  # Add other coins as needed
     threads = []
     for coin in coins:
         thread = threading.Thread(target=monitor_coin_progress, args=(coin,))
