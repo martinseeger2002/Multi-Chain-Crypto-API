@@ -9095,6 +9095,258 @@
                     }
                 ]
             }
+        },
+        {
+            "id": "ee7799221b186fbb8839e6deb1ee725e7dbb87396eb23daf2b37172ca57328ddi0",
+            "meta": {
+                "name": "PixelBosu #256",
+                "attributes": [
+                    {
+                        "trait_type": "Background",
+                        "value": "phonk"
+                    },
+                    {
+                        "trait_type": "pepe",
+                        "value": "pepe"
+                    },
+                    {
+                        "trait_type": "body",
+                        "value": "red shirt"
+                    },
+                    {
+                        "trait_type": "eyes",
+                        "value": "yellow green vibes"
+                    },
+                    {
+                        "trait_type": "head item",
+                        "value": "teal beanie"
+                    },
+                    {
+                        "trait_type": "mouth",
+                        "value": "bubble gun pink"
+                    },
+                    {
+                        "trait_type": "item",
+                        "value": "Gold Bowie Knife"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "508dd7269087fe1c1f449537714a38ff5895303a83d3cbda3c946da19017b45di0",
+            "meta": {
+                "name": "PixelBosu #257",
+                "attributes": [
+                    {
+                        "trait_type": "Background",
+                        "value": "ocean"
+                    },
+                    {
+                        "trait_type": "pepe",
+                        "value": "pepe"
+                    },
+                    {
+                        "trait_type": "body",
+                        "value": "brownish hoodie"
+                    },
+                    {
+                        "trait_type": "eyes",
+                        "value": "orange vibes"
+                    },
+                    {
+                        "trait_type": "head item",
+                        "value": "doorag"
+                    },
+                    {
+                        "trait_type": "mouth",
+                        "value": "braces"
+                    },
+                    {
+                        "trait_type": "item",
+                        "value": "pray"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "a7670f7117b698efe1f12e728b73d5fd847848ee6650e07d812ecdcf4affad1bi0",
+            "meta": {
+                "name": "PixelBosu #258",
+                "attributes": [
+                    {
+                        "trait_type": "Background",
+                        "value": "Green Smoke"
+                    },
+                    {
+                        "trait_type": "pepe",
+                        "value": "pepe"
+                    },
+                    {
+                        "trait_type": "body",
+                        "value": "red shirt"
+                    },
+                    {
+                        "trait_type": "eyes",
+                        "value": "purple viebs"
+                    },
+                    {
+                        "trait_type": "head item",
+                        "value": "beanie dark poorple"
+                    },
+                    {
+                        "trait_type": "mouth",
+                        "value": "smile"
+                    },
+                    {
+                        "trait_type": "item",
+                        "value": "champeign"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "330aecbf079e5ad365dadd18fb0c070a3921f1fda572ab7ec33869fe75ae4aeci0",
+            "meta": {
+                "name": "PixelBosu #259",
+                "attributes": [
+                    {
+                        "trait_type": "Background",
+                        "value": "pepe blue"
+                    },
+                    {
+                        "trait_type": "pepe",
+                        "value": "pepe"
+                    },
+                    {
+                        "trait_type": "body",
+                        "value": "white shirt"
+                    },
+                    {
+                        "trait_type": "eyes",
+                        "value": "looking to right"
+                    },
+                    {
+                        "trait_type": "head item",
+                        "value": "purple hat"
+                    },
+                    {
+                        "trait_type": "mouth",
+                        "value": "braces"
+                    },
+                    {
+                        "trait_type": "item",
+                        "value": "Gold Bowie Knife"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "a441c36130658569ce72c55fe773cf43598edf5ef509dba638a543ff6b821e62i0",
+            "meta": {
+                "name": "PixelBosu #260",
+                "attributes": [
+                    {
+                        "trait_type": "Background",
+                        "value": "phonk"
+                    },
+                    {
+                        "trait_type": "pepe",
+                        "value": "pepe"
+                    },
+                    {
+                        "trait_type": "body",
+                        "value": "gold chain"
+                    },
+                    {
+                        "trait_type": "eyes",
+                        "value": "eye patch"
+                    },
+                    {
+                        "trait_type": "head item",
+                        "value": "Detective Hat"
+                    },
+                    {
+                        "trait_type": "mouth",
+                        "value": "frown"
+                    },
+                    {
+                        "trait_type": "item",
+                        "value": "champeign"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "c8f4e8a95a62fc2f3fe44ce7d01a38e16101b4f5bf7c8bad8d3907c581bde049i0",
+            "meta": {
+                "name": "PixelBosu #261",
+                "attributes": [
+                    {
+                        "trait_type": "Background",
+                        "value": "pond"
+                    },
+                    {
+                        "trait_type": "pepe",
+                        "value": "pepe"
+                    },
+                    {
+                        "trait_type": "body",
+                        "value": "Black Body Armor"
+                    },
+                    {
+                        "trait_type": "eyes",
+                        "value": "Eye Patch Open Eye"
+                    },
+                    {
+                        "trait_type": "head item",
+                        "value": "police hat"
+                    },
+                    {
+                        "trait_type": "mouth",
+                        "value": "handle bar mustach"
+                    },
+                    {
+                        "trait_type": "item",
+                        "value": "clown nose"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "d52de96ef5f8c372be0b2f0b1b75469c99388fa359bb0bfc02e635e9916143ffi0",
+            "meta": {
+                "name": "PixelBosu #262",
+                "attributes": [
+                    {
+                        "trait_type": "Background",
+                        "value": "mango"
+                    },
+                    {
+                        "trait_type": "pepe",
+                        "value": "pepe"
+                    },
+                    {
+                        "trait_type": "body",
+                        "value": "purple shirt"
+                    },
+                    {
+                        "trait_type": "eyes",
+                        "value": "Eye Patch Open Eye"
+                    },
+                    {
+                        "trait_type": "head item",
+                        "value": "head phones"
+                    },
+                    {
+                        "trait_type": "mouth",
+                        "value": "braces"
+                    },
+                    {
+                        "trait_type": "item",
+                        "value": "starff"
+                    }
+                ]
+            }
         }
     ],
     "slug": "pixel-bosu"
