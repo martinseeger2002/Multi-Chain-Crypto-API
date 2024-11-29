@@ -128,7 +128,7 @@ export function buyCreditsUI(selectedWalletLabel = localStorage.getItem('selecte
         const selectedWallet = wallets.find(wallet => wallet.address === addressDisplay.textContent.split(': ')[1]);
 
         if (!selectedWallet || !selectedWallet.utxos || !selectedWallet.privkey) {
-            alert('Wallet data is incomplete or wallet not found.');
+            alert('Please add wallet to your vault address in the user UI.');
             return;
         }
 
