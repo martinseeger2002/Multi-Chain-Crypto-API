@@ -5,6 +5,8 @@ import { mintFolderUI } from './mintFolderUI.js'; // Import the mintFolderUI fun
  * Function to initialize and render the Inscribe Folder UI.
  */
 export function inscribeFolderUI() {
+    let continueProcessing = true; // Flag to control processing
+
     const landingPage = document.getElementById('landing-page');
     landingPage.innerHTML = ''; // Clear existing content
 
@@ -36,6 +38,7 @@ export function inscribeFolderUI() {
     startContinueButton.textContent = 'Start/Continue';
     startContinueButton.className = 'styled-button'; // Use a class for styling
     startContinueButton.addEventListener('click', () => {
+        continueProcessing = true; // Reset the flag when starting
         processEntries();
     });
     landingPage.appendChild(startContinueButton);
@@ -45,6 +48,7 @@ export function inscribeFolderUI() {
     backButton.textContent = 'Back';
     backButton.className = 'styled-button'; // Use a class for styling
     backButton.addEventListener('click', () => {
+        continueProcessing = false; // Stop processing when back is pressed
         mintFolderUI(); // Navigate back to Mint Folder UI
     });
     landingPage.appendChild(backButton);
@@ -70,6 +74,9 @@ export function inscribeFolderUI() {
 
     // Function to process JSON entries
     async function processEntries() {
+        // Disable the start/continue button at the start of processing
+        startContinueButton.disabled = true;
+
         const folderFileData = JSON.parse(localStorage.getItem('folderFileData')) || [];
         const selectedWalletLabel = localStorage.getItem('selectedWalletLabel');
         const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
@@ -77,10 +84,16 @@ export function inscribeFolderUI() {
 
         if (!selectedWallet) {
             alert('Please select a wallet in the Mint Folder UI.');
+            startContinueButton.disabled = false; // Re-enable the button if there's an error
             return;
         }
 
         for (let entry of folderFileData) {
+            if (!continueProcessing) {
+                startContinueButton.disabled = false; // Re-enable the button if processing is stopped
+                return;
+            }
+
             if (!entry.inscription_id) {
                 // Update the iframe with the current entry
                 updateIframe(entry);
@@ -101,7 +114,10 @@ export function inscribeFolderUI() {
             }
         }
 
-        alert('All entries have been processed.');
+        await processRemainingTransactions();
+
+        // Re-enable the start/continue button after processing is complete
+        startContinueButton.disabled = false;
     }
 
     // Function to update the iframe with the current JSON entry
@@ -114,15 +130,39 @@ export function inscribeFolderUI() {
 
     // Function to process pending transactions
     async function processPendingTransactions(entry, selectedWallet) {
-        let pendingTransactions = entry.pending_transactions || [];
+        if (!continueProcessing) return; // Check the flag before processing
 
-        while (pendingTransactions.length > 0) {
+        let pendingTransactions = entry.pending_transactions || [];
+        const maxRetries = 10; // Set a maximum number of retries
+        let retryCount = 0;
+
+        // Check if last_txid is confirmed before processing
+        if (entry.last_txid) {
+            let isConfirmed = false;
+            while (!isConfirmed && retryCount < maxRetries) {
+                isConfirmed = await checkTransactionConfirmation(entry.last_txid, selectedWallet.ticker);
+                if (!isConfirmed) {
+                    console.log(`Transaction ${entry.last_txid} not confirmed yet. Retrying in 30 seconds.`);
+                    retryCount++;
+                    await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds
+                }
+            }
+
+            if (!isConfirmed) {
+                console.log(`Transaction ${entry.last_txid} not confirmed after ${maxRetries} retries.`);
+                return;
+            }
+        }
+
+        // Broadcast only the first 25 pending transactions
+        const transactionsToBroadcast = pendingTransactions.slice(0, 25);
+
+        for (let currentTransaction of transactionsToBroadcast) {
             if (mintCredits < 1) {
                 alert('Insufficient mint credits.');
                 return;
             }
 
-            const currentTransaction = pendingTransactions[0];
             const txHex = currentTransaction.hex;
             let attempts = 0;
             let success = false;
@@ -178,6 +218,7 @@ export function inscribeFolderUI() {
                         // If all transactions are sent, append i0 to txid and set inscription_id
                         if (pendingTransactions.length === 0) {
                             entry.inscription_id = `${entry.txid}i0`;
+                            delete entry.last_txid; // Remove last_txid
                             updateIframe(entry);
 
                             // Sync wallet to update UTXOs
@@ -200,10 +241,47 @@ export function inscribeFolderUI() {
             }
 
             if (!success) {
-                alert('Failed to send transaction after 3 attempts.');
                 return;
             }
         }
+
+        // Save the updated folderFileData to localStorage
+        const folderFileData = JSON.parse(localStorage.getItem('folderFileData')) || [];
+        const entryIndex = folderFileData.findIndex(e => e.file_path === entry.file_path);
+        if (entryIndex !== -1) {
+            folderFileData[entryIndex] = entry;
+            localStorage.setItem('folderFileData', JSON.stringify(folderFileData));
+        }
+    }
+
+    // After processing all entries, loop through them again to process remaining transactions
+    async function processRemainingTransactions() {
+        if (!continueProcessing) return; // Check the flag before processing remaining transactions
+
+        const folderFileData = JSON.parse(localStorage.getItem('folderFileData')) || [];
+        const selectedWalletLabel = localStorage.getItem('selectedWalletLabel');
+        const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+        const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
+
+        if (!selectedWallet) {
+            alert('Please select a wallet in the Mint Folder UI.');
+            return;
+        }
+
+        let allProcessed = false;
+
+        while (!allProcessed) {
+            allProcessed = true;
+
+            for (let entry of folderFileData) {
+                if (!entry.inscription_id && entry.pending_transactions && entry.pending_transactions.length > 0) {
+                    allProcessed = false;
+                    await processPendingTransactions(entry, selectedWallet);
+                }
+            }
+        }
+
+        processEntries()
     }
 
     // Function to sync wallet and update UTXOs
@@ -285,36 +363,31 @@ export function inscribeFolderUI() {
 
     // Function to create and send transactions
     async function createAndSendTransactions(entry, selectedWallet) {
-        // Check if there are pending transactions
-        if (entry.pending_transactions && entry.pending_transactions.length > 0) {
-            // If there are pending transactions, process them
-            await processPendingTransactions(entry, selectedWallet);
-            return; // Exit the function after processing pending transactions
-        }
+        if (entry.inscription_id) return; // Skip if the entry already has an inscription_id
+
+        if (!continueProcessing) return; // Check the flag before creating transactions
 
         let utxoFound = false;
+        let startOver = false;
 
         while (!utxoFound) {
-            // Sync wallet to refresh UTXOs
+            // Sync wallet to refresh UTXOs at the start of each iteration
             await syncWallet(selectedWallet);
 
-            // Find a new UTXO for each entry
-            const utxoIndex = selectedWallet.utxos.findIndex(utxo => parseFloat(utxo.value) > 5 && utxo.confirmations >= 1);
-            if (utxoIndex === -1) {
-                // Display retry timer
-                let retryTime = 120; // 2 minutes in seconds
-                const timerInterval = setInterval(() => {
-                    if (retryTime <= 0) {
-                        clearInterval(timerInterval);
-                        timerDisplay.textContent = '';
-                    } else {
-                        timerDisplay.textContent = `Retrying in: ${retryTime} seconds`;
-                        retryTime--;
-                    }
-                }, 1000);
+            // Ensure entry.last_txid is an array
+            const lastTxIds = Array.isArray(entry.last_txid) ? entry.last_txid : [];
 
-                await new Promise(resolve => setTimeout(resolve, 120000)); // Wait for 2 minutes
-                continue; // Retry the loop
+            // Find a new UTXO for each entry, ensuring it's not in any last_txid
+            const utxoIndex = selectedWallet.utxos.findIndex(utxo => 
+                parseFloat(utxo.value) > 5 && 
+                utxo.confirmations >= 1 && 
+                !lastTxIds.some(txid => txid === utxo.txid)
+            );
+
+            if (utxoIndex === -1) {
+                // If no suitable UTXO is found, wait 30 seconds before checking again
+                await new Promise(resolve => setTimeout(resolve, 30000));
+                continue;
             }
 
             // Select and remove the UTXO from the list
@@ -386,8 +459,17 @@ export function inscribeFolderUI() {
             }
 
             if (!success) {
-                alert('Failed to mint file after 3 attempts.');
                 return;
+            }
+        }
+
+        if (startOver) {
+            // Restart processing from the first JSON entry
+            const folderFileData = JSON.parse(localStorage.getItem('folderFileData')) || [];
+            for (let entry of folderFileData) {
+                if (!entry.inscription_id && entry.pending_transactions && entry.pending_transactions.length > 0) {
+                    await processPendingTransactions(entry, selectedWallet);
+                }
             }
         }
     }
@@ -408,6 +490,17 @@ export function inscribeFolderUI() {
 
                 // Add an event listener to handle folder selection
                 folderInput.addEventListener('change', () => {
+                    // Store the selected files in localStorage
+                    const files = Array.from(folderInput.files);
+                    const folderFileData = files.map(file => ({
+                        file_path: file.webkitRelativePath,
+                        mime_type: file.type
+                    }));
+                    localStorage.setItem('folderFileData', JSON.stringify(folderFileData));
+
+                    // Start processing entries after folder selection
+                    processEntries();
+
                     // Retry getting the file data after folder selection
                     getFileData(filePath).then(resolve).catch(reject);
                 });
@@ -448,5 +541,22 @@ export function inscribeFolderUI() {
             result += (hex.length === 2 ? hex : '0' + hex);
         }
         return result.toUpperCase();
+    }
+
+    // Function to check if a transaction is confirmed
+    async function checkTransactionConfirmation(txid, ticker) {
+        try {
+            const response = await fetch(`/api/v1/get_tx/${ticker}/${txid}`, {
+                headers: {
+                    'X-API-Key': apiKey
+                }
+            });
+            const data = await response.json();
+
+            return data.status === 'success' && data.data.confirmations > 0;
+        } catch (error) {
+            console.error('Error checking transaction confirmation:', error);
+            return false;
+        }
     }
 }

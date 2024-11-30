@@ -27,11 +27,19 @@ def fetch_and_replace_content(content, processed_txids):
 
 @main_bp.route('/')
 def landing_page():
-    return render_template('API_landing_page.html')
+    return render_template('main.html')
 
 @main_bp.route('/api_tester.html')
 def api_tester():
     return render_template('api_tester.html')
+
+@main_bp.route('/rc001parent')
+def rc001parent():
+    return render_template('rc001parent.html')
+
+@main_bp.route('/rc001')
+def rc001():
+    return render_template('rc001.html')
 
 @main_bp.route('/content/<txid>i0', methods=['GET'])
 def display_content(txid, processed_txids=None):
