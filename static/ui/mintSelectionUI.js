@@ -16,25 +16,6 @@ export function mintSelectionUI() {
     title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
-    // Display mint credits
-    const creditsDisplay = document.createElement('div');
-    creditsDisplay.className = 'credits-display'; // Use a class for styling
-    landingPage.appendChild(creditsDisplay);
-
-    fetch('/api/v1/mint_credits')
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                creditsDisplay.textContent = `Mint Credits: ${data.credits}`;
-            } else {
-                creditsDisplay.textContent = 'Error fetching mint credits';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching mint credits:', error);
-            creditsDisplay.textContent = 'Error fetching mint credits';
-        });
-
     // Image Compressor button
     const imageCompressorButton = document.createElement('button');
     imageCompressorButton.textContent = 'Mint Image';

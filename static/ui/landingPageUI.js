@@ -3,7 +3,6 @@ import { mintSelectionUI } from './mintSelectionUI.js';
 import { vaultSelectionUI } from './vaultSelectionUI.js';
 import { userUI } from './userUI.js';
 import { addWalletUI } from './addWalletUI.js';
-import { buyCreditsUI } from './buyCreditsUI.js'; // Import the buyCreditsUI function
 import { mintPadUI } from './mintPadUI.js'; // Import the mintPadUI function
 
 export function landingPageUI() {
@@ -51,8 +50,7 @@ export function landingPageUI() {
         },
         { text: 'Mint', onClick: mintSelectionUI },
         { text: 'Vault', onClick: vaultSelectionUI },
-        { text: 'User', onClick: userUI },
-        { text: 'Buy Mint Credits', onClick: buyCreditsUI } // Updated button to navigate to buyCreditsUI
+        { text: 'User', onClick: userUI }
     ];
 
     buttons.forEach(({ text, onClick }) => {

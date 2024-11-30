@@ -20,3 +20,4 @@ API.py
 /workingOnThis/
 /db/creditsWallet.json
 /prc20/tokens/
+/prc20/last_block_scaned.json

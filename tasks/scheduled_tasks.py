@@ -61,16 +61,6 @@ def reset_daily_request_counts():
     conn.commit()
     conn.close()
 
-def run_credit_bot():
-    original_dir = os.getcwd()  # Save the current working directory
-    try:
-        os.chdir('./addCreditBot')
-        subprocess.run(['python3', 'walletWatcher.py'], check=True)
-        time.sleep(10)
-        subprocess.run(['python3', 'creditBot.py'], check=True)
-    finally:
-        os.chdir(original_dir)
-
 @contextmanager
 def change_directory(destination):
     original_dir = os.getcwd()
@@ -86,7 +76,6 @@ def run_rc001_indexer():
 
 scheduler = BackgroundScheduler()
 
-
 scheduler.add_job(
     func=trigger_blockchain_rescan,
     trigger='cron',
@@ -99,13 +88,6 @@ scheduler.add_job(
     trigger='cron',
     hour=0,
     minute=0,
-    timezone='America/Chicago'
-)
-
-scheduler.add_job(
-    func=run_credit_bot,
-    trigger='cron',
-    minute='*',
     timezone='America/Chicago'
 )
 

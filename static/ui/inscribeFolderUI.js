@@ -16,11 +16,6 @@ export function inscribeFolderUI() {
     title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
-    // Mint Credits Display
-    const creditsDisplay = document.createElement('p');
-    creditsDisplay.className = 'credits-display'; // Use a class for styling
-    landingPage.appendChild(creditsDisplay);
-
     // Timer Display
     const timerDisplay = document.createElement('p');
     timerDisplay.className = 'timer-display'; // Use a class for styling
@@ -52,25 +47,6 @@ export function inscribeFolderUI() {
         mintFolderUI(); // Navigate back to Mint Folder UI
     });
     landingPage.appendChild(backButton);
-
-    // Fetch and update mint credits
-    let mintCredits = 0;
-    fetch('/api/v1/mint_credits')
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                mintCredits = data.credits;
-                creditsDisplay.textContent = `Mint Credits: ${mintCredits}`;
-            } else {
-                creditsDisplay.textContent = 'Mint credits error. Log out and log back in.';
-                startContinueButton.disabled = true; // Disable the button if there's an error
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching mint credits:', error);
-            creditsDisplay.textContent = 'Mint credits error. Log out and log back in.';
-            startContinueButton.disabled = true; // Disable the button if there's an error
-        });
 
     // Function to process JSON entries
     async function processEntries() {
@@ -120,14 +96,6 @@ export function inscribeFolderUI() {
         startContinueButton.disabled = false;
     }
 
-    // Function to update the iframe with the current JSON entry
-    function updateIframe(entry) {
-        const doc = jsonIframe.contentDocument || jsonIframe.contentWindow.document;
-        doc.open();
-        doc.write('<html><body><pre>' + JSON.stringify(entry, null, 2) + '</pre></body></html>');
-        doc.close();
-    }
-
     // Function to process pending transactions
     async function processPendingTransactions(entry, selectedWallet) {
         if (!continueProcessing) return; // Check the flag before processing
@@ -158,11 +126,6 @@ export function inscribeFolderUI() {
         const transactionsToBroadcast = pendingTransactions.slice(0, 25);
 
         for (let currentTransaction of transactionsToBroadcast) {
-            if (mintCredits < 1) {
-                alert('Insufficient mint credits.');
-                return;
-            }
-
             const txHex = currentTransaction.hex;
             let attempts = 0;
             let success = false;
@@ -198,18 +161,6 @@ export function inscribeFolderUI() {
 
                         // Add last_txid to the entry
                         entry.last_txid = data.data.txid;
-
-                        // Update mint credits
-                        mintCredits -= 1;
-                        creditsDisplay.textContent = `Mint Credits: ${mintCredits}`;
-
-                        // Call the API to remove a mint credit
-                        await fetch('/api/v1/remove_mint_credit', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        });
 
                         // Update the entry and iframe
                         entry.pending_transactions = pendingTransactions;
@@ -558,5 +509,13 @@ export function inscribeFolderUI() {
             console.error('Error checking transaction confirmation:', error);
             return false;
         }
+    }
+
+    // Function to update the iframe with the current JSON entry
+    function updateIframe(entry) {
+        const doc = jsonIframe.contentDocument || jsonIframe.contentWindow.document;
+        doc.open();
+        doc.write('<html><body><pre>' + JSON.stringify(entry, null, 2) + '</pre></body></html>');
+        doc.close();
     }
 }

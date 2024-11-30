@@ -10,32 +10,10 @@ export function inscribeUI() {
     title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
-    // Mint Credits Display
-    const creditsDisplay = document.createElement('p');
-    creditsDisplay.className = 'credits-display'; // Use a class for styling
-    landingPage.appendChild(creditsDisplay);
-
     // Pending Transactions Counter
     const pendingTxDisplay = document.createElement('p');
     pendingTxDisplay.className = 'pending-tx-display'; // Use a class for styling
     landingPage.appendChild(pendingTxDisplay);
-
-    // Fetch and update mint credits and pending transactions
-    fetch('/api/v1/mint_credits')
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                creditsDisplay.textContent = `Mint Credits: ${data.credits}`;
-            } else {
-                creditsDisplay.textContent = 'Mint credits error log out and log back in';
-                inscribeAllButton.disabled = true; // Disable the inscribe button
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching mint credits:', error);
-            creditsDisplay.textContent = 'Mint credits error log out and log back in';
-            inscribeAllButton.disabled = true; // Disable the inscribe button
-        });
 
     // Initialize Pending Transactions Counter
     const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
@@ -78,12 +56,6 @@ export function inscribeUI() {
 
     // Function to inscribe a single transaction
     function inscribeTransaction(showAlert = true) {
-        const mintCredits = parseInt(creditsDisplay.textContent.split(': ')[1], 10);
-        if (mintCredits < 1) {
-            alert('Insufficient mint credits.');
-            return Promise.reject('Insufficient mint credits.');
-        }
-
         const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
         pendingTransactions = mintResponse.pendingTransactions || [];
         if (pendingTransactions.length === 0) {
@@ -132,22 +104,6 @@ export function inscribeUI() {
                 // Update the pending transactions counter
                 updatePendingTxCounter(pendingTransactions.length);
 
-                // Call the remove mint credit API
-                fetch('/api/v1/remove_mint_credit', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(creditResponse => creditResponse.json())
-                .then(creditData => {
-                    if (creditData.status === 'success') {
-                        creditsDisplay.textContent = `Mint Credits: ${creditData.credits}`;
-                    } else {
-                        console.error('Error removing mint credit:', creditData.message);
-                    }
-                });
-
                 if (showAlert) {
                     alert(`Transaction sent successfully! TXID: ${data.data.txid}`);
                 }
@@ -173,12 +129,6 @@ export function inscribeUI() {
 
     // Function to inscribe all transactions
     function inscribeAllTransactions() {
-        const mintCredits = parseInt(creditsDisplay.textContent.split(': ')[1], 10);
-        if (mintCredits < 0) {
-            alert('Insufficient mint credits to start inscribing transactions.');
-            return;
-        }
-
         mintResponse.pendingTransactions = pendingTransactions;
         localStorage.setItem('mintResponse', JSON.stringify(mintResponse));
 

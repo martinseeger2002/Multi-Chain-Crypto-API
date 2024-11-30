@@ -11,26 +11,6 @@ export function mintImageUI(selectedWalletLabel = localStorage.getItem('selected
     title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
-    // Display mint credits
-    const creditsDisplay = document.createElement('div');
-    creditsDisplay.className = 'credits-display'; // Use a class for styling
-    landingPage.appendChild(creditsDisplay);
-
-    // Fetch and display mint credits
-    fetch('/api/v1/mint_credits')
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                creditsDisplay.textContent = `Mint Credits: ${data.credits}`;
-            } else {
-                creditsDisplay.textContent = 'Error fetching mint credits';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching mint credits:', error);
-            creditsDisplay.textContent = 'Error fetching mint credits';
-        });
-
     // Wallet dropdown
     const walletDropdown = document.createElement('select');
     walletDropdown.className = 'styled-select'; // Use a class for styling
@@ -250,5 +230,4 @@ export function mintImageUI(selectedWalletLabel = localStorage.getItem('selected
             alert('An error occurred while generating the transaction.');
         });
     }
-    
 }

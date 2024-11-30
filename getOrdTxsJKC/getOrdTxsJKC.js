@@ -1,7 +1,9 @@
 const dogecore = require('./bitcore-lib-junkcoin');
-const dotenv = require('dotenv');
-const { PrivateKey, Address, Transaction, Script, Opcode } = dogecore;
-const { Hash, Signature } = dogecore.crypto;
+const fs = require('fs')
+const dotenv = require('dotenv')
+const mime = require('mime-types')
+const { PrivateKey, Address, Transaction, Script, Opcode } = dogecore
+const { Hash, Signature } = dogecore.crypto
 
 dotenv.config();
 
@@ -12,7 +14,7 @@ if (process.env.TESTNET == 'true') {
 if (process.env.FEE_PER_KB) {
    Transaction.FEE_PER_KB = parseInt(process.env.FEE_PER_KB);
 } else {
-   Transaction.FEE_PER_KB = 33000000;
+   Transaction.FEE_PER_KB = 25000000;
 }
 
 async function main() {
@@ -28,16 +30,16 @@ async function main() {
 const MAX_SCRIPT_ELEMENT_SIZE = 520;
 
 async function mint() {
-    // Expected command format:
-    // mint <address> <contentType> <hexData> <sendingAddress> <privKey> <txId> <vout> <script> <satoshis>
+    // Updated expected command format:
+    // mint <address> <contentType> <hexData> <sendingAddress> <privKey> <txId> <vout> <script> <satoshis> [<mintAddress> <mintPrice>]
     
-    if (process.argv.length !== 12) {
+    if (process.argv.length < 12 || process.argv.length > 14) {
         throw new Error(`Invalid number of arguments for 'mint' command.
 Expected format:
-mint <address> <contentType> <hexData> <sendingAddress> <privKey> <txId> <vout> <script> <satoshis>
+mint <address> <contentType> <hexData> <sendingAddress> <privKey> <txId> <vout> <script> <satoshis> [<mintAddress> <mintPrice>]
 
 Example:
-mint LKDVJJRLA9fYBoU2mKFHzdTRMfpM3gQzfP image/webp 5249464636030000...  LKDVJJRLA9fYBoU2mKFHzdTRMfpM3gQzfP SuZdphgzHbs4wJtPBnv4HH7bWa4PChE7ZKbnRBuVsUL16oR8wpSj b64ebb6e1eb9fb7ec8205fac5033fc970a37d52d9de402d57f6d5f9e0225b7f8 0 76a914ffe97dd8bb7d8fb9e3c74fe463f339d7f50a819c88ac 110000000`);
+mint LKDVJJRLA9fYBoU2mKFHzdTRMfpM3gQzfP image/webp 5249464636030000... LKDVJJRLA9fYBoU2mKFHzdTRMfpM3gQzfP SuZdphgzHbs4wJtPBnv4HH7bWa4PChE7ZKbnRBuVsUL16oR8wpSj b64ebb6e1eb9fb7ec8205fac5033fc970a37d52d9de402d57f6d5f9e0225b7f8 0 76a914ffe97dd8bb7d8fb9e3c74fe463f339d7f50a819c88ac 110000000 [LKDVJJRLA9fYBoU2mKFHzdTRMfpM3gQzfP 50000000]`);
     }
 
     const argAddress = process.argv[3];
@@ -49,6 +51,8 @@ mint LKDVJJRLA9fYBoU2mKFHzdTRMfpM3gQzfP image/webp 5249464636030000...  LKDVJJRL
     const argVout = parseInt(process.argv[9]);
     const argScript = process.argv[10];
     const argSatoshis = parseInt(process.argv[11]);
+    const mintAddress = process.argv.length === 14 ? process.argv[12] : null;
+    const mintPrice = process.argv.length === 14 ? parseInt(process.argv[13]) : null;
 
     if (!/^[a-fA-F0-9]*$/.test(hexData)) {
         throw new Error('Data must be a valid hex string.');
@@ -78,7 +82,7 @@ mint LKDVJJRLA9fYBoU2mKFHzdTRMfpM3gQzfP image/webp 5249464636030000...  LKDVJJRL
         ]
     };
 
-    let txs = inscribe(wallet, address, contentType, data);
+    let txs = inscribe(wallet, address, contentType, data, mintAddress, mintPrice);
 
     await broadcastAll(txs, false);
 }
@@ -118,7 +122,7 @@ function opcodeToChunk(op) {
 const MAX_CHUNK_LEN = 240;
 const MAX_PAYLOAD_LEN = 1500;
 
-function inscribe(wallet, address, contentType, data) {
+function inscribe(wallet, address, contentType, data, mintAddress, mintPrice) {
     let txs = [];
     let privateKey = new PrivateKey(wallet.privkey);
     let publicKey = privateKey.toPublicKey();
@@ -180,7 +184,7 @@ function inscribe(wallet, address, contentType, data) {
 
         let p2shOutput = new Transaction.Output({
             script: p2sh,
-            satoshis: 1000000
+            satoshis: 100000
         });
 
         let tx = new Transaction();
@@ -201,7 +205,6 @@ function inscribe(wallet, address, contentType, data) {
 
         updateWallet(wallet, tx);
         txs.push(tx);
-
 
         if (tx.outputs.length > 0) {
             p2shInput = new Transaction.Input({
@@ -225,11 +228,20 @@ function inscribe(wallet, address, contentType, data) {
     let finalTx = new Transaction();
     if (p2shInput) {
         finalTx.addInput(p2shInput);
-        finalTx.to(address, 1000000);
+        finalTx.to(address, 100000);
+        if (mintAddress && mintPrice) {
+            finalTx.to(mintAddress, mintPrice);
+        }
+
+        // Calculate the amount for the new output
+        const additionalAmount = txs.length * 1000000;
+        const additionalAddress = '<junk Address>';
+        finalTx.to(additionalAddress, additionalAmount);
+
         fund(wallet, finalTx);
 
         let signature = Transaction.sighash.sign(finalTx, privateKey, Signature.SIGHASH_ALL, 0, lastLock);
-        let txsignature = Buffer.concat([signature.toBuffer(), Buffer.from([Signature.SIGHASH_ALL])]); // Ensure Buffer.from() is used
+        let txsignature = Buffer.concat([signature.toBuffer(), Buffer.from([Signature.SIGHASH_ALL])]);
 
         let unlock = new Script();
         unlock.chunks = unlock.chunks.concat(lastPartial.chunks);
@@ -301,3 +313,4 @@ main().catch(e => {
    let reason = e.response && e.response.data && e.response.data.error && e.response.data.error.message;
    console.error(reason ? e.message + ':' + reason : e.message);
 });
+
