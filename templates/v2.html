@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet UI</title>
+    <style>
+        /* Basic styling for the wallet page */
+        .wallet-info {
+            background-color: #e0f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .action-button {
+            margin: 5px;
+            padding: 10px 20px;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .action-button:hover {
+            background-color: #004d40;
+        }
+    </style>
+</head>
+<body>
+    <div id="wallet-page"></div>
+
+    <script type="module">
+        import { walletUI } from '/static/v2/walletUI.js';
+        walletUI();
+    </script>
+</body>
+</html>

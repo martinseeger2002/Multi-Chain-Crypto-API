@@ -106,3 +106,7 @@ def display_content(txid, processed_txids=None):
 def terminal():
     return render_template('terminal.html')
 
+@main_bp.route('/v2')
+def v2():
+    return render_template('v2.html')
+

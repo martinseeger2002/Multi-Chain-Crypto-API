@@ -48,7 +48,7 @@ def mint_rc001(ticker):
     # Determine the command directory and script based on the ticker
     if ticker.lower() == 'doge':
         command_dir = './getOrdTxsDoge'
-        script = 'getOrdTxDoge.js'
+        script = 'getOrdTxsDoge.js'
     elif ticker.lower() == 'lky':
         command_dir = './getOrdTxsLKY'
         script = 'getOrdTxsLKY.js'
