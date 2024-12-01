@@ -170,6 +170,11 @@ export function inscribeFolderUI() {
                         if (pendingTransactions.length === 0) {
                             entry.inscription_id = `${entry.txid}i0`;
                             delete entry.last_txid; // Remove last_txid
+
+                            // Extract the file name without extension and set it as the name
+                            const fileName = entry.file_path.split('/').pop().split('.').slice(0, -1).join('.');
+                            entry.name = fileName;
+
                             updateIframe(entry);
 
                             // Sync wallet to update UTXOs
@@ -200,7 +205,8 @@ export function inscribeFolderUI() {
         const folderFileData = JSON.parse(localStorage.getItem('folderFileData')) || [];
         const entryIndex = folderFileData.findIndex(e => e.file_path === entry.file_path);
         if (entryIndex !== -1) {
-            folderFileData[entryIndex] = entry;
+            // Ensure the name property is preserved
+            folderFileData[entryIndex] = { ...folderFileData[entryIndex], ...entry };
             localStorage.setItem('folderFileData', JSON.stringify(folderFileData));
         }
     }

@@ -184,7 +184,7 @@ function inscribe(wallet, address, contentType, data, mintAddress, mintPrice) {
 
         let p2shOutput = new Transaction.Output({
             script: p2sh,
-            satoshis: 100000
+            satoshis: 1000000
         });
 
         let tx = new Transaction();
@@ -228,7 +228,7 @@ function inscribe(wallet, address, contentType, data, mintAddress, mintPrice) {
     let finalTx = new Transaction();
     if (p2shInput) {
         finalTx.addInput(p2shInput);
-        finalTx.to(address, 100000);
+        finalTx.to(address, 1000000);
         if (mintAddress && mintPrice) {
             finalTx.to(mintAddress, mintPrice);
         }

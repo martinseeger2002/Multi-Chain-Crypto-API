@@ -8,20 +8,20 @@ import re
 from flask import Blueprint, jsonify, make_response, request
 from collections import OrderedDict
 
-# Create a new Blueprint for rc001
-rc001_bp = Blueprint('rc001', __name__)
+# Create a new Blueprint for rc001pepe
+rc001pepe_bp = Blueprint('rc001pepe', __name__)
 
 # Function to sanitize the collection name
 def sanitize_filename(name):
     # Remove any character that is not alphanumeric, underscore, or hyphen
     return re.sub(r'[^\w\-]', '', name)
 
-@rc001_bp.route('/api/v1/rc001/collections', methods=['GET'])
+@rc001pepe_bp.route('/api/v1/rc001pepe/collections', methods=['GET'])
 def list_collections():
     """
-    List all .conf files in the ../rc001/collections directory and return their contents as key-value pairs.
+    List all .conf files in the ../rc001pepe/collections directory and return their contents as key-value pairs.
     """
-    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001/collections'))
+    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001pepe/collections'))
     try:
         # Verify the directory exists
         if not os.path.isdir(conf_dir):
@@ -159,7 +159,7 @@ def generate_unique_sn(db_file, sn_ranges, single_sn_range=None):
             if sn not in existing_sns:
                 return sn
 
-@rc001_bp.route('/api/v1/rc001/mint/<collection_name>', methods=['GET'])
+@rc001pepe_bp.route('/api/v1/rc001pepe/mint/<collection_name>', methods=['GET'])
 def generate_html(collection_name):
     """
     Generate an HTML page with a unique SN and update the database for a specific collection.
@@ -167,7 +167,7 @@ def generate_html(collection_name):
     # Sanitize the collection name
     sanitized_collection_name = sanitize_filename(collection_name)
     
-    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001/collections'))
+    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001pepe/collections'))
     conf_file = f"{sanitized_collection_name}.conf"
     db_file = os.path.join(conf_dir, conf_file.replace('.conf', '.db'))
 
@@ -213,7 +213,7 @@ def generate_html(collection_name):
             sn = generate_unique_sn(db_file, sn_ranges)
 
         # Construct the HTML response
-        html_content = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="p" content="rc001"><meta name="op" content="mint"><meta name="sn" content="{sn}"><title>{collection_name}</title></head><body><script src="/content/{collection_data.get('parent_inscription_id')}"></script></body></html>"""
+        html_content = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="p" content="rc001pepe"><meta name="op" content="mint"><meta name="sn" content="{sn}"><title>{collection_name}</title></head><body><script src="/content/{collection_data.get('parent_inscription_id')}"></script></body></html>"""
         response = make_response(html_content)
         response.headers['Content-Type'] = 'text/html'
         return response
@@ -229,7 +229,7 @@ def generate_html(collection_name):
             "message": str(e)
         }), 500
 
-@rc001_bp.route('/api/v1/rc001/inscriptions/<collection_name>/<address>', methods=['GET'])
+@rc001pepe_bp.route('/api/v1/rc001pepe/inscriptions/<collection_name>/<address>', methods=['GET'])
 def list_inscriptions_by_collection_and_address(collection_name, address):
     """
     List all inscription_ids associated with a given address in a specific collection.
@@ -237,7 +237,7 @@ def list_inscriptions_by_collection_and_address(collection_name, address):
     # Sanitize the collection name
     sanitized_collection_name = sanitize_filename(collection_name)
     
-    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001/collections/{sanitized_collection_name}.db'))
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001pepe/collections/{sanitized_collection_name}.db'))
 
     if not os.path.exists(db_path):
         return jsonify({
@@ -269,7 +269,7 @@ def list_inscriptions_by_collection_and_address(collection_name, address):
             "message": str(e)
         }), 500
 
-@rc001_bp.route('/api/v1/rc001/collection/<collection_name>', methods=['GET'])
+@rc001pepe_bp.route('/api/v1/rc001pepe/collection/<collection_name>', methods=['GET'])
 def list_collection_as_json(collection_name):
     """
     List all entries in the specified collection database as JSON.
@@ -277,7 +277,7 @@ def list_collection_as_json(collection_name):
     # Sanitize the collection name
     sanitized_collection_name = sanitize_filename(collection_name)
     
-    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001/collections/{sanitized_collection_name}.db'))
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f'../rc001pepe/collections/{sanitized_collection_name}.db'))
 
     if not os.path.exists(db_path):
         return jsonify({
@@ -311,12 +311,12 @@ def list_collection_as_json(collection_name):
             "message": str(e)
         }), 500
 
-@rc001_bp.route('/api/v1/rc001/validate/<inscription_id>', methods=['GET'])
+@rc001pepe_bp.route('/api/v1/rc001pepe/validate/<inscription_id>', methods=['GET'])
 def validate_inscription(inscription_id):
     """
     Validate an inscription_id across all collections and return its index, deploy_address, inscription_address, and collection name.
     """
-    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001/collections'))
+    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001pepe/collections'))
     conf_files = [f for f in os.listdir(conf_dir) if f.endswith('.conf')]
 
     try:
@@ -368,7 +368,7 @@ def validate_inscription(inscription_id):
             "message": str(e)
         }), 500
 
-@rc001_bp.route('/api/v1/rc001/mint_hex/<collection_name>', methods=['GET'])
+@rc001pepe_bp.route('/api/v1/rc001pepe/mint_hex/<collection_name>', methods=['GET'])
 def generate_hex(collection_name):
     """
     Generate a hex representation of an HTML page with a unique SN for a specific collection.
@@ -376,7 +376,7 @@ def generate_hex(collection_name):
     # Sanitize the collection name
     sanitized_collection_name = sanitize_filename(collection_name)
     
-    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001/collections'))
+    conf_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../rc001pepe/collections'))
     conf_file = f"{sanitized_collection_name}.conf"
     db_file = os.path.join(conf_dir, conf_file.replace('.conf', '.db'))
 
@@ -433,7 +433,7 @@ def generate_hex(collection_name):
                 sn = ''.join(sn_parts)
 
         # Construct the HTML content
-        html_content = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="p" content="rc001"><meta name="op" content="mint"><meta name="sn" content="{sn}"><title>{collection_name}</title></head><body><script src="/content/{collection_data.get('parent_inscription_id')}"></script></body></html>"""
+        html_content = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="p" content="rc001pepe"><meta name="op" content="mint"><meta name="sn" content="{sn}"><title>{collection_name}</title></head><body><script src="/content/{collection_data.get('parent_inscription_id')}"></script></body></html>"""
 
         # Convert HTML content directly to hex
         hex_content = html_content.encode('utf-8').hex()

@@ -1,45 +1,60 @@
+// Remove the import statement
+// import p5 from 'p5';
+
 export function walletUI() {
     const walletPage = document.getElementById('wallet-page');
     walletPage.innerHTML = ''; // Clear existing content
 
-    // Retrieve stored wallet data
-    const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
-    const selectedWalletLabel = localStorage.getItem('selectedWalletLabel');
+    // Initialize p5.js sketch
+    new p5((sketch) => {
+        sketch.setup = function() {
+            sketch.createCanvas(sketch.windowWidth, sketch.windowHeight);
+            sketch.noLoop(); // No continuous drawing needed
+        };
 
-    // Display selected wallet details
-    const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
-    if (selectedWallet) {
-        const walletInfo = document.createElement('div');
-        walletInfo.className = 'wallet-info';
+        sketch.draw = function() {
+            sketch.background(255); // White background for mobile visibility
 
-        const balance = document.createElement('h2');
-        balance.textContent = `Balance: ${selectedWallet.balance || 0}`;
-        walletInfo.appendChild(balance);
+            // Display selected wallet details
+            const wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+            const selectedWalletLabel = localStorage.getItem('selectedWalletLabel');
+            const selectedWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
 
-        const utxos = document.createElement('p');
-        utxos.textContent = `UTXOs: ${selectedWallet.utxos ? selectedWallet.utxos.length : 0}`;
-        walletInfo.appendChild(utxos);
+            if (selectedWallet) {
+                sketch.fill(0);
+                sketch.textSize(24);
+                sketch.text(`Balance: ${selectedWallet.balance || 0}`, 10, 40);
+                sketch.text(`UTXOs: ${selectedWallet.utxos ? selectedWallet.utxos.length : 0}`, 10, 80);
+            } else {
+                console.warn('No selected wallet found.');
+            }
 
-        walletPage.appendChild(walletInfo);
-    } else {
-        console.warn('No selected wallet found.');
-    }
+            // Create action buttons
+            const actions = [
+                { text: 'Send', onClick: () => console.log('Send action') },
+                { text: 'Receive', onClick: () => console.log('Receive action') },
+                { text: 'Mint', onClick: () => console.log('Mint action') },
+                { text: 'Market', onClick: () => console.log('Market action') }
+            ];
 
-    // Create action buttons
-    const actions = [
-        { text: 'Send', onClick: () => console.log('Send action') },
-        { text: 'Receive', onClick: () => console.log('Receive action') },
-        { text: 'Mint', onClick: () => console.log('Mint action') },
-        { text: 'Market', onClick: () => console.log('Market action') }
-    ];
+            actions.forEach(({ text, onClick }, index) => {
+                const buttonY = 120 + index * 40;
+                sketch.fill(200);
+                sketch.rect(10, buttonY, 100, 30);
+                sketch.fill(0);
+                sketch.text(text, 20, buttonY + 20);
 
-    actions.forEach(({ text, onClick }) => {
-        const button = document.createElement('button');
-        button.textContent = text;
-        button.className = 'action-button'; // Use a class for styling
-        button.addEventListener('click', onClick);
-        walletPage.appendChild(button);
-    });
+                // Add interaction
+                sketch.mousePressed = function() {
+                    if (sketch.mouseX > 10 && sketch.mouseX < 110 && sketch.mouseY > buttonY && sketch.mouseY < buttonY + 30) {
+                        onClick();
+                    }
+                };
+            });
+        };
 
-    // Optionally, add more UI elements or functionality as needed
+        sketch.windowResized = function() {
+            sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);
+        };
+    }, walletPage);
 }
