@@ -45,6 +45,10 @@ def rc001():
 def tokenchecker():
     return render_template('tokenChecker.html')
 
+@main_bp.route('/tickchecker')
+def tickchecker():
+    return render_template('Xticks.html')
+
 @main_bp.route('/content/<txid>i0', methods=['GET'])
 def display_content(txid, processed_txids=None):
     if processed_txids is None:

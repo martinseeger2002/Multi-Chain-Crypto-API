@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Chain Token Checker</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #1a1a1a;
+            color: #00ff00;
+            text-align: center;
+            padding: 50px;
+        }
+        input[type="text"], select {
+            padding: 10px;
+            width: 300px;
+            border-radius: 5px;
+            border: 1px solid #00ff00;
+            background-color: #333;
+            color: #00ff00;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #00ff00;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #1a1a1a;
+        }
+        button:hover {
+            background-color: #00cc00;
+        }
+        .result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🕶 Cross-Chain Token Checker 🐕</h1>
+    <select id="token_type">
+        <option value="shc20">SHC-20</option>
+        <option value="prc20">PRC-20</option>
+        <option value="drc20">DRC-20</option>
+    </select>
+    <input type="text" id="address" placeholder="Enter your address">
+    <button onclick="checkBalance()">Check Balance</button>
+    <div class="result" id="result"></div>
+
+    <script>
+        function checkBalance() {
+            const address = document.getElementById('address').value;
+            const tokenType = document.getElementById('token_type').value;
+            fetch('/check_balance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `address=${address}&token_type=${tokenType}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                if (data.error) {
+                    resultDiv.innerHTML = `<p style="color: red;">${data.error}</p>`;
+                } else {
+                    let balanceHTML = '';
+                    data.forEach(item => {
+                        const formattedBalance = parseFloat(item.overall_balance).toLocaleString('en-US', { maximumFractionDigits: 2 });
+                        balanceHTML += `<p><strong>${item.tick.toUpperCase()} Balance:</strong> ${formattedBalance}</p>`;
+                    });
+                    resultDiv.innerHTML = balanceHTML;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</html>
