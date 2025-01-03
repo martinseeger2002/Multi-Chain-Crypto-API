@@ -41,6 +41,10 @@ def rc001parent():
 def rc001():
     return render_template('rc001.html')
 
+@main_bp.route('/tokenchecker')
+def tokenchecker():
+    return render_template('tokenChecker.html')
+
 @main_bp.route('/content/<txid>i0', methods=['GET'])
 def display_content(txid, processed_txids=None):
     if processed_txids is None:

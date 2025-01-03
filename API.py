@@ -14,6 +14,7 @@ from routes.minting import minting_bp
 from routes.user import user_bp
 from routes.doginals import doginals_bp
 from routes.rc001 import rc001_bp
+from routes.wonky import wonky_bp
 from tasks.scheduled_tasks import scheduler
 
 app = Flask(__name__)
@@ -32,7 +33,7 @@ app.register_blueprint(minting_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(doginals_bp)
 app.register_blueprint(rc001_bp)
-
+app.register_blueprint(wonky_bp)
 # Initialize scheduler
 scheduler.start()
 
