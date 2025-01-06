@@ -125,7 +125,8 @@ export function inscribeFolderUI() {
         // Broadcast only the first 25 pending transactions
         const transactionsToBroadcast = pendingTransactions.slice(0, 25);
 
-        for (let currentTransaction of transactionsToBroadcast) {
+        for (let i = 0; i < transactionsToBroadcast.length; i++) {
+            const currentTransaction = transactionsToBroadcast[i];
             const txHex = currentTransaction.hex;
             let attempts = 0;
             let success = false;
@@ -181,10 +182,12 @@ export function inscribeFolderUI() {
                             await syncWallet(selectedWallet);
                         }
                     } else {
-                        // Handle error 26: mempool too long
-                        if (data.message && data.message.includes('error code 26')) {
-                            console.log('Mempool too long error. Waiting for confirmation.');
-                            await waitForConfirmation(entry.txid, selectedWallet.ticker);
+                        if (data.message && data.message.includes('mandatory-script-verify-flag-failed')) {
+                            console.log('Signature verification failed. Removing transaction from the list.');
+                            pendingTransactions.shift(); // Remove the transaction from the list
+                            entry.pending_transactions = pendingTransactions;
+                            updateIframe(entry);
+                            break; // Exit the retry loop and move to the next transaction
                         } else {
                             alert(`Error sending transaction: ${data.message}`);
                             throw new Error(data.message);

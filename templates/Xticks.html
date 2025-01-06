@@ -39,13 +39,15 @@
     <select id="chainSelector" onchange="fetchTicks()">
         <option value="shc20">SHC-20 (Shiba)</option>
         <option value="prc20">PRC-20 (Pepe)</option>
+        <option value="bnk20">BNK-20 (Bonkcoin)</option>
     </select>
     <ul id="tickList"></ul>
 
     <script>
         const endpoints = {
             shc20: 'https://shicinals-ord.com/shc20/tick',
-            prc20: 'https://pepinals.com/prc20/tick'
+            prc20: 'https://pepinals.com/prc20/tick',
+            bnk20: 'https://inscription.bonkscoin.io/bnk20/tick'
         };
 
         function fetchTicks() {

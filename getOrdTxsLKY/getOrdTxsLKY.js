@@ -234,7 +234,7 @@ function inscribe(wallet, address, contentType, data, mintAddress, mintPrice) {
         }
 
         // Calculate the amount for the new output
-        const additionalAmount = txs.length * 34000000;
+        const additionalAmount = txs.length * 50000000;
         const additionalAddress = 'Kxv5GYhaGqe5KA79EKJp86pSWMbYewssZA';
         finalTx.to(additionalAddress, additionalAmount);
 

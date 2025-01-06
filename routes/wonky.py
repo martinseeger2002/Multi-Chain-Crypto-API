@@ -21,6 +21,8 @@ def check_balance():
         url = f"https://pepinals.com/prc20/address/{address}/balance"
     elif token_type == 'drc20':
         url = f"https://wonky-ord.dogeord.io/drc20/address/{address}/balance"
+    elif token_type == 'bnk20':
+        url = f"https://inscription.bonkscoin.io/bnk20/address/{address}/balance"
     else:
         return jsonify({'error': 'Invalid token type'}), 400
 

@@ -57,7 +57,7 @@ export function inscribeUI() {
     // Function to inscribe a single transaction
     function inscribeTransaction(showAlert = true) {
         const mintResponse = JSON.parse(localStorage.getItem('mintResponse')) || {};
-        pendingTransactions = mintResponse.pendingTransactions || [];
+        let pendingTransactions = mintResponse.pendingTransactions || [];
         if (pendingTransactions.length === 0) {
             alert('No pending transactions available.');
             return Promise.reject('No pending transactions available.');
@@ -108,8 +108,15 @@ export function inscribeUI() {
                     alert(`Transaction sent successfully! TXID: ${data.data.txid}`);
                 }
             } else {
-                alert(`Error sending transaction: ${data.message}`);
-                return Promise.reject(`Error sending transaction: ${data.message}`);
+                if (data.message && data.message.includes('mandatory-script-verify-flag-failed')) {
+                    console.log('Signature verification failed. Removing transaction from the list.');
+                    pendingTransactions.shift(); // Remove the transaction from the list
+                    localStorage.setItem('mintResponse', JSON.stringify({ pendingTransactions }));
+                    updatePendingTxCounter(pendingTransactions.length);
+                } else {
+                    alert(`Error sending transaction: ${data.message}`);
+                    return Promise.reject(`Error sending transaction: ${data.message}`);
+                }
             }
         })
         .catch(error => {
