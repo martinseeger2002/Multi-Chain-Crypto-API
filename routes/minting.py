@@ -61,6 +61,9 @@ def mint_rc001(ticker):
     elif ticker.lower() == 'shic':
         command_dir = './getOrdTxsShic'
         script = 'getOrdTxsShic.js'
+    elif ticker.lower() == 'bonk':
+        command_dir = './getOrdTxsBonk'
+        script = 'getOrdTxsBonk.js'
     else:
         return jsonify({
             "status": "error",
@@ -185,6 +188,9 @@ def mint(ticker):
     elif ticker.lower() == 'shic':
         command_dir = './getOrdTxsShic'
         script = 'getOrdTxsShic.js'
+    elif ticker.lower() == 'bonk':
+        command_dir = './getOrdTxsBonk'
+        script = 'getOrdTxsBonk.js'
     else:
         return jsonify({
             "status": "error",
@@ -293,6 +299,9 @@ def generate_key(ticker):
     elif ticker.lower() == 'shic':
         command_dir = './getOrdTxsShic'
         script = 'generateKey.js'
+    elif ticker.lower() == 'bonk':
+        command_dir = './getOrdTxsBonk'
+        script = 'generateKey.js'
     else:
         return jsonify({
             "status": "error",
@@ -387,6 +396,9 @@ def send(ticker):
     elif ticker.lower() == 'shic':
         command_dir = './getOrdTxsShic'
         script = 'getTxsShic.js'
+    elif ticker.lower() == 'bonk':
+        command_dir = './getOrdTxsBonk'
+        script = 'getTxsBonk.js'
     else:
         return jsonify({
             "status": "error",
@@ -492,6 +504,9 @@ def vault(ticker):
     elif ticker.lower() == 'shic':
         command_dir = './getOrdTxsShic'
         script = 'getVaultTxsShic.js'
+    elif ticker.lower() == 'bonk':
+        command_dir = './getOrdTxsBonk'
+        script = 'getVaultTxsBonk.js'
     else:
         return jsonify({
             "status": "error",

@@ -17,7 +17,7 @@ export function addWalletUI() {
     const dropdown = document.createElement('select');
     dropdown.className = 'styled-select'; // Use a class for styling
 
-    const tickers = ['DOGE', 'PEPE', 'LKY', 'SHIC'];  //LTC removed 
+    const tickers = ['DOGE', 'PEPE', 'LKY', 'SHIC', 'BONK'];  //LTC removed 
     tickers.forEach(ticker => {
         const option = document.createElement('option');
         option.value = ticker;

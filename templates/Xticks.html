@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHC-20 Ticks List</title>
+    <title>Cross-Chain Ticks List</title>
     <style>
         body {
             font-family: 'Courier New', monospace;
@@ -23,52 +23,61 @@
             border-radius: 5px;
             border: 1px solid #00ff00;
         }
+        select {
+            padding: 10px;
+            width: 300px;
+            border-radius: 5px;
+            border: 1px solid #00ff00;
+            background-color: #333;
+            color: #00ff00;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>🕶 SHC-20 Ticks List 🐕</h1>
+    <h1>🕶 Cross-Chain Ticks List 🐕</h1>
+    <select id="chainSelector" onchange="fetchTicks()">
+        <option value="shc20">SHC-20 (Shiba)</option>
+        <option value="prc20">PRC-20 (Pepe)</option>
+    </select>
     <ul id="tickList"></ul>
 
     <script>
-        let snapshotData = null;
-
-        function populateList(data) {
-            const tickList = document.getElementById('tickList');
-            tickList.innerHTML = ''; // Clear existing list items
-            data.forEach(item => {
-                const listItem = document.createElement('li');
-                listItem.innerHTML = `<strong>Tick:</strong> ${item.tick} <br> 
-                                      <strong>Inscription ID:</strong> ${item.inscription_id} <br>
-                                      <strong>Inscription Number:</strong> ${item.inscription_number} <br>
-                                      <strong>Supply:</strong> ${item.supply.toLocaleString()} <br>
-                                      <strong>Minted:</strong> ${item.minted.toLocaleString()} <br>
-                                      <strong>Limit Per Mint:</strong> ${item.limit_per_mint} <br>
-                                      <strong>Deployed By:</strong> ${item.deploy_by.Address} <br>
-                                      <strong>Deployed Number:</strong> ${item.deployed_number} <br>
-                                      <strong>Deployed Timestamp:</strong> ${new Date(item.deployed_timestamp * 1000).toLocaleString()} <br>
-                                      <strong>Latest Mint Number:</strong> ${item.latest_mint_number}`;
-                tickList.appendChild(listItem);
-            });
-        }
-
-        window.onload = function() {
-            if (!snapshotData) {
-                fetch('https://shicinals-ord.com/shc20/tick')
-                    .then(response => response.json())
-                    .then(data => {
-                        snapshotData = data; // Take a snapshot of the data
-                        populateList(snapshotData);
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-            } else {
-                populateList(snapshotData);
-            }
+        const endpoints = {
+            shc20: 'https://shicinals-ord.com/shc20/tick',
+            prc20: 'https://pepinals.com/prc20/tick'
         };
 
-        // Disable any further fetches or updates
-        // Comment out or remove the fetch logic after the initial load
+        function fetchTicks() {
+            const selectedChain = document.getElementById('chainSelector').value;
+            const tickList = document.getElementById('tickList');
+            tickList.innerHTML = ''; // Clear current list
+
+            fetch(endpoints[selectedChain])
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(item => {
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `<strong>Tick:</strong> ${item.tick} <br> 
+                                          <strong>Inscription ID:</strong> ${item.inscription_id} <br>
+                                          <strong>Inscription Number:</strong> ${item.inscription_number} <br>
+                                          <strong>Supply:</strong> ${item.supply.toLocaleString()} <br>
+                                          <strong>Minted:</strong> ${item.minted.toLocaleString()} <br>
+                                          <strong>Limit Per Mint:</strong> ${item.limit_per_mint.toLocaleString()} <br>
+                                          <strong>Deployed By:</strong> ${item.deploy_by?.Address || item.deploy_by || 'N/A'} <br>
+                                          <strong>Deployed Number:</strong> ${item.deployed_number} <br>
+                                          <strong>Latest Mint Number:</strong> ${item.latest_mint_number}`;
+                        tickList.appendChild(listItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    tickList.innerHTML = '<li style="color: red;">Error loading ticks data</li>';
+                });
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', fetchTicks);
     </script>
 </body>
 </html>

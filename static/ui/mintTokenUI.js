@@ -87,6 +87,8 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
                 tokenStandardDropdown.value = 'prc-20';
             } else if (selectedWallet.ticker === 'shc') {
                 tokenStandardDropdown.value = 'shc-20';
+            } else if (selectedWallet.ticker === 'bnk') {
+                tokenStandardDropdown.value = 'bnk-20';
             }
         } else {
             localStorage.removeItem('selectedWalletLabel');
@@ -101,7 +103,7 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     // Token standard selector
     const tokenStandardDropdown = document.createElement('select');
     tokenStandardDropdown.className = 'styled-select';
-    ['drc-20', 'lky-20', 'prc-20', 'shc-20'].forEach(standard => {
+    ['drc-20', 'lky-20', 'prc-20', 'shc-20', 'bnk-20'].forEach(standard => {
         const option = document.createElement('option');
         option.value = standard;
         option.textContent = standard;
