@@ -1,0 +1,86 @@
+
+<!doctype html>
+<html lang=en>
+  <head>
+    <meta charset=utf-8>
+    <meta name=format-detection content='telephone=no'>
+    <meta name=viewport content='width=device-width,initial-scale=1.0'>
+    <meta property=og:title content='Transaction 7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3ce'>
+    <meta property=og:image content='https://wonky-worker-int-3/static/favicon.png'>
+    <meta property=twitter:card content=summary>
+    <title>Transaction 7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3ce</title>
+    <link rel=alternate href=/feed.xml type=application/rss+xml title='Inscription RSS Feed'>
+    <link rel=stylesheet href=/static/index.css>
+    <link rel=stylesheet href=/static/modern-normalize.css>
+    <script src=/static/index.js defer></script>
+  </head>
+  <body>
+  <header>
+    <nav>
+      <a href=/>Doginals<sup>alpha</sup></a>
+      <a href=https://docs.ordinals.com/>Handbook</a>
+      <a href=https://github.com/apezord/ord-dogecoin>Wallet</a>
+      <form action=/search method=get>
+        <input type=text autocapitalize=off autocomplete=off autocorrect=off name=query spellcheck=false>
+        <input type=submit value=Search>
+      </form>
+    </nav>
+  </header>
+  <main>
+<h1>Transaction <span class=monospace>7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3ce</span></h1>
+<h2>Inscription Geneses</h2>
+<div class=thumbnails>
+<a href=/shibescription/7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3cei0><iframe sandbox=allow-scripts scrolling=no loading=lazy src=/preview/7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3cei0></iframe></a>
+</div>
+<dl>
+  <dt>block</dt>
+  <dd><a href=/block/583118b25075693f05d14a2d4c57bb53d260c7134b652a2312e65751f0412a85 class=monospace>583118b25075693f05d14a2d4c57bb53d260c7134b652a2312e65751f0412a85</a></dd>
+</dl>
+<h2>2 Inputs</h2>
+<ul>
+  <li><a class=monospace href=/output/69de95f1fb9a24e01cfaa6ccc35a7ff7a21957a82444f666e58a3f3bffcf2d14:0>69de95f1fb9a24e01cfaa6ccc35a7ff7a21957a82444f666e58a3f3bffcf2d14:0</a></li>
+  <li><a class=monospace href=/output/69de95f1fb9a24e01cfaa6ccc35a7ff7a21957a82444f666e58a3f3bffcf2d14:1>69de95f1fb9a24e01cfaa6ccc35a7ff7a21957a82444f666e58a3f3bffcf2d14:1</a></li>
+</ul>
+<h2>3 Outputs</h2>
+<ul class=monospace>
+  <li>
+    <a href=/output/7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3ce:0 class=monospace>
+      7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3ce:0
+    </a>
+    <dl>
+      <dt>value</dt><dd>100000</dd>
+      <dt>script pubkey</dt><dd class=monospace>OP_DUP OP_HASH160 OP_PUSHBYTES_20 10e8b308905ea666b5a75adef65498fe11fcbaf8 OP_EQUALVERIFY OP_CHECKSIG</dd>
+      <dt>address</dt><dd class=monospace>D6gW7ZYjE9vMHVCioroRS6HPJ38vfoeEVb</dd>
+    </dl>
+  </li>
+  <li>
+    <a href=/output/7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3ce:1 class=monospace>
+      7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3ce:1
+    </a>
+    <dl>
+      <dt>value</dt><dd>200000000</dd>
+      <dt>script pubkey</dt><dd class=monospace>OP_DUP OP_HASH160 OP_PUSHBYTES_20 b2b711d2a47aa206c82699ac0b8bb945276fca7a OP_EQUALVERIFY OP_CHECKSIG</dd>
+      <dt>address</dt><dd class=monospace>DMS48JcWFuxzfm6xHvs1B89UhAfbdwUTzP</dd>
+    </dl>
+  </li>
+  <li>
+    <a href=/output/7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3ce:2 class=monospace>
+      7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3ce:2
+    </a>
+    <dl>
+      <dt>value</dt><dd>3000000</dd>
+      <dt>script pubkey</dt><dd class=monospace>OP_DUP OP_HASH160 OP_PUSHBYTES_20 4ca2a287df0a6a8ce627d145822f48588710ee52 OP_EQUALVERIFY OP_CHECKSIG</dd>
+      <dt>address</dt><dd class=monospace>DC8Jiub8pP9Vd1Scy3qU52AcjwsiKaj1mG</dd>
+    </dl>
+  </li>
+</ul>
+<h2>Inscription Event</h2>
+    <dl>
+      <dt>Event</dt><dd>Inscribe</dd>
+          <dt>Inscription ID</dt><dd>7195bb9f0d73d1de3472c9daf6fa2eda3dc8a452a1a8e1361657a9ec2d5ad3cei0</dd>
+          <dt>to</dt><dd>D6gW7ZYjE9vMHVCioroRS6HPJ38vfoeEVb</dd>
+    </dl>
+
+  </main>
+  </body>
+</html>
