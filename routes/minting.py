@@ -67,6 +67,9 @@ def mint_rc001(ticker):
     elif ticker.lower() == 'flop':
         command_dir = './getOrdTxsFlop'
         script = 'getOrdTxsFlop.js'
+    elif ticker.lower() == 'digi':
+        command_dir = './getOrdTxsDigi'
+        script = 'getOrdTxsDigi.js'
     else:
         return jsonify({
             "status": "error",
@@ -197,6 +200,9 @@ def mint(ticker):
     elif ticker.lower() == 'flop':
         command_dir = './getOrdTxsFlop'
         script = 'getOrdTxsFlop.js'
+    elif ticker.lower() == 'digi':
+        command_dir = './getOrdTxsDigi'
+        script = 'getOrdTxsDigi.js'
     else:
         return jsonify({
             "status": "error",
@@ -311,6 +317,9 @@ def generate_key(ticker):
     elif ticker.lower() == 'flop':
         command_dir = './getOrdTxsFlop'
         script = 'generateKey.js'
+    elif ticker.lower() == 'digi':
+        command_dir = './getOrdTxsDigi'
+        script = 'generateKey.js'
     else:
         return jsonify({
             "status": "error",
@@ -411,6 +420,9 @@ def send(ticker):
     elif ticker.lower() == 'flop':
         command_dir = './getOrdTxsFlop'
         script = 'getTxsFlop.js'
+    elif ticker.lower() == 'digi':
+        command_dir = './getOrdTxsDigi'
+        script = 'getTxsDigi.js'
     else:
         return jsonify({
             "status": "error",
@@ -522,6 +534,9 @@ def vault(ticker):
     elif ticker.lower() == 'flop':
         command_dir = './getOrdTxsFlop'
         script = 'getVaultTxsFlop.js'
+    elif ticker.lower() == 'digi':
+        command_dir = './getOrdTxsDigi'
+        script = 'getVaultTxsDigi.js'
     else:
         return jsonify({
             "status": "error",
