@@ -608,3 +608,82 @@ def vault(ticker):
             "status": "error",
             "message": f"Unexpected error: {str(e)}"
         }), 500
+    
+@minting_bp.route('/api/v1/send-ord/<ticker>', methods=['POST'])
+@require_api_key
+def send_ord(ticker):
+    data = request.json
+
+    # Extract parameters
+    sending_address = data.get('sending_address')
+    wif_private_key = data.get('wif_private_key')
+    utxo0 = data.get('utxo0')
+    utxo1 = data.get('utxo1')
+    recipients = data.get('recipients')
+    fee = data.get('fee')
+    change_address = data.get('change_address')
+
+    # Log the extracted parameters for debugging
+    print(f"Received send ord request with parameters: {data}")
+
+    # Validate required parameters
+    if not all([sending_address, wif_private_key, utxo0, utxo1, recipients, fee, change_address]):
+        return jsonify({
+            "status": "error",
+            "message": "Missing required parameters."
+        }), 400
+
+    # Determine the command directory and script based on the ticker
+    if ticker.lower() == 'digi':
+        command_dir = './getOrdTxsDigi'
+        script = 'createTxOrd.js'
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Unsupported ticker type."
+        }), 400
+
+    # Define the command to run
+    command = [
+        'node', script, 'sendDogeTransactionTwoUtxos',
+        sending_address, wif_private_key, json.dumps(utxo0), json.dumps(utxo1),
+        json.dumps(recipients), str(fee), change_address
+    ]
+
+    try:
+        # Run the command and capture the output
+        result = subprocess.run(
+            command,
+            cwd=command_dir,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        output = result.stdout.strip()
+        error_output = result.stderr.strip()
+
+        # Print both stdout and stderr
+        print("Command output:", output)
+        print("Command error output:", error_output)
+
+        # Assume output is the transaction hex
+        tx_hex = output.strip()
+
+        # Structure the response as desired
+        response = {
+            "status": "success",
+            "transactionHex": tx_hex
+        }
+
+        return jsonify(response)
+
+    except subprocess.CalledProcessError as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Command failed with error: {e.stderr}"
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Unexpected error: {str(e)}"
+        }), 500

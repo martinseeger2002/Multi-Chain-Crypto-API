@@ -61,8 +61,11 @@ export function sendTxUI(selectedLabel) {
     doc.close();
     const iframeBody = doc.body;
 
+    // Sort UTXOs: highest to lowest for display in iframe
+    const sortedUtxosForIframe = [...filteredUtxos].sort((a, b) => b.value - a.value);
+
     // Create checkboxes for UTXO selection within the iframe
-    filteredUtxos.forEach((utxo, index) => {
+    sortedUtxosForIframe.forEach((utxo, index) => {
         const utxoDiv = doc.createElement('div');
         utxoDiv.className = 'utxo-item';
 
@@ -82,10 +85,13 @@ export function sendTxUI(selectedLabel) {
         iframeBody.appendChild(utxoDiv);
     });
 
+    // Sort UTXOs: lowest to highest for fee UTXO dropdown
+    const sortedUtxosForFee = [...filteredUtxos].sort((a, b) => a.value - b.value);
+
     // Create dropdown for fee UTXO selection (in main document)
     const feeUtxoDropdown = document.createElement('select');
     feeUtxoDropdown.className = 'styled-select';
-    filteredUtxos.forEach((utxo, index) => {
+    sortedUtxosForFee.forEach((utxo, index) => {
         const option = document.createElement('option');
         option.value = index;
 
