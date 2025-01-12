@@ -79,16 +79,19 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
             localStorage.setItem('selectedWalletLabel', selectedWallet.label);
 
             // Automatically select token standard based on wallet ticker
-            if (selectedWallet.ticker === 'drc') {
+            const ticker = selectedWallet.ticker.toLowerCase();
+            if (ticker === 'doge') {
                 tokenStandardDropdown.value = 'drc-20';
-            } else if (selectedWallet.ticker === 'lky') {
+            } else if (ticker === 'lky') {
                 tokenStandardDropdown.value = 'lky-20';
-            } else if (selectedWallet.ticker === 'prc') {
+            } else if (ticker === 'pepe') {
                 tokenStandardDropdown.value = 'prc-20';
-            } else if (selectedWallet.ticker === 'shc') {
+            } else if (ticker === 'shic') {
                 tokenStandardDropdown.value = 'shc-20';
-            } else if (selectedWallet.ticker === 'bnk') {
+            } else if (ticker === 'bonk') {
                 tokenStandardDropdown.value = 'bnk-20';
+            } else if (ticker === 'digi') {
+                tokenStandardDropdown.value = 'dgb-20';
             }
         } else {
             localStorage.removeItem('selectedWalletLabel');
@@ -103,7 +106,7 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
     // Token standard selector
     const tokenStandardDropdown = document.createElement('select');
     tokenStandardDropdown.className = 'styled-select';
-    ['drc-20', 'lky-20', 'prc-20', 'shc-20', 'bnk-20'].forEach(standard => {
+    ['drc-20', 'lky-20', 'prc-20', 'shc-20', 'bnk-20', 'dgb-20'].forEach(standard => {
         const option = document.createElement('option');
         option.value = standard;
         option.textContent = standard;
@@ -373,5 +376,24 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
 
     function stringToHex(str) {
         return str.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+    }
+
+    // Set token standard based on the initially selected wallet
+    const initialWallet = wallets.find(wallet => wallet.label === selectedWalletLabel);
+    if (initialWallet) {
+        const ticker = initialWallet.ticker.toLowerCase();
+        if (ticker === 'doge') {
+            tokenStandardDropdown.value = 'drc-20';
+        } else if (ticker === 'lky') {
+            tokenStandardDropdown.value = 'lky-20';
+        } else if (ticker === 'pepe') {
+            tokenStandardDropdown.value = 'prc-20';
+        } else if (ticker === 'shic') {
+            tokenStandardDropdown.value = 'shc-20';
+        } else if (ticker === 'bonk') {
+            tokenStandardDropdown.value = 'bnk-20';
+        } else if (ticker === 'digi') {
+            tokenStandardDropdown.value = 'dgb-20';
+        }
     }
 }
