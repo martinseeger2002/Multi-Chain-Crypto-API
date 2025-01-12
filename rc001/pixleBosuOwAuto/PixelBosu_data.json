@@ -9955,5 +9955,113 @@
                 }
             ]
         }
+    },
+    {
+        "id": "27ea865bdd75d4f1e0bf46fb3cf0c1c0e778ca2c6529e02446192a4f3a31ab49i0",
+        "meta": {
+            "name": "PixelBosu #280",
+            "attributes": [
+                {
+                    "trait_type": "Background",
+                    "value": "Green Smoke"
+                },
+                {
+                    "trait_type": "pepe",
+                    "value": "pepe"
+                },
+                {
+                    "trait_type": "body",
+                    "value": "skull shirt"
+                },
+                {
+                    "trait_type": "eyes",
+                    "value": "sun glasses"
+                },
+                {
+                    "trait_type": "head item",
+                    "value": "beanie poorple"
+                },
+                {
+                    "trait_type": "mouth",
+                    "value": "e cig"
+                },
+                {
+                    "trait_type": "item",
+                    "value": "starff"
+                }
+            ]
+        }
+    },
+    {
+        "id": "52a6918b942dca3625b0044aa0801ff54bd0986d7e2363dab9c5f7607313138bi0",
+        "meta": {
+            "name": "PixelBosu #281",
+            "attributes": [
+                {
+                    "trait_type": "Background",
+                    "value": "salmon"
+                },
+                {
+                    "trait_type": "pepe",
+                    "value": "pepe"
+                },
+                {
+                    "trait_type": "body",
+                    "value": "blue shirt"
+                },
+                {
+                    "trait_type": "eyes",
+                    "value": "sun glasses"
+                },
+                {
+                    "trait_type": "head item",
+                    "value": "beanie"
+                },
+                {
+                    "trait_type": "mouth",
+                    "value": "neutral"
+                },
+                {
+                    "trait_type": "item",
+                    "value": "why"
+                }
+            ]
+        }
+    },
+    {
+        "id": "bbc993b7d06233c334bb2681195a2950c30bdadac739bd1dacf684008516516ci0",
+        "meta": {
+            "name": "PixelBosu #282",
+            "attributes": [
+                {
+                    "trait_type": "Background",
+                    "value": "Green Smoke"
+                },
+                {
+                    "trait_type": "pepe",
+                    "value": "pepe"
+                },
+                {
+                    "trait_type": "body",
+                    "value": "red shirt"
+                },
+                {
+                    "trait_type": "eyes",
+                    "value": "regular eyes"
+                },
+                {
+                    "trait_type": "head item",
+                    "value": "nadanda"
+                },
+                {
+                    "trait_type": "mouth",
+                    "value": "pipe"
+                },
+                {
+                    "trait_type": "item",
+                    "value": "champeign"
+                }
+            ]
+        }
     }
 ]
