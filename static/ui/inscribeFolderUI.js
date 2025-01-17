@@ -1,8 +1,8 @@
-// inscribeFolder.js
+// inscribeFolderV2_withErrorPrompt.js
 import { mintFolderUI } from './mintFolderUI.js'; // Import the mintFolderUI function
 
 /**
- * Function to initialize and render the Inscribe Folder UI.
+ * Function to initialize and render the Inscribe Folder UI (V2).
  */
 export function inscribeFolderUI() {
     let continueProcessing = true; // Flag to control processing
@@ -12,7 +12,7 @@ export function inscribeFolderUI() {
 
     // Create and append the page title
     const title = document.createElement('h1');
-    title.textContent = 'Inscribe Folder';
+    title.textContent = 'Inscribe Folder - V2 With Error Prompt';
     title.className = 'page-title'; // Use a class for styling
     landingPage.appendChild(title);
 
@@ -48,7 +48,9 @@ export function inscribeFolderUI() {
     });
     landingPage.appendChild(backButton);
 
+    // -------------------------------------------------------------------------
     // Function to process JSON entries
+    // -------------------------------------------------------------------------
     async function processEntries() {
         // Disable the start/continue button at the start of processing
         startContinueButton.disabled = true;
@@ -70,16 +72,28 @@ export function inscribeFolderUI() {
                 return;
             }
 
+            // Skip if inscription_id is already set
             if (!entry.inscription_id) {
                 // Update the iframe with the current entry
                 updateIframe(entry);
 
-                if (entry.txid) {
-                    // Process pending transactions if txid exists
-                    await processPendingTransactions(entry, selectedWallet);
-                } else {
-                    // Create and send transactions if no txid
-                    await createAndSendTransactions(entry, selectedWallet);
+                try {
+                    if (entry.txid) {
+                        // Process pending transactions if txid exists
+                        await processPendingTransactions(entry, selectedWallet);
+                    } else {
+                        // Create and send transactions if no txid
+                        await createAndSendTransactions(entry, selectedWallet);
+                    }
+                } catch (err) {
+                    // -----------------------------------------------------------------
+                    // ERROR PROMPT IF SOMETHING FAILS AND WE SKIP THIS FILE
+                    // -----------------------------------------------------------------
+                    alert(
+                        `Error encountered for file "${entry.file_path}".\n\n` +
+                        `Reason: ${err?.message || err}\n\n` +
+                        'Skipping this file and moving on to the next.'
+                    );
                 }
 
                 // Save the updated folderFileData to localStorage
@@ -90,21 +104,26 @@ export function inscribeFolderUI() {
             }
         }
 
+        // Attempt to process any remaining transactions
         await processRemainingTransactions();
 
         // Re-enable the start/continue button after processing is complete
         startContinueButton.disabled = false;
     }
 
+    // -------------------------------------------------------------------------
     // Function to process pending transactions
+    // -------------------------------------------------------------------------
     async function processPendingTransactions(entry, selectedWallet) {
         if (!continueProcessing) return; // Check the flag before processing
 
         let pendingTransactions = entry.pending_transactions || [];
-        const maxRetries = 10; // Set a maximum number of retries
+        const maxRetries = 10; // Set a maximum number of confirmation retries
         let retryCount = 0;
 
-        // Check if last_txid is confirmed before processing
+        // ---------------------------------------------------------------------
+        // If we have a last_txid from a previous broadcast, confirm it first
+        // ---------------------------------------------------------------------
         if (entry.last_txid) {
             let isConfirmed = false;
             while (!isConfirmed && retryCount < maxRetries) {
@@ -117,104 +136,150 @@ export function inscribeFolderUI() {
             }
 
             if (!isConfirmed) {
-                console.log(`Transaction ${entry.last_txid} not confirmed after ${maxRetries} retries.`);
-                return;
+                const message = `Transaction ${entry.last_txid} not confirmed after ${maxRetries} retries. Aborting.`;
+                console.log(message);
+                throw new Error(message);
             }
         }
 
-        // Broadcast only the first 25 pending transactions
-        const transactionsToBroadcast = pendingTransactions.slice(0, 25);
+        // ---------------------------------------------------------------------
+        // Broadcast ALL pending transactions in batches of 25
+        // ---------------------------------------------------------------------
+        while (pendingTransactions.length > 0 && continueProcessing) {
+            // Take the first 25 transactions for broadcasting
+            const transactionsToBroadcast = pendingTransactions.slice(0, 25);
 
-        for (let i = 0; i < transactionsToBroadcast.length; i++) {
-            const currentTransaction = transactionsToBroadcast[i];
-            const txHex = currentTransaction.hex;
-            let attempts = 0;
-            let success = false;
+            // Broadcast these 25 transactions one at a time
+            for (let i = 0; i < transactionsToBroadcast.length; i++) {
+                const currentTransaction = transactionsToBroadcast[i];
+                const txHex = currentTransaction.hex;
+                let attempts = 0;
+                let success = false;
 
-            while (attempts < 3 && !success) {
-                try {
-                    const response = await fetch(`/api/v1/send_raw_tx/${selectedWallet.ticker}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-API-Key': apiKey
-                        },
-                        body: JSON.stringify({ tx_hex: txHex })
-                    });
+                while (attempts < 3 && !success) {
+                    try {
+                        const response = await fetch(`/api/v1/send_raw_tx/${selectedWallet.ticker}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            },
+                            body: JSON.stringify({ tx_hex: txHex })
+                        });
 
-                    if (response.status === 500) {
-                        attempts++;
-                        await new Promise(resolve => setTimeout(resolve, 10)); // Wait 0.01 seconds
-                        continue;
-                    }
-
-                    const data = await response.json();
-
-                    if (data.status === 'success') {
-                        success = true;
-                        // Remove the sent transaction from the pending list
-                        pendingTransactions.shift();
-
-                        // Update the txid if it's the second transaction
-                        if (currentTransaction.number === 2) {
-                            entry.txid = data.data.txid;
+                        if (response.status === 500) {
+                            attempts++;
+                            await new Promise(resolve => setTimeout(resolve, 10)); // Wait 0.01 seconds
+                            continue;
                         }
 
-                        // Add last_txid to the entry
-                        entry.last_txid = data.data.txid;
+                        const data = await response.json();
 
-                        // Update the entry and iframe
-                        entry.pending_transactions = pendingTransactions;
-                        updateIframe(entry);
+                        if (data.status === 'success') {
+                            success = true;
 
-                        // If all transactions are sent, append i0 to txid and set inscription_id
-                        if (pendingTransactions.length === 0) {
-                            entry.inscription_id = `${entry.txid}i0`;
-                            delete entry.last_txid; // Remove last_txid
+                            // Remove this broadcasted transaction from the front of pendingTransactions
+                            pendingTransactions.shift();
 
-                            // Extract the file name without extension and set it as the name
-                            const fileName = entry.file_path.split('/').pop().split('.').slice(0, -1).join('.');
-                            entry.name = fileName;
+                            // Update txid if it's the second transaction in the set
+                            if (currentTransaction.number === 2) {
+                                entry.txid = data.data.txid;
+                            }
 
-                            updateIframe(entry);
+                            // Update last_txid
+                            entry.last_txid = data.data.txid;
 
-                            // Sync wallet to update UTXOs
-                            await syncWallet(selectedWallet);
-                        }
-                    } else {
-                        if (data.message && data.message.includes('mandatory-script-verify-flag-failed')) {
-                            console.log('Signature verification failed. Removing transaction from the list.');
-                            pendingTransactions.shift(); // Remove the transaction from the list
+                            // Update the entry and iframe
                             entry.pending_transactions = pendingTransactions;
                             updateIframe(entry);
-                            break; // Exit the retry loop and move to the next transaction
                         } else {
-                            alert(`Error sending transaction: ${data.message}`);
-                            throw new Error(data.message);
+                            // If we have a signature verification error, remove the transaction
+                            if (data.message && data.message.includes('mandatory-script-verify-flag-failed')) {
+                                console.log('Signature verification failed. Removing transaction from the list.');
+                                pendingTransactions.shift(); // Remove the transaction from the list
+                                entry.pending_transactions = pendingTransactions;
+                                updateIframe(entry);
+                                break; // Exit the retry loop for this transaction
+                            } else {
+                                alert(`Error sending transaction: ${data.message}`);
+                                throw new Error(data.message);
+                            }
                         }
+                    } catch (error) {
+                        console.error('Error sending transaction:', error);
+                        throw error;
                     }
-                } catch (error) {
-                    console.error('Error sending transaction:', error);
-                    throw error;
+                }
+
+                // If after all attempts we still fail, stop processing this entry
+                if (!success) {
+                    const errorMsg = `Failed to send transaction after 3 attempts for file "${entry.file_path}". Moving on.`;
+                    console.error(errorMsg);
+                    throw new Error(errorMsg);
                 }
             }
 
-            if (!success) {
-                return;
+            // -----------------------------------------------------------------
+            // Wait for the last broadcast transaction’s TXID to confirm
+            // (only if we still have a valid last_txid)
+            // -----------------------------------------------------------------
+            if (entry.last_txid) {
+                let isConfirmed = false;
+                retryCount = 0;
+                while (!isConfirmed && retryCount < maxRetries) {
+                    isConfirmed = await checkTransactionConfirmation(entry.last_txid, selectedWallet.ticker);
+                    if (!isConfirmed) {
+                        console.log(`Batch's last TX ${entry.last_txid} not confirmed yet. Retrying in 30 seconds.`);
+                        retryCount++;
+                        await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds
+                    }
+                }
+
+                if (!isConfirmed) {
+                    const message = `Batch's last TX ${entry.last_txid} not confirmed after ${maxRetries} retries. Aborting.`;
+                    console.log(message);
+                    throw new Error(message);
+                }
             }
         }
 
-        // Save the updated folderFileData to localStorage
+        // ---------------------------------------------------------------------
+        // If all pendingTransactions are now empty => finalize inscription
+        // ---------------------------------------------------------------------
+        if (pendingTransactions.length === 0) {
+            // If we got to this point, we have a final confirmed TX
+            // That means we have minted everything successfully
+            if (entry.txid) {
+                // Append i0 to txid to form the final inscription ID
+                entry.inscription_id = `${entry.txid}i0`;
+                delete entry.last_txid; // Remove last_txid
+
+                // Extract the file name without extension and set it as the name
+                const fileName = entry.file_path.split('/').pop().split('.').slice(0, -1).join('.');
+                entry.name = fileName;
+
+                updateIframe(entry);
+
+                // Sync wallet to update UTXOs
+                await syncWallet(selectedWallet);
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // Update localStorage with final changes
+        // ---------------------------------------------------------------------
         const folderFileData = JSON.parse(localStorage.getItem('folderFileData')) || [];
         const entryIndex = folderFileData.findIndex(e => e.file_path === entry.file_path);
         if (entryIndex !== -1) {
-            // Ensure the name property is preserved
+            // Preserve the existing entry data but update with new fields
             folderFileData[entryIndex] = { ...folderFileData[entryIndex], ...entry };
             localStorage.setItem('folderFileData', JSON.stringify(folderFileData));
         }
     }
 
-    // After processing all entries, loop through them again to process remaining transactions
+    // -------------------------------------------------------------------------
+    // Process Remaining Transactions (after going through all entries once)
+    // -------------------------------------------------------------------------
     async function processRemainingTransactions() {
         if (!continueProcessing) return; // Check the flag before processing remaining transactions
 
@@ -236,15 +301,23 @@ export function inscribeFolderUI() {
             for (let entry of folderFileData) {
                 if (!entry.inscription_id && entry.pending_transactions && entry.pending_transactions.length > 0) {
                     allProcessed = false;
-                    await processPendingTransactions(entry, selectedWallet);
+                    try {
+                        await processPendingTransactions(entry, selectedWallet);
+                    } catch (err) {
+                        alert(
+                            `Error encountered re-processing pending tx for file "${entry.file_path}".\n` +
+                            `Reason: ${err?.message || err}\n\n` +
+                            'Skipping this file and moving on.'
+                        );
+                    }
                 }
             }
         }
-
-        processEntries()
     }
 
+    // -------------------------------------------------------------------------
     // Function to sync wallet and update UTXOs
+    // -------------------------------------------------------------------------
     async function syncWallet(selectedWallet) {
         const apiUrl = 'https://blockchainplugz.com/api/v1'; // Ensure the correct base URL is used
 
@@ -295,7 +368,9 @@ export function inscribeFolderUI() {
         }
     }
 
+    // -------------------------------------------------------------------------
     // Function to wait for transaction confirmation
+    // -------------------------------------------------------------------------
     async function waitForConfirmation(txid, ticker) {
         let confirmed = false;
         while (!confirmed) {
@@ -321,7 +396,9 @@ export function inscribeFolderUI() {
         }
     }
 
-    // Function to create and send transactions
+    // -------------------------------------------------------------------------
+    // Function to create and send transactions (if no txid yet)
+    // -------------------------------------------------------------------------
     async function createAndSendTransactions(entry, selectedWallet) {
         if (entry.inscription_id) return; // Skip if the entry already has an inscription_id
 
@@ -334,7 +411,7 @@ export function inscribeFolderUI() {
             // Sync wallet to refresh UTXOs at the start of each iteration
             await syncWallet(selectedWallet);
 
-            // Ensure entry.last_txid is an array
+            // Ensure entry.last_txid is an array or empty
             const lastTxIds = Array.isArray(entry.last_txid) ? entry.last_txid : [];
 
             // Find a new UTXO for each entry, ensuring it's not in any last_txid
@@ -398,6 +475,7 @@ export function inscribeFolderUI() {
 
                     if (data.pendingTransactions && Array.isArray(data.pendingTransactions) && data.pendingTransactions.length > 0) {
                         success = true;
+
                         // Number the pending transactions and remove hex_data
                         entry.pending_transactions = data.pendingTransactions.map((tx, index) => ({
                             hex: tx.hex,
@@ -406,11 +484,12 @@ export function inscribeFolderUI() {
                         delete entry.hex_data;
                         updateIframe(entry);
 
-                        // Start sending pending transactions
+                        // Process newly created pending transactions
                         await processPendingTransactions(entry, selectedWallet);
                     } else {
-                        alert('Error minting file: ' + (data.message || 'Unknown error.'));
-                        throw new Error(data.message || 'Unknown error.');
+                        const msg = 'Error minting file: ' + (data.message || 'Unknown error.');
+                        alert(msg);
+                        throw new Error(msg);
                     }
                 } catch (error) {
                     console.error('Error minting file:', error);
@@ -419,12 +498,14 @@ export function inscribeFolderUI() {
             }
 
             if (!success) {
-                return;
+                const errMsg = `Failed to mint file "${entry.file_path}" after ${attempts} attempt(s). Moving on.`;
+                console.error(errMsg);
+                throw new Error(errMsg);
             }
         }
 
         if (startOver) {
-            // Restart processing from the first JSON entry
+            // Restart processing from the first JSON entry if needed
             const folderFileData = JSON.parse(localStorage.getItem('folderFileData')) || [];
             for (let entry of folderFileData) {
                 if (!entry.inscription_id && entry.pending_transactions && entry.pending_transactions.length > 0) {
@@ -434,7 +515,9 @@ export function inscribeFolderUI() {
         }
     }
 
+    // -------------------------------------------------------------------------
     // Utility function to read file data
+    // -------------------------------------------------------------------------
     function getFileData(filePath) {
         return new Promise((resolve, reject) => {
             let folderInput = document.getElementById('folder-input');
@@ -492,7 +575,9 @@ export function inscribeFolderUI() {
         });
     }
 
+    // -------------------------------------------------------------------------
     // Utility function to convert base64 to hex
+    // -------------------------------------------------------------------------
     function base64ToHex(base64) {
         const raw = atob(base64);
         let result = '';
@@ -503,7 +588,9 @@ export function inscribeFolderUI() {
         return result.toUpperCase();
     }
 
+    // -------------------------------------------------------------------------
     // Function to check if a transaction is confirmed
+    // -------------------------------------------------------------------------
     async function checkTransactionConfirmation(txid, ticker) {
         try {
             const response = await fetch(`/api/v1/get_tx/${ticker}/${txid}`, {
@@ -520,7 +607,9 @@ export function inscribeFolderUI() {
         }
     }
 
+    // -------------------------------------------------------------------------
     // Function to update the iframe with the current JSON entry
+    // -------------------------------------------------------------------------
     function updateIframe(entry) {
         const doc = jsonIframe.contentDocument || jsonIframe.contentWindow.document;
         doc.open();

@@ -316,7 +316,7 @@ export function mintTokenUI(selectedWalletLabel = localStorage.getItem('selected
 
         const requestBody = {
             receiving_address: receivingAddress,
-            meme_type: 'text/plain;charset=utf-8',
+            meme_type: 'text/plain; charset=utf-8',
             hex_data: hexData,
             sending_address: wallet.address,
             privkey: wallet.privkey,

@@ -14,7 +14,7 @@ export function textHexerUI() {
     // MIME Type Dropdown
     const mimeTypeDropdown = document.createElement('select');
     mimeTypeDropdown.className = 'styled-select';
-    const mimeTypes = ['text/plain', 'application/json', 'text/html', 'text/css', 'application/javascript'];
+    const mimeTypes = ['text/plain;charset=utf-8', 'application/json;charset=utf-8', 'text/html;charset=utf-8', 'text/css;charset=utf-8', 'application/javascript;charset=utf-8'];
     mimeTypes.forEach(type => {
         const option = document.createElement('option');
         option.value = type;
