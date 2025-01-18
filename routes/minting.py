@@ -55,19 +55,19 @@ def mint_rc001(ticker):
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'getOrdTxsLTC.js'
-    elif ticker.lower() == 'pepe':
+    elif ticker.lower() in ('pepe', 'pep'):
         command_dir = './getOrdTxsPepe'
         script = 'getOrdTxsPepe.js'
     elif ticker.lower() == 'shic':
         command_dir = './getOrdTxsShic'
         script = 'getOrdTxsShic.js'
-    elif ticker.lower() == 'bonk':
+    elif ticker.lower() in ('bonk', 'bonc'):
         command_dir = './getOrdTxsBonk'
         script = 'getOrdTxsBonk.js'
     elif ticker.lower() == 'flop':
         command_dir = './getOrdTxsFlop'
         script = 'getOrdTxsFlop.js'
-    elif ticker.lower() == 'digi':
+    elif ticker.lower() in ('digi', 'dgb'):
         command_dir = './getOrdTxsDigi'
         script = 'getOrdTxsDigi.js'
     else:
@@ -188,19 +188,19 @@ def mint(ticker):
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'getOrdTxsLTC.js'
-    elif ticker.lower() == 'pepe':
+    elif ticker.lower() in ('pepe', 'pep'):
         command_dir = './getOrdTxsPepe'
         script = 'getOrdTxsPepe.js'
     elif ticker.lower() == 'shic':
         command_dir = './getOrdTxsShic'
         script = 'getOrdTxsShic.js'
-    elif ticker.lower() == 'bonk':
+    elif ticker.lower() in ('bonk', 'bonc'):
         command_dir = './getOrdTxsBonk'
         script = 'getOrdTxsBonk.js'
     elif ticker.lower() == 'flop':
         command_dir = './getOrdTxsFlop'
         script = 'getOrdTxsFlop.js'
-    elif ticker.lower() == 'digi':
+    elif ticker.lower() in ('digi', 'dgb'):
         command_dir = './getOrdTxsDigi'
         script = 'getOrdTxsDigi.js'
     else:
@@ -305,19 +305,19 @@ def generate_key(ticker):
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'generateKey.js'
-    elif ticker.lower() == 'pepe':
+    elif ticker.lower() in ('pepe', 'pep'):
         command_dir = './getOrdTxsPepe'
         script = 'generateKey.js'
     elif ticker.lower() == 'shic':
         command_dir = './getOrdTxsShic'
         script = 'generateKey.js'
-    elif ticker.lower() == 'bonk':
+    elif ticker.lower() in ('bonk', 'bonc'):
         command_dir = './getOrdTxsBonk'
         script = 'generateKey.js'
     elif ticker.lower() == 'flop':
         command_dir = './getOrdTxsFlop'
         script = 'generateKey.js'
-    elif ticker.lower() == 'digi':
+    elif ticker.lower() in ('digi', 'dgb'):
         command_dir = './getOrdTxsDigi'
         script = 'generateKey.js'
     else:
@@ -408,19 +408,19 @@ def send(ticker):
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'getTxsLTC.js'
-    elif ticker.lower() == 'pepe':
+    elif ticker.lower() in ('pepe', 'pep'):
         command_dir = './getOrdTxsPepe'
         script = 'getTxsPepe.js'
     elif ticker.lower() == 'shic':
         command_dir = './getOrdTxsShic'
         script = 'getTxsShic.js'
-    elif ticker.lower() == 'bonk':
+    elif ticker.lower() in ('bonk', 'bonc'):
         command_dir = './getOrdTxsBonk'
         script = 'getTxsBonk.js'
     elif ticker.lower() == 'flop':
         command_dir = './getOrdTxsFlop'
         script = 'getTxsFlop.js'
-    elif ticker.lower() == 'digi':
+    elif ticker.lower() in ('digi', 'dgb'):
         command_dir = './getOrdTxsDigi'
         script = 'getTxsDigi.js'
     else:
@@ -522,19 +522,19 @@ def vault(ticker):
     elif ticker.lower() == 'ltc':
         command_dir = './getOrdTxsLTC'
         script = 'getVaultTxsLTC.js'
-    elif ticker.lower() == 'pepe':
+    elif ticker.lower() in ('pepe', 'pep'):
         command_dir = './getOrdTxsPepe'
         script = 'getVaultTxsPepe.js'
     elif ticker.lower() == 'shic':
         command_dir = './getOrdTxsShic'
         script = 'getVaultTxsShic.js'
-    elif ticker.lower() == 'bonk':
+    elif ticker.lower() in ('bonk', 'bonc'):
         command_dir = './getOrdTxsBonk'
         script = 'getVaultTxsBonk.js'
     elif ticker.lower() == 'flop':
         command_dir = './getOrdTxsFlop'
         script = 'getVaultTxsFlop.js'
-    elif ticker.lower() == 'digi':
+    elif ticker.lower() in ('digi', 'dgb'):
         command_dir = './getOrdTxsDigi'
         script = 'getVaultTxsDigi.js'
     else:
@@ -634,7 +634,7 @@ def send_ord(ticker):
         }), 400
 
     # Determine the command directory and script based on the ticker
-    if ticker.lower() == 'digi':
+    if ticker.lower() in ('digi', 'dgb'):
         command_dir = './getOrdTxsDigi'
         script = 'createTxOrd.js'
     else:
